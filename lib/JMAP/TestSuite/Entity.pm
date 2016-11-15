@@ -175,12 +175,13 @@ package JMAP::TestSuite::EntityBatch {
     traits   => [ 'Hash' ],
     reader   => '_batch',
     handles  => {
-      result_for => 'get',
+      result_for  => 'get',
+      all_results => 'values',
     },
   );
 
   sub is_entirely_successful {
-    return ! grep {; $_->is_error } values %{ $_[0]->_batch };
+    return ! grep {; $_->is_error } $_[0]->all_results;
   }
 
   no Moose;
