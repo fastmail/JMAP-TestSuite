@@ -15,7 +15,7 @@ package JMAP::TestSuite::Entity {
   );
 
   role {
-    with 'JMAP::TestSuite::Entity::Common';
+    with 'JMAP::TestSuite::EntityRole::Common';
 
     my $param = shift;
 
@@ -34,7 +34,7 @@ package JMAP::TestSuite::Entity {
   }
 }
 
-package JMAP::TestSuite::Entity::Common {
+package JMAP::TestSuite::EntityRole::Common {
   use Moose::Role;
 
   sub is_error { 0 }
@@ -128,6 +128,21 @@ package JMAP::TestSuite::Entity::Common {
 
     # TODO: bless this into a collection
     return \%result;
+  }
+
+  sub create {
+    my ($pkg, $item_to_create, $extra) = @_;
+    my $result = $pkg->_create_batch({ a => $item_to_create, $extra });
+    return $result->{a};
+  }
+
+  sub create_list {
+    my ($pkg, $to_create_array, $extra) = @_;
+    my %to_create = map {; $_ => $to_create_array->[$_] }
+                    keys @$to_create_array;
+
+    my $result = $pkg->_create_batch(\%to_create, $extra);
+    return @$result{ sort { $a <=> $b } keys %$result };
   }
 
   sub create_batch {

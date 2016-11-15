@@ -2,19 +2,10 @@ use strict;
 use warnings;
 
 use JMAP::TestSuite::Instance;
+use JMAP::TestSuite::Entity::Mailbox;
 
 use Test::Deep::JType;
 use Test::More;
-
-package JMAP::TestSuite::Entity::Mailbox {
-  use Moose;
-  with 'JMAP::TestSuite::Entity' => {
-    plural_noun => 'mailboxes',
-    properties  => [ qw(id name parentId role) ], # TODO: flesh out
-  };
-
-  no Moose;
-};
 
 my $ti = JMAP::TestSuite::Instance->new({
   jmap_uri    => q{http://localhost:9000/jmap/b0b7699c-4474-11e6-b790-f23c91556942},
