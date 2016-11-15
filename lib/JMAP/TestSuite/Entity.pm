@@ -14,10 +14,19 @@ package JMAP::TestSuite::Entity {
     required => 1,
   );
 
-  role {
-    with 'JMAP::TestSuite::EntityRole::Common';
+  parameter can_create => (
+    is => 'ro',
+    default => 1,
+  );
 
+  role {
     my $param = shift;
+
+    with(
+      ($param->can_create
+        ? 'JMAP::TestSuite::EntityRole::Create'
+        : 'JMAP::TestSuite::EntityRole::Common'),
+    );
 
     my $noun = $param->plural_noun;
     method get_method => sub { "get\u$noun" };
@@ -55,6 +64,13 @@ package JMAP::TestSuite::EntityRole::Common {
     is => 'ro',
     required => 1,
   );
+
+  no Moose::Role;
+}
+
+package JMAP::TestSuite::EntityRole::Create {
+  use Moose::Role;
+  with 'JMAP::TestSuite::EntityRole::Common';
 
   sub create_args {
     my ($self, $arg) = @_;
@@ -150,8 +166,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my $result = $pkg->_create_batch($to_create, $extra);
     return JMAP::TestSuite::EntityBatch->new({ batch => $result });
   }
-
-  no Moose::Role;
 }
 
 # create
