@@ -11,7 +11,8 @@ has test_instance => (is => 'ro', isa => 'Object', required => 1);
 
 sub authenticated_tester {
   my $tester = JMAP::Tester->new({
-    jmap_uri => $_[0]->jmap_uri,
+    jmap_uri    => $_[0]->jmap_uri,
+    upload_uri  => $_[0]->upload_uri,
   });
 }
 

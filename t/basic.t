@@ -3,6 +3,7 @@ use warnings;
 
 use JMAP::TestSuite::Instance;
 use JMAP::TestSuite::Entity::Mailbox;
+use JMAP::TestSuite::Entity::Message;
 
 use Test::Deep::JType;
 use Test::More;
@@ -46,6 +47,31 @@ $ti->simple_test(sub {
     ok( ! $batch->is_entirely_successful, "something failed");
     ok(! $batch->result_for('x')->is_error, 'x succeeded');
     ok(  $batch->result_for('y')->is_error, 'y failed');
+  }
+
+  {
+    require Email::MIME;
+    my $email = Email::MIME->create(
+      header_str => [
+        From => 'example@example.com',
+        To   => 'example@example.biz',
+        Subject => 'This is a test',
+        'Message-Id' => "<$$.$^T\@$$.example.com>",
+      ],
+      body => "This is a very simple message.",
+    );
+
+    my $batch = JMAP::TestSuite::Entity::Message->import_messages(
+      {
+        msg => { blobId => $email, mailboxIds => [ $role{inbox}{id} ] },
+      },
+      {
+        tester  => $tester,
+        account => $account,
+      },
+    );
+
+    ok($batch->is_entirely_successful, "we uploaded");
   }
 });
 
