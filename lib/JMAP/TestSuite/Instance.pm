@@ -8,9 +8,13 @@ has jmap_uri     => (is => 'ro');
 has download_uri => (is => 'ro');
 has upload_uri   => (is => 'ro');
 
+# XXX obviously temporary
+has single_accountId => (is => 'ro', required => 1);
+
 sub any_account {
   require JMAP::TestSuite::Account;
   return JMAP::TestSuite::Account->new({
+    accountId     => $_[0]->single_accountId,
     test_instance => $_[0],
     map {; $_ => $_[0]->$_ } qw( jmap_uri download_uri upload_uri )
   });
@@ -19,10 +23,7 @@ sub any_account {
 sub simple_test {
   my ($self, $callback) = @_;
 
-  my $account = $self->any_account;
-  my $tester  = $account->authenticated_tester;
-
-  $callback->($account, $tester);
+  $callback->($self->any_account->context);
 }
 
 1;

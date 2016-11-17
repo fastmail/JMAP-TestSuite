@@ -48,16 +48,10 @@ package JMAP::TestSuite::EntityRole::Common {
 
   sub is_error { 0 }
 
-  has account => (
+  has context => (
     is => 'ro',
     required => 1,
-    handles  => [ 'accountId' ],
-  );
-
-  has tester => (
-    is => 'ro',
-    required => 1,
-    # lazy create with $self->account->authenticated_tester?
+    handles  => [ qw(account accountId tester clear_tester) ],
   );
 
   has _props => (
@@ -85,8 +79,8 @@ package JMAP::TestSuite::EntityRole::Create {
     # have both an account and accountId, with the account only implying the
     # accountId *by default*. -- rjbs, 2016-11-15
 
-    my $tester  = $extra->{tester}  || (blessed $pkg ? $pkg->tester  : die 'no tester');
-    my $account = $extra->{account} || (blessed $pkg ? $pkg->account : die 'no account');
+    my $context = $extra->{context}
+               || (blessed $pkg ? $pkg->tester  : die 'no context');
 
     my $set_method = $pkg->set_method;
     my $set_expect = $pkg->set_result;
@@ -95,7 +89,7 @@ package JMAP::TestSuite::EntityRole::Create {
       map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
     };
 
-    my $set_res = $tester->request([
+    my $set_res = $context->tester->request([
       [ $set_method => { create => $to_create } ]
     ]);
 
@@ -116,7 +110,7 @@ package JMAP::TestSuite::EntityRole::Create {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $tester->request([
+    my $get_res = $context->tester->request([
       [
         $get_method => { ids => [ $set_sentence->created_ids ] },
       ],
@@ -137,8 +131,7 @@ package JMAP::TestSuite::EntityRole::Create {
     for my $item (@{ $get_res_arg->{list} }) {
       $result{ $crid_for{ $item->{id} } } = $pkg->new({
         _props  => $item,
-        account => $account,
-        tester  => $tester,
+        context => $context,
       });
     }
 
@@ -176,7 +169,7 @@ package JMAP::TestSuite::EntityRole::Create {
 # update_batch
 # destroy
 # destroy_batch
-# 
+#
 # accessors
 # accountId
 # refresh

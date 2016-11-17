@@ -10,8 +10,8 @@ with 'JMAP::TestSuite::Entity' => {
 sub import_messages {
   my ($pkg, $to_import, $extra) = @_;
 
-  my $tester  = $extra->{tester}  || (blessed $pkg ? $pkg->tester  : die 'no tester');
-  my $account = $extra->{account} || (blessed $pkg ? $pkg->account : die 'no account');
+  my $context = $extra->{context}
+             || (blessed $pkg ? $pkg->tester  : die 'no context');
 
   # pre-process to_import, replacing blob hashrefs with blobs after
   # uploading
@@ -19,7 +19,7 @@ sub import_messages {
   for my $crid (keys %$to_import) {
     my $blob = $to_import->{$crid}{blobId};
     next unless blessed $blob;
-    my $upload = $tester->upload('message/rfc822', \$blob->as_string);
+    my $upload = $context->tester->upload('message/rfc822', \$blob->as_string);
 
     if ($upload->is_success) {
       $to_import->{$crid}{blobId} = $upload->blobId;
@@ -33,8 +33,7 @@ sub import_messages {
   }
 
   my $result = $pkg->_import_batch($to_import, {
-    tester  => $tester,
-    account => $account,
+    context => $context,
   });
 
   return JMAP::TestSuite::EntityBatch->new({
@@ -45,14 +44,13 @@ sub import_messages {
 sub _import_batch {
   my ($pkg, $to_create, $extra) = @_;
 
-  my $tester  = $extra->{tester};
-  my $account = $extra->{account};
+  my $context = $extra->{context};
 
   $to_create = {
     map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
   };
 
-  my $set_res = $tester->request([
+  my $set_res = $context->tester->request([
     [ importMessages => { messages => $to_create } ]
   ]);
 
@@ -75,7 +73,7 @@ sub _import_batch {
   my $get_method = $pkg->get_method;
   my $get_expect = $pkg->get_result;
 
-  my $get_res = $tester->request([
+  my $get_res = $context->tester->request([
     [
       $get_method => { ids => [ $set_sentence->created_ids ] },
     ],
@@ -96,8 +94,7 @@ sub _import_batch {
   for my $item (@{ $get_res_arg->{list} }) {
     $result{ $crid_for{ $item->{id} } } = $pkg->new({
       _props  => $item,
-      account => $account,
-      tester  => $tester,
+      context => $context,
     });
   }
 

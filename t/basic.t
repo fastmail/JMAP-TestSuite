@@ -9,12 +9,15 @@ use Test::Deep::JType;
 use Test::More;
 
 my $ti = JMAP::TestSuite::Instance->new({
+  single_accountId => 'b0b7699c-4474-11e6-b790-f23c91556942',
   jmap_uri    => q{http://localhost:9000/jmap/b0b7699c-4474-11e6-b790-f23c91556942},
   upload_uri  => q{http://localhost:9000/upload/b0b7699c-4474-11e6-b790-f23c91556942},
 });
 
 $ti->simple_test(sub {
-  my ($account, $tester) = @_;
+  my ($context) = @_;
+
+  my $tester = $context->tester;
   my $res = $tester->request([[ getMailboxes => {} ]]);
 
   my $pairs = $res->as_pairs;
@@ -33,16 +36,10 @@ $ti->simple_test(sub {
   }
 
   {
-    my $batch = JMAP::TestSuite::Entity::Mailbox->create_batch(
-      {
-        x => { name => "Folder X at $^T.$$" },
-        y => { name => undef },
-      },
-      {
-        tester  => $tester,
-        account => $account,
-      }
-    );
+    my $batch = $context->create_batch(mailbox => {
+      x => { name => "Folder X at $^T.$$" },
+      y => { name => undef },
+    });
 
     ok( ! $batch->is_entirely_successful, "something failed");
     ok(! $batch->result_for('x')->is_error, 'x succeeded');
@@ -61,15 +58,9 @@ $ti->simple_test(sub {
       body => "This is a very simple message.",
     );
 
-    my $batch = JMAP::TestSuite::Entity::Message->import_messages(
-      {
-        msg => { blobId => $email, mailboxIds => [ $role{inbox}{id} ] },
-      },
-      {
-        tester  => $tester,
-        account => $account,
-      },
-    );
+    my $batch = $context->import_messages({
+      msg => { blobId => $email, mailboxIds => [ $role{inbox}{id} ] },
+    });
 
     ok($batch->is_entirely_successful, "we uploaded");
   }
