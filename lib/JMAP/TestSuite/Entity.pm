@@ -173,7 +173,6 @@ package JMAP::TestSuite::EntityRole::Create {
 # accessors
 # accountId
 # refresh
-# instance (TestSuite::Instance)
 
 package JMAP::TestSuite::EntityError {
   use Moose;

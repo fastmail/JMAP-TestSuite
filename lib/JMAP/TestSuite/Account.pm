@@ -1,26 +1,19 @@
-package JMAP::TestSuite::Account;
-use Moose;
+package JMAP::TestSuite::Account {
+  use Moose::Role;
 
-use JMAP::Tester;
+  use JMAP::Tester;
 
-has accountId    => (is => 'ro', required => 1);
+  has accountId => (is => 'ro', required => 1);
+  has server    => (is => 'ro', isa => 'Object', required => 1);
 
-has jmap_uri     => (is => 'ro');
-has download_uri => (is => 'ro');
-has upload_uri   => (is => 'ro');
+  requires 'authenticated_tester';
 
-has test_instance => (is => 'ro', isa => 'Object', required => 1);
+  sub context { JMAP::TestSuite::AccountContext->new({ account => $_[0] }) }
 
-sub authenticated_tester {
-  my $tester = JMAP::Tester->new({
-    jmap_uri    => $_[0]->jmap_uri,
-    upload_uri  => $_[0]->upload_uri,
-  });
+  no Moose::Role;
 }
 
-sub context { JMAP::TestSuite::Account::Context->new({ account => $_[0] }) }
-
-package JMAP::TestSuite::Account::Context {
+package JMAP::TestSuite::AccountContext {
   use Moose;
 
   has account => (
@@ -60,5 +53,4 @@ package JMAP::TestSuite::Account::Context {
   __PACKAGE__->meta->make_immutable;
 }
 
-no Moose;
-__PACKAGE__->meta->make_immutable;
+1;

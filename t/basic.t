@@ -1,17 +1,16 @@
 use strict;
 use warnings;
 
-use JMAP::TestSuite::Instance;
+use JMAP::TestSuite::ServerAdapter::JMAPProxy;
 use JMAP::TestSuite::Entity::Mailbox;
 use JMAP::TestSuite::Entity::Message;
 
 use Test::Deep::JType;
 use Test::More;
 
-my $ti = JMAP::TestSuite::Instance->new({
-  single_accountId => 'b0b7699c-4474-11e6-b790-f23c91556942',
-  jmap_uri    => q{http://localhost:9000/jmap/b0b7699c-4474-11e6-b790-f23c91556942},
-  upload_uri  => q{http://localhost:9000/upload/b0b7699c-4474-11e6-b790-f23c91556942},
+my $ti = JMAP::TestSuite::ServerAdapter::JMAPProxy->new({
+  accountIds => [ 'b0b7699c-4474-11e6-b790-f23c91556942' ],
+  base_uri    => q{http://localhost:9000/},
 });
 
 $ti->simple_test(sub {
