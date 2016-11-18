@@ -1,19 +1,14 @@
 use strict;
 use warnings;
 
-use JMAP::TestSuite::ServerAdapter::JMAPProxy;
-use JMAP::TestSuite::Entity::Mailbox;
-use JMAP::TestSuite::Entity::Message;
+use JMAP::TestSuite;
 
 use Test::Deep::JType;
 use Test::More;
 
-my $ti = JMAP::TestSuite::ServerAdapter::JMAPProxy->new({
-  accountIds => [ 'b0b7699c-4474-11e6-b790-f23c91556942' ],
-  base_uri    => q{http://localhost:9000/},
-});
+my $server = JMAP::TestSuite->get_server;
 
-$ti->simple_test(sub {
+$server->simple_test(sub {
   my ($context) = @_;
 
   my $tester = $context->tester;

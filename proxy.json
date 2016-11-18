@@ -1,0 +1,5 @@
+{
+  "adapter"   : "JMAPProxy",
+  "accountIds": [ "b0b7699c-4474-11e6-b790-f23c91556942" ],
+  "base_uri"  : "http://localhost:9000/"
+}
