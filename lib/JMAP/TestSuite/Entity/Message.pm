@@ -7,6 +7,8 @@ with 'JMAP::TestSuite::Entity' => {
   properties  => [ qw(id blobId threadId mailboxIds subject) ],
 };
 
+use Safe::Isa;
+
 sub import_messages {
   my ($pkg, $to_import, $extra) = @_;
 
@@ -19,15 +21,14 @@ sub import_messages {
   for my $crid (keys %$to_import) {
     my $blob = $to_import->{$crid}{blobId};
     next unless blessed $blob;
-    my $upload = $context->tester->upload('message/rfc822', \$blob->as_string);
 
-    if ($upload->is_success) {
-      $to_import->{$crid}{blobId} = $upload->blobId;
+    if ($blob->is_success) {
+      $to_import->{$crid}{blobId} = $blob->blobId;
     } else {
       delete $to_import->{$crid};
+      # XXX I'm sure we can do better than this. -- rjbs, 2016-11-18
       $upload_failure{$crid} = JMAP::TestSuite::EntityError->new({
-        creation_id => $crid,
-        result      => { status => $upload->http_response->code },
+        result      => { status => $blob->http_response->code },
       });
     }
   }

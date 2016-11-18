@@ -28,6 +28,26 @@ package JMAP::TestSuite::AccountContext {
     default => sub { $_[0]->account->authenticated_tester },
   );
 
+  sub email_blob {
+    my ($self, $which, $arg) = @_;
+
+    Carp::confess("don't know how to generate test message named $which")
+      unless $which && $which eq 'generic';
+
+    require Email::MIME;
+    my $email = Email::MIME->create(
+      header_str => [
+        From => 'example@example.com',
+        To   => 'example@example.biz',
+        Subject => 'This is a test',
+        'Message-Id' => $arg->{message_id} // "<default.$$.$^T\@$$.example.com>",
+      ],
+      body => "This is a very simple message.",
+    );
+
+    return $self->tester->upload('message/rfc822', \$email->as_string);
+  }
+
   for my $method (qw(create create_list create_batch retrieve retrieve_batch)) {
     my $code = sub {
       my ($self, $moniker, $to_pass, $to_munge) = @_;

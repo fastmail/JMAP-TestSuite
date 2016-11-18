@@ -51,19 +51,12 @@ $server->simple_test(sub {
   }
 
   {
-    require Email::MIME;
-    my $email = Email::MIME->create(
-      header_str => [
-        From => 'example@example.com',
-        To   => 'example@example.biz',
-        Subject => 'This is a test',
-        'Message-Id' => "<$$.$^T\@$$.example.com>",
-      ],
-      body => "This is a very simple message.",
-    );
+    my $blob = $context->email_blob(generic => {
+      message_id => "<$$.$^T\@$$.example.com>",
+    });
 
     my $batch = $context->import_messages({
-      msg => { blobId => $email, mailboxIds => [ $role{inbox}{id} ] },
+      msg => { blobId => $blob, mailboxIds => [ $role{inbox}{id} ] },
     });
 
     ok($batch->is_entirely_successful, "we uploaded");
