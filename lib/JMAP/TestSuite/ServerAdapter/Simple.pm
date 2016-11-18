@@ -19,33 +19,41 @@ sub any_account {
 
   my $base = $self->base_uri =~ s{/\z}{}r;
 
-  my ($accountId) = $self->accountIds;
+  my ($credentials) = $self->credentials;
 
-  return JMAP::TestSuite::Account::JMAPProxy->new({
-    server    => $self,
-    accountId => $accountId,
-
-    jmap_uri      => "$base/jmap/$accountId",
-    download_uri  => "$base/raw/$accountId",
-    upload_uri    => "$base/upload/$accountId",
+  # Is it okay to require the credentials to have the accountId?  If we don't
+  # do that, we need to make accounts' accountId only be known on demand.  Or
+  # we could authenticate eagerly on Simple accounts.  For now, I'll do the
+  # simplest thing I've thought of: this. -- rjbs, 2016-11-18
+  return JMAP::TestSuite::Account::Simple->new({
+    server      => $self,
+    accountId   => $credentials->{accountId},
+    credentials => $credentials,
   });
 }
 
-package JMAP::TestSuite::Account::JMAPProxy {
+package JMAP::TestSuite::Account::Simple {
   use Moose;
   with 'JMAP::TestSuite::Account';
 
   use JMAP::Tester;
 
-  has jmap_uri     => (is => 'ro');
-  has download_uri => (is => 'ro');
-  has upload_uri   => (is => 'ro');
-
   sub authenticated_tester {
+    my ($self) = @_;
+
     my $tester = JMAP::Tester->new({
-      jmap_uri    => $_[0]->jmap_uri,
-      upload_uri  => $_[0]->upload_uri,
+      authentication_uri => $self->server->authentication_uri,
     });
+
+    my $auth = $tester->simple_auth(
+      $self->credentials->{username},
+      $self->credentials->{password},
+    );
+
+    Carp::confess("can't authenticate with JMAP credentials")
+      unless $auth->is_success;
+
+    return $tester;
   }
 
   no Moose;
