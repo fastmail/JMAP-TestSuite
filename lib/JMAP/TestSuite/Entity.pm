@@ -86,7 +86,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my %result;
     for my $crid ($set_sentence->not_created_ids) {
       $result{$crid} = JMAP::TestSuite::EntityError->new({
-        creation_id => $crid,
         result      => $create_errors->{$crid},
       });
     }
@@ -121,7 +120,6 @@ package JMAP::TestSuite::EntityRole::Common {
       });
     }
 
-    # TODO: bless this into a collection
     return \%result;
   }
 
@@ -208,8 +206,7 @@ package JMAP::TestSuite::EntityError {
 
   sub is_error { 1 }
 
-  has creation_id => (is => 'ro', required => 1);
-  has result      => (is => 'ro', required => 1);
+  has result => (is => 'ro', required => 1);
 
   sub error_type { $_[0]->result->{type} }
 
