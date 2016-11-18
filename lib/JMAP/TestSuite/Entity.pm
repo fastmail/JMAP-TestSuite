@@ -231,6 +231,13 @@ package JMAP::TestSuite::EntityBatch {
     return ! grep {; $_->is_error } $_[0]->all_results;
   }
 
+  sub retrieve {
+    my ($self) = @_;
+    # return a new batch with the same keys, dropping failures, and with the
+    # new values gotten by retrieving by entity id
+    ...;
+  }
+
   no Moose;
 }
 
