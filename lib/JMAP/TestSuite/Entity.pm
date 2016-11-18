@@ -145,10 +145,53 @@ package JMAP::TestSuite::EntityRole::Common {
     my $result = $pkg->_create_batch($to_create, $extra);
     return JMAP::TestSuite::EntityBatch->new({ batch => $result });
   }
+
+  sub _retrieve_batch {
+    my ($pkg, $ids, $extra) = @_;
+
+    my $context = $extra->{context}
+               || (blessed $pkg ? $pkg->tester  : die 'no context');
+
+    my $get_method = $pkg->get_method;
+    my $get_expect = $pkg->get_result;
+
+    my $get_res = $context->tester->request([
+      [
+        $get_method => { ids => [ @$ids ] },
+      ],
+    ]);
+
+    my $get_res_arg = $get_res->single_sentence($get_expect)
+                              ->as_stripped_pair->[1];
+
+    my %result;
+    for my $nf_id (@{ $get_res_arg->{notFound} // [] }) {
+      $result{$nf_id} = JMAP::TestSuite::EntityError->new({
+        result => "not found",
+      });
+    }
+
+    for my $item (@{ $get_res_arg->{list} }) {
+      $result{ $item->{id} } = $pkg->new({
+        _props  => $item,
+        context => $context,
+      });
+    }
+
+    return \%result;
+  }
+
+  sub retrieve_batch {
+    my ($pkg, $ids, $extra) = @_;
+    my $result = $pkg->_retrieve_batch($ids, $extra);
+    return JMAP::TestSuite::EntityBatch->new({ batch => $result });
+  }
+
+  sub retrieve { ... }
+
 }
 
-# create
-# create_batch
+
 # retrieve
 # retrieve_batch
 # update

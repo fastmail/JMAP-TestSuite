@@ -28,7 +28,7 @@ package JMAP::TestSuite::AccountContext {
     default => sub { $_[0]->account->authenticated_tester },
   );
 
-  for my $method (qw(create create_list create_batch)) {
+  for my $method (qw(create create_list create_batch retrieve retrieve_batch)) {
     my $code = sub {
       my ($self, $moniker, $to_pass, $to_munge) = @_;
       my $class = "JMAP::TestSuite::Entity::\u$moniker";
