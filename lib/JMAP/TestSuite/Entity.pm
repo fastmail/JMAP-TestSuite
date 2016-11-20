@@ -31,6 +31,31 @@ package JMAP::TestSuite::Entity {
         return  $_[0]->_props->{$property};
       };
     }
+
+    has _props => (
+      is       => 'ro',
+      traits   => [ 'Hash' ],
+      handles  => {
+        value_for => 'get',
+      },
+      required => 1,
+    );
+
+    has _unknown_props => (
+      is   => 'ro',
+      lazy => 1,
+      traits  => [ 'Hash' ],
+      handles => {
+        unknown_properties => 'keys',
+      },
+      default => sub {
+        my ($self) = @_;
+        my %known   = map {; $_ => 1 } @{ $param->properties };
+        my %props   = %{ $self->_props };
+        my %unknown = map {; $known{$_} ? () : ($_ => $props{$_}) } keys %props;
+        return \%unknown;
+      },
+    );
   }
 }
 
@@ -43,11 +68,6 @@ package JMAP::TestSuite::EntityRole::Common {
     is => 'ro',
     required => 1,
     handles  => [ qw(account accountId tester clear_tester) ],
-  );
-
-  has _props => (
-    is => 'ro',
-    required => 1,
   );
 
   no Moose::Role;
