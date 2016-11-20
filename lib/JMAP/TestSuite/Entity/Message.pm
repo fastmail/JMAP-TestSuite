@@ -3,8 +3,33 @@ use Moose;
 with 'JMAP::TestSuite::Entity' => {
   plural_noun => 'messages',
 
-  # TODO: flesh out
-  properties  => [ qw(id blobId threadId mailboxIds subject) ],
+  properties  => [ qw(
+    id
+    blobId
+    threadId
+    mailboxIds
+    inReplyToMessageId
+    isUnread
+    isFlagged
+    isAnswered
+    isDraft
+    hasAttachment
+    headers
+    sender
+    from
+    to
+    cc
+    bcc
+    replyTo
+    subject
+    date
+    size
+    preview
+    textBody
+    htmlBody
+    attachments
+    attachedMessages
+  ) ],
 };
 
 use Safe::Isa;
