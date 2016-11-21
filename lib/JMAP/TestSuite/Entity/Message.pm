@@ -63,7 +63,8 @@ sub import_messages {
   });
 
   return JMAP::TestSuite::EntityBatch->new({
-    batch => { %upload_failure, %$result },
+    create_spec => $to_import,
+    batch       => { %upload_failure, %$result },
   });
 }
 

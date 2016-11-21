@@ -110,6 +110,13 @@ package JMAP::TestSuite::EntityRole::Common {
       });
     }
 
+    if (
+      my @unexpected = grep {; ! exists $to_create->{$_} }
+                       $set_sentence->created_creation_ids
+    ) {
+      confess("$set_expect returned  unexpected creation ids: @unexpected");
+    }
+
     # TODO: detect, barf on crid appearing in both created and notCreated
 
     my $get_method = $pkg->get_method;
@@ -149,19 +156,13 @@ package JMAP::TestSuite::EntityRole::Common {
     return $result->{a};
   }
 
-  sub create_list {
-    my ($pkg, $to_create_array, $extra) = @_;
-    my %to_create = map {; $_ => $to_create_array->[$_] }
-                    keys @$to_create_array;
-
-    my $result = $pkg->_create_batch(\%to_create, $extra);
-    return @$result{ sort { $a <=> $b } keys %$result };
-  }
-
   sub create_batch {
     my ($pkg, $to_create, $extra) = @_;
     my $result = $pkg->_create_batch($to_create, $extra);
-    return JMAP::TestSuite::EntityBatch->new({ batch => $result });
+    return JMAP::TestSuite::EntityBatch->new({
+      batch       => $result,
+      create_spec => $to_create,
+    });
   }
 
   sub _retrieve_batch {
@@ -236,6 +237,16 @@ package JMAP::TestSuite::EntityError {
 package JMAP::TestSuite::EntityBatch {
   use Moose;
 
+  has create_spec => (
+    isa => 'HashRef',
+    traits  => [ 'Hash' ],
+    handles => {
+      creation_ids => 'keys',
+      spec_for     => 'get',
+    },
+    predicate => 'has_create_spec',
+  );
+
   has batch => (
     isa => 'HashRef',
     required => 1,
@@ -243,6 +254,7 @@ package JMAP::TestSuite::EntityBatch {
     reader   => '_batch',
     handles  => {
       result_for  => 'get',
+      result_ids  => 'keys',
       all_results => 'values',
     },
   );
