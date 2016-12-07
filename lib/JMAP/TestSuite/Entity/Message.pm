@@ -44,6 +44,9 @@ sub import_messages {
   # uploading
   my %upload_failure;
   for my $crid (keys %$to_import) {
+    $to_import->{$crid}{$_} //= \0
+      for qw(isUnread isAnswered isFlagged isDraft);
+
     my $blob = $to_import->{$crid}{blobId};
     next unless blessed $blob;
 
