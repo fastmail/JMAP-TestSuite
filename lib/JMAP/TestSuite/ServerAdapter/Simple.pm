@@ -8,7 +8,7 @@ has authentication_uri => (
 );
 
 has credentials => (
-  isa => 'ArrayRef[Str]',
+  isa => 'ArrayRef[HashRef]',
   traits  => [ 'Array' ],
   handles => { credentials => 'elements' },
   required => 1,
