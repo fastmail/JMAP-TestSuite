@@ -58,6 +58,8 @@ $server->simple_test(sub {
       message_id => "<$$.$^T\@$$.example.com>",
     });
 
+    ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
+
     my $batch = $context->import_messages({
       msg => { blobId => $blob, mailboxIds => [ $role{inbox}{id} ] },
     });
