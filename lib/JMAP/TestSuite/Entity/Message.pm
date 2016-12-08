@@ -61,6 +61,15 @@ sub import_messages {
     }
   }
 
+  unless (keys %$to_import) {
+    return JMAP::TestSuite::EntityBatch->new({
+      # XXX: Problematic, because we're deleting from to_import as we go, so
+      # create_spec has been corrupted by this point. -- rjbs, 2016-12-06
+      create_spec => $to_import,
+      batch       => { %upload_failure },
+    });
+  }
+
   my $result = $pkg->_import_batch($to_import, {
     context => $context,
   });
