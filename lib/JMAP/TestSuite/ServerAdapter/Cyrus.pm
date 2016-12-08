@@ -8,7 +8,7 @@ has base_uri => (
 );
 
 has credentials => (
-  isa => 'ArrayRef[Str]',
+  isa => 'ArrayRef[HashRef]',
   traits  => [ 'Array' ],
   handles => { credentials => 'elements' },
   required => 1,
@@ -16,8 +16,6 @@ has credentials => (
 
 sub any_account {
   my ($self) = @_;
-
-  my $base = $self->base_uri =~ s{/\z}{}r;
 
   my ($credentials) = $self->credentials;
 
@@ -28,7 +26,7 @@ sub any_account {
   # ^^ This comment stolen from the Simple account.
   return JMAP::TestSuite::Account::Cyrus->new({
     server      => $self,
-    accountId   => $credentials->{accountId},
+    accountId   => $credentials->{username},
     credentials => $credentials,
   });
 }
@@ -40,21 +38,23 @@ package JMAP::TestSuite::Account::Cyrus {
   use JMAP::Tester;
   use MIME::Base64 ();
 
+  has credentials => (is => 'ro', required => 1);
+
   sub authenticated_tester {
     my ($self) = @_;
 
-    my $base = $self->base_uri =~ s{/\z}{}r;
+    my $base = $self->server->base_uri =~ s{/\z}{}r;
 
     my $tester = JMAP::Tester->new({
-      jmap_uri   => "$base/jmap",
-      upload_uri => "$base/upload",
-      download_uri => "$base/download",
+      api_uri    => "$base/jmap",
+      upload_uri => "$base/jmap/upload",
+      download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}",
     });
 
     my $auth = join q{:}, @{ $self->credentials }{ qw(username password) };
 
     $tester->ua->default_header(
-      Authorization => MIME::Base64::encode_base64($auth, ''),
+      Authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
     );
 
     return $tester;
