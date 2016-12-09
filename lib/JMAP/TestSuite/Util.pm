@@ -31,8 +31,8 @@ sub batch_ok {
     if (@broken_ids) {
       fail("some batch results have unknown properties");
       for my $id (@broken_ids) {
-        diag("  $_ has unknown properties: "
-            . join(q{, }, $batch->result_for($_)->unknown_properties)
+        diag("  $id has unknown properties: "
+            . join(q{, }, $batch->result_for($id)->unknown_properties)
         );
       }
     } else {
