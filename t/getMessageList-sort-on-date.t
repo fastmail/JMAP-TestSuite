@@ -32,10 +32,6 @@ $server->simple_test(sub {
       header => "Sun, 25 Dec 2016 12:00:01 −0300",
       date   => '2016-12-25T12:00:01Z',
     },
-    2011 => {
-      header => "Sun, 25 Dec 2011 12:00:01 −0300",
-      date   => '2011-12-25T12:00:01Z',
-    },
     2005 => {
       header => "Sun, 25 Dec 2005 12:00:01 −0300",
       date   => '2005-12-25T12:00:01Z',
@@ -82,25 +78,18 @@ $server->simple_test(sub {
   my $first   = $res->sentence(1)->arguments->{list}[0];
   my ($which) = grep { $message{$_}{id} eq $first->{id} } keys %message;
 
-  unless ($which) {
-    fail("the message we got back is not one we just created?!");
-    return;
-  }
+  is($which, 2005, "the more recently imported message is newer");
 
-  # Okay, so either we're sorting by internal date so we should have a date in
-  # 2017 or later --or-- we're sorting by header and should have the 2016 date.
-  if ($which eq '2005') {
-    cmp_ok(
-      $first->{date}, 'gt', '2017-01-01',
-      "sort by internaldate, return internaldate"
-    );
-    return;
-  } elsif ($which eq '2016') {
-    is($first->{date}, $message{2016}{date}, "sort by header, return header");
-    return;
-  }
+  isnt(
+    $first->{date},
+    $message{$which}{date},
+    "the message.date is not from the ancient header value"
+  );
 
-  fail("something weird is going on: $which");
+  cmp_ok(
+    $first->{date}, 'gt', '2017-01-01',
+    "...and we return an internaldate in the plausible present"
+  );
 });
 
 done_testing;
