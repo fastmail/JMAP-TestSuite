@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use JMAP::TestSuite;
+use Test::Deep::JType 0.004;
 use Test::More;
 
 my $server = JMAP::TestSuite->get_server;
@@ -15,7 +16,9 @@ $server->simple_test(sub {
   my $res = $context->tester->request([
     [
       getMessageUpdates => {
-        sinceState => 0, # "0" works fine though for example
+        # JMAP expects this state value to be a string, so this call may be
+        # rejected, but it shouldn't cause a server error.
+        sinceState => jnum(0),
       },
     ]
   ]);
