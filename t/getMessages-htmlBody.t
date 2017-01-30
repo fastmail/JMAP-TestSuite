@@ -47,13 +47,13 @@ $server->simple_test(sub {
   ]);
 
   is(
-    $res->sentence->arguments->{list}[0]{textBody},
+    $res->single_sentence->arguments->{list}[0]{textBody},
     'This is a very simple message.',
     'textBody is correct'
   );
 
   isnt(
-    $res->sentence->arguments->{list}[0]{htmlBody},
+    $res->single_sentence->arguments->{list}[0]{htmlBody},
     'This is a very simple message.',
     'htmlBody is correct'
   );
