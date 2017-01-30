@@ -22,7 +22,7 @@ sub batch_ok {
 
   # TODO: every non-error result has properties superhash of create spec
 
-  {
+  if ($ENV{JMAP_STRICT_PROPERTIES}) {
     my @broken_ids = grep {;
       !  $batch->result_for($_)->is_error
       && $batch->result_for($_)->unknown_properties
