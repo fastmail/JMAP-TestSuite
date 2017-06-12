@@ -46,9 +46,9 @@ package JMAP::TestSuite::Account::Cyrus {
     my $base = $self->server->base_uri =~ s{/\z}{}r;
 
     my $tester = JMAP::Tester->new({
-      api_uri    => "$base/jmap",
-      upload_uri => "$base/jmap/upload",
-      download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}",
+      api_uri    => "$base/jmap/",
+      upload_uri => "$base/jmap/upload/",
+      download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
     });
 
     my $auth = join q{:}, @{ $self->credentials }{ qw(username password) };
