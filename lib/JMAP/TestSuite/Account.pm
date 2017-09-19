@@ -41,6 +41,7 @@ package JMAP::TestSuite::AccountContext {
         To   => 'example@example.biz',
         Subject => 'This is a test',
         'Message-Id' => $arg->{message_id} // "<default.$$.$^T\@$$.example.com>",
+        ( $arg->{date} ? ( Date => $arg->{date} ) : () ),
       ],
       body => "This is a very simple message.",
     );
