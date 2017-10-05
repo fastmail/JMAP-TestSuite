@@ -22,5 +22,13 @@ with 'JMAP::TestSuite::Entity' => {
   ) ],
 };
 
+sub create_args {
+  my ($self, $arg) = @_;
+  return {
+    parentId => undef,
+    %$arg
+  };
+}
+
 no Moose;
 __PACKAGE__->meta->make_immutable;

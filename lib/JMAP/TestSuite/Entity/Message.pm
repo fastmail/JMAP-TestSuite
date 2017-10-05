@@ -141,5 +141,13 @@ sub _import_batch {
   return \%result;
 }
 
+sub create_args {
+  my ($self, $arg) = @_;
+  return {
+    keywords => [],
+    %$arg
+  };
+}
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
