@@ -1,18 +1,14 @@
-package JMAP::TestSuite::Entity::Message;
+package JMAP::TestSuite::Entity::Email;
 use Moose;
 with 'JMAP::TestSuite::Entity' => {
-  plural_noun => 'messages',
+  singular_noun => 'email',
 
   properties  => [ qw(
     id
     blobId
     threadId
     mailboxIds
-    inReplyToMessageId
-    isUnread
-    isFlagged
-    isAnswered
-    isDraft
+    keywords
     hasAttachment
     headers
     sender
@@ -22,14 +18,22 @@ with 'JMAP::TestSuite::Entity' => {
     bcc
     replyTo
     subject
-    date
+    sentAt
+    receivedAt
     size
     preview
     textBody
     htmlBody
     attachments
-    attachedMessages
+    attachedEmails
+    isUnread
+    isFlagged
+    isAnswered
+    isDraft
   ) ],
+
+  # I'm not sure the is* flags are still valid XXX
+  # -- alh, 2018-02-20
 };
 
 use Safe::Isa;
@@ -89,13 +93,16 @@ sub _import_batch {
     map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
   };
 
-  my $set_res = $context->tester->request([
-    [ importMessages => { messages => $to_create } ]
-  ]);
+  my $set_res = $context->tester->request({
+    using => ["ietf:jmapmail"],
+    methodCalls => [
+      [ "Email/import" => { emails => $to_create }, ],
+    ],
+  });
 
   # this isn't quite a "set" sentence, but this will work anyway for created
   # and notCreated -- rjbs, 2016-11-16
-  my $set_sentence = $set_res->single_sentence('messagesImported')->as_set;
+  my $set_sentence = $set_res->single_sentence('Email/import')->as_set;
 
   my $create_errors = $set_sentence->create_errors;
 
@@ -112,11 +119,14 @@ sub _import_batch {
   my $get_method = $pkg->get_method;
   my $get_expect = $pkg->get_result;
 
-  my $get_res = $context->tester->request([
-    [
-      $get_method => { ids => [ $set_sentence->created_ids ] },
+  my $get_res = $context->tester->request({
+    using => ["ietf:jmapmail"],
+    methodCalls => [
+      [
+        $get_method => { ids => [ $set_sentence->created_ids ] },
+      ],
     ],
-  ]);
+  });
 
   my $get_res_arg = $get_res->single_sentence($get_expect)
                             ->as_stripped_pair->[1];

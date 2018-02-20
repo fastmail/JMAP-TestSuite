@@ -47,7 +47,7 @@ package JMAP::TestSuite::Account::Cyrus {
 
     my $tester = JMAP::Tester->new({
       api_uri    => "$base/jmap/",
-      upload_uri => "$base/jmap/upload/",
+      upload_uri => "$base/jmap/upload/" . $self->credentials->{username} . "/",
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
     });
 

@@ -31,20 +31,24 @@ $server->simple_test(sub {
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
   $batch = $context->import_messages({
-    msg => { blobId => $blob, mailboxIds => [ $x->id ] },
+    msg => { blobId => $blob, keywords => {}, mailboxIds => { $x->id => \1 }, },
   });
 
   batch_ok($batch);
 
   ok($batch->is_entirely_successful, "we uploaded and imported messages");
 
-  my $res = $tester->request([
-    [
-      getMessages => {
-        ids => [ $batch->result_for('msg')->id ],
-      }
+  my $res = $tester->request({
+    using => ["ietf:jmapmail"],
+
+    methodCalls => [
+      [
+        'Email/get' => {
+          ids => [ $batch->result_for('msg')->id ],
+        }
+      ],
     ],
-  ]);
+  });
 
   is(
     $res->single_sentence->arguments->{list}[0]{textBody},

@@ -32,7 +32,7 @@ $server->simple_test(sub {
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
   $batch = $context->import_messages({
-    msg => { blobId => $blob, mailboxIds => [ $x->id ] },
+    msg => { blobId => $blob, keywords => {}, mailboxIds => { $x->id => \1 }, },
   });
 
   batch_ok($batch);
@@ -41,22 +41,27 @@ $server->simple_test(sub {
 
   for my $test (
     [ "getting message-id as a default header property" => {} ],
-    [ "requesting header.message-id explicitly" => { properties => [ 'header.message-id' ] } ],
+    [ "requesting header.message-id explicitly" => { properties => [ 'headers.message-id' ] } ],
   ) {
     my ($desc, $extra) = @$test;
 
     subtest $desc => sub {
-      my $res = $tester->request([
-        [
-          getMessages => {
-            ids => [ $batch->result_for('msg')->id ],
-            %$extra,
-          }
-        ],
-      ]);
+      my $res = $tester->request({
+        using => ["ietf:jmapmail"],
 
-      my $prop = $res->single_sentence('messages')->arguments->{list}[0];
+        methodCalls => [
+          [
+            'Email/get' => {
+              ids => [ $batch->result_for('msg')->id ],
+              %$extra,
+            }
+          ],
+        ],
+      });
+
+      my $prop = $res->single_sentence('Email/get')->arguments->{list}[0];
       my %header = %{ $prop->{headers} || {} };
+
 
       my (@any_case) = grep {; 'message-id' eq lc $_ } keys %header;
       ok(@any_case, "message-id appears in headers in any case");

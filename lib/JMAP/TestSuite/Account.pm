@@ -63,7 +63,7 @@ package JMAP::TestSuite::AccountContext {
 
   sub import_messages {
     my ($self, $to_pass, $to_munge) = @_;
-    JMAP::TestSuite::Entity::Message->import_messages(
+    JMAP::TestSuite::Entity::Email->import_messages(
       $to_pass,
       { ($to_munge ? %$to_munge : ()), context => $self },
     );

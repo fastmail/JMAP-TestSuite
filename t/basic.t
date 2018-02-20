@@ -13,9 +13,8 @@ $server->simple_test(sub {
   my ($context) = @_;
 
   my $tester = $context->tester;
-  my $res = $tester->request([[ getMailboxes => {} ]]);
-
-  my $pairs = $res->as_pairs;
+  my $res = $tester->request({ using => ["ietf:jmapmail"], methodCalls => [[ "Mailbox/get" => {} ]]});
+  my $pairs = $res->as_triples;
 
   is(@$pairs, 1, "one sentence of response to getMailboxes");
 
@@ -61,7 +60,7 @@ $server->simple_test(sub {
     ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
     my $batch = $context->import_messages({
-      msg => { blobId => $blob, mailboxIds => [ $role{inbox}{id} ] },
+      msg => { blobId => $blob, keywords => {}, mailboxIds => { $role{inbox}{id} => \1 }, },
     });
 
     batch_ok($batch);

@@ -1,7 +1,7 @@
 package JMAP::TestSuite::Entity::Mailbox;
 use Moose;
 with 'JMAP::TestSuite::Entity' => {
-  plural_noun => 'mailboxes',
+  singular_noun => 'mailbox',
   properties  => [ qw(
     id
     name

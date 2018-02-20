@@ -9,7 +9,7 @@ package JMAP::TestSuite::Entity {
     required => 1,
   );
 
-  parameter plural_noun => (
+  parameter singular_noun => (
     is => 'ro',
     required => 1,
   );
@@ -19,11 +19,11 @@ package JMAP::TestSuite::Entity {
 
     with 'JMAP::TestSuite::EntityRole::Common';
 
-    my $noun = $param->plural_noun;
-    method get_method => sub { "get\u$noun" };
-    method get_result => sub { "$noun" };
-    method set_method => sub { "set\u$noun" };
-    method set_result => sub { "${noun}Set" };
+    my $noun = $param->singular_noun;
+    method get_method => sub { "\u$noun/get" };
+    method get_result => sub { "\u$noun/get" };
+    method set_method => sub { "\u$noun/set" };
+    method set_result => sub { "\u$noun/set" };
 
     for my $property (@{ $param->properties }) {
       method $property => sub {
@@ -95,9 +95,12 @@ package JMAP::TestSuite::EntityRole::Common {
       map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
     };
 
-    my $set_res = $context->tester->request([
-      [ $set_method => { create => $to_create } ]
-    ]);
+    my $set_res = $context->tester->request({
+      using => ["ietf:jmapmail"],
+      methodCalls => [
+        [ $set_method => { create => $to_create } ],
+      ],
+    });
 
     my $set_sentence = $set_res->single_sentence($set_expect)->as_set;
 
@@ -122,11 +125,12 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request([
-      [
-        $get_method => { ids => [ $set_sentence->created_ids ] },
+    my $get_res = $context->tester->request({
+      using => ["ietf:jmapmail"],
+      methodCalls => [
+        [ $get_method => { ids => [ $set_sentence->created_ids ] }, ],
       ],
-    ]);
+    });
 
     my $get_res_arg = $get_res->single_sentence($get_expect)
                               ->as_stripped_pair->[1];
@@ -174,11 +178,12 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request([
-      [
-        $get_method => { ids => [ @$ids ] },
+    my $get_res = $context->tester->request({
+      using => ["ietf:jmapmail"],
+      methodCalls => [
+        [ $get_method => { ids => [ @$ids ] }, ],
       ],
-    ]);
+    });
 
     my $get_res_arg = $get_res->single_sentence($get_expect)
                               ->as_stripped_pair->[1];
