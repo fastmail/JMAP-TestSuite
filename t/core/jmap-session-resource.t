@@ -35,7 +35,7 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
-#          hasDataFor => [jstr],
+#          hasDataFor => [jstr], # XXX - Spec updates might change
         },
       },
       capabilities => superhashof({
@@ -53,7 +53,7 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
       apiUrl => jstr,
       downloadUrl => jstr,
       uploadUrl => jstr,
-#      eventSourceUrl => jstr,
+#      eventSourceUrl => jstr, # XXX - Spec updates might change
     },
     'Response looks good',
   ) or diag explain $data;
