@@ -34,7 +34,7 @@ test "previews" => sub {
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
   $batch = $context->import_messages({
-    msg => { blobId => $blob, keywords => {}, mailboxIds => { $x->id => \1 }, },
+    msg => { blobId => $blob, mailboxIds => { $x->id => \1 }, },
   });
 
   batch_ok($batch);

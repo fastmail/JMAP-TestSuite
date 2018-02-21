@@ -63,7 +63,7 @@ test "basic" => sub {
     ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
     my $batch = $context->import_messages({
-      msg => { blobId => $blob, keywords => {}, mailboxIds => { $role{inbox}{id} => \1 }, },
+      msg => { blobId => $blob, mailboxIds => { $role{inbox}{id} => \1 }, },
     });
 
     batch_ok($batch);
