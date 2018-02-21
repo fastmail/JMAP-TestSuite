@@ -1,14 +1,19 @@
 use strict;
 use warnings;
+use Test::Routine;
+use Test::Routine::Util;
 
-use JMAP::TestSuite;
-use Test::Deep::JType 0.004;
+with 'JMAP::TestSuite::Tester';
+
+use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+
+use Test::Deep::JType;
 use Test::More;
 
-my $server = JMAP::TestSuite->get_server;
+test "getMesageUpdates-sinceState" => sub {
+  my ($self) = @_;
 
-$server->simple_test(sub {
-  my ($context) = @_;
+  my $context = $self->context;
 
   # We should be able to pass junk (like an integer sinceState instead of a
   # string sinceState like the spec requires) and get back a sensible JSON
@@ -29,6 +34,7 @@ $server->simple_test(sub {
 
   ok($res->is_success, 'called getMessageUpdates')
     or diag explain $res->http_response->as_string;
-});
+};
 
+run_me;
 done_testing;

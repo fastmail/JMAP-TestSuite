@@ -1,8 +1,11 @@
 use strict;
 use warnings;
+use Test::Routine;
+use Test::Routine::Util;
 
-use JMAP::TestSuite;
-use JMAP::TestSuite::Util qw(batch_ok);
+with 'JMAP::TestSuite::Tester';
+
+use JMAP::TestSuite::Util qw(batch_ok pristine_test);
 
 use Test::Deep::JType;
 use Test::More;
@@ -10,10 +13,10 @@ use Test::More;
 use DateTime;
 use Email::MessageID;
 
-my $server = JMAP::TestSuite->get_server;
+test "getMessages-header" => sub {
+  my ($self) = @_;
 
-$server->simple_test(sub {
-  my ($context) = @_;
+  my $context = $self->context;
 
   my $tester = $context->tester;
 
@@ -78,6 +81,7 @@ $server->simple_test(sub {
       }
     };
   }
-});
+};
 
+run_me;
 done_testing;

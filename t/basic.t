@@ -1,16 +1,19 @@
 use strict;
 use warnings;
+use Test::Routine;
+use Test::Routine::Util;
 
-use JMAP::TestSuite;
-use JMAP::TestSuite::Util qw(batch_ok);
+with 'JMAP::TestSuite::Tester';
+
+use JMAP::TestSuite::Util qw(batch_ok pristine_test);
 
 use Test::Deep::JType;
 use Test::More;
 
-my $server = JMAP::TestSuite->get_server;
+test "basic" => sub {
+  my ($self) = @_;
 
-$server->simple_test(sub {
-  my ($context) = @_;
+  my $context = $self->context;
 
   my $tester = $context->tester;
   my $res = $tester->request({ using => ["ietf:jmapmail"], methodCalls => [[ "Mailbox/get" => {} ]]});
@@ -67,6 +70,7 @@ $server->simple_test(sub {
 
     ok($batch->is_entirely_successful, "we uploaded");
   }
-});
+};
 
+run_me;
 done_testing;
