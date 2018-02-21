@@ -3,6 +3,7 @@ use Moose;
 with 'JMAP::TestSuite::ServerAdapter';
 
 use Process::Status;
+use Data::GUID qw(guid_string);
 
 has base_uri => (
   is => 'ro',
@@ -37,7 +38,7 @@ sub pristine_account {
   my ($self) = @_;
 
   # XXX - Do something far less janky. -- alh, 2018-02-21
-  my $user = "jtuser$^T$$";
+  my $user = "jt-" . guid_string();
 
   my $res = `echo 'mypassword' | saslpasswd2 -p -c $user`;
   my $ps = Process::Status->new;
