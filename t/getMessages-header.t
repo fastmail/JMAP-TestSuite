@@ -20,22 +20,14 @@ test "getMessages-header" => sub {
 
   my $tester = $context->tester;
 
-  # Get us a mailbox to play with
-  my $batch = $context->create_batch(mailbox => {
-    x => { name => "Folder X at $^T.$$" },
-  });
-
-  batch_ok($batch);
-
-  ok( $batch->is_entirely_successful, "created a mailbox");
-  my $x = $batch->result_for('x');
+  my $mailbox = $context->create_mailbox;
 
   my $msg_id = Email::MessageID->new->in_brackets;
   my $blob = $context->email_blob(generic => { message_id => $msg_id });
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
-  $batch = $context->import_messages({
-    msg => { blobId => $blob, mailboxIds => { $x->id => \1 }, },
+  my $batch = $context->import_messages({
+    msg => { blobId => $blob, mailboxIds => { $mailbox->id => \1 }, },
   });
 
   batch_ok($batch);

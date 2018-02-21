@@ -16,6 +16,9 @@ package JMAP::TestSuite::Account {
 package JMAP::TestSuite::AccountContext {
   use Moose;
 
+  use JMAP::TestSuite::Util qw(batch_ok);
+  use Test::More;
+
   has account => (
     is => 'ro',
     handles  => [ qw(accountId) ],
@@ -59,6 +62,29 @@ package JMAP::TestSuite::AccountContext {
     };
     no strict 'refs';
     *$method = $code;
+  }
+
+  sub create_mailbox {
+    # XXX - This should probably not use Test::* functions and
+    #       instead hard fail if something goes wrong.
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+
+    $arg ||= {};
+    $arg->{name} ||= "Folder X at $^T.$$";
+
+    my $batch = $self->create_batch(mailbox => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created a mailbox");
+
+    my $x = $batch->result_for('x');
+
+    return $x;
   }
 
   sub import_messages {
