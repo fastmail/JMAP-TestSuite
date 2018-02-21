@@ -2,6 +2,8 @@ package JMAP::TestSuite::ServerAdapter::Cyrus;
 use Moose;
 with 'JMAP::TestSuite::ServerAdapter';
 
+use Process::Status;
+
 has base_uri => (
   is => 'ro',
   required => 1,
@@ -28,6 +30,38 @@ sub any_account {
     server      => $self,
     accountId   => $credentials->{username},
     credentials => $credentials,
+  });
+}
+
+sub pristine_account {
+  my ($self) = @_;
+
+  # XXX - Do something far less janky. -- alh, 2018-02-21
+  my $user = "jtuser$^T$$";
+
+  my $res = `echo 'mypassword' | saslpasswd2 -p -c $user`;
+  my $ps = Process::Status->new;
+
+  unless ($ps->is_success) {
+    die "Failed to create sasl auth for new user. Got output: $res\n";
+  }
+
+  $res = `echo 'createmailbox user/$user\@localhost' | /usr/cyrus/bin/cyradm -u imapuser -w secret localhost`;
+  $ps = Process::Status->new;
+
+  unless ($ps->is_success) {
+    die "Failed to create a new account in cyrus. Got output: $res\n";
+  }
+
+  my $username = "$user\@localhost";
+
+  return JMAP::TestSuite::Account::Cyrus->new({
+    server      => $self,
+    accountId   => $username,
+    credentials => {
+      username => $username,
+      password => 'mypassword',
+    },
   });
 }
 

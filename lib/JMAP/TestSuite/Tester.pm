@@ -22,6 +22,7 @@ has context => (
   default => sub {
     shift->server->any_account->context
   },
+  writer  => '_set_context',
   handles => [qw(
     tester
   )],
@@ -49,6 +50,13 @@ before run_test => sub {
 
   # Give us a fresh context every time
   $self->_clear_context;
+
+  if (JMAP::TestSuite::Util::is_pristine($test->description)) {
+    # XXX - Ick. -- alh, 2018-02-21
+    $self->_set_context(
+      $self->server->pristine_account->context,
+    );
+  }
 };
 
 around run_test => sub {
