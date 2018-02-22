@@ -38,7 +38,8 @@ sub pristine_account {
   my ($self) = @_;
 
   # XXX - Do something far less janky. -- alh, 2018-02-21
-  my $user = "jt-" . guid_string();
+  # These must be lowercase or cyrus can't auth them
+  my $user = "jt-" . lc guid_string();
 
   my $res = `echo 'mypassword' | saslpasswd2 -p -c $user`;
   my $ps = Process::Status->new;
