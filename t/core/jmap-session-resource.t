@@ -31,7 +31,7 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
     {
       username => jstr,
       accounts => {
-        'example' => {
+        $self->context->accountId => {
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
