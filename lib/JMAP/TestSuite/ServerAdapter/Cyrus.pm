@@ -27,9 +27,12 @@ sub any_account {
   # we could authenticate eagerly on Simple accounts.  For now, I'll do the
   # simplest thing I've thought of: this. -- rjbs, 2016-11-18
   # ^^ This comment stolen from the Simple account.
+  my $account_id = $credentials->{username};
+  $account_id =~ s/@.*//;
+
   return JMAP::TestSuite::Account::Cyrus->new({
     server      => $self,
-    accountId   => $credentials->{username},
+    accountId   => $account_id,
     credentials => $credentials,
   });
 }
@@ -59,7 +62,7 @@ sub pristine_account {
 
   return JMAP::TestSuite::Account::Cyrus->new({
     server      => $self,
-    accountId   => $username,
+    accountId   => $user,
     credentials => {
       username => $username,
       password => 'mypassword',
