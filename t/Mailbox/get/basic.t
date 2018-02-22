@@ -59,63 +59,70 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
   # Standard /get method. The ids argument may be null to fetch all at once.
 
-  subtest "No arguments" => sub {
-    my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
-      methodCalls => [[
-        "Mailbox/get" => {},
-      ]],
-    });
-    ok($res->is_success, "Mailbox/get")
-      or diag explain $res->http_response->as_string;
+  for my $test (
+    [ "No arguments" => {}, ],
+    [ "null ids"     => { ids => undef }, ],
+  ) {
+    my ($name, $args) = @$test;
 
-    jcmp_deeply(
-      $res->single_sentence("Mailbox/get")->arguments,
-      superhashof({
-        accountId => jstr($self->context->accountId),
-        state     => jstr(),
-        notFound  => undef,
-      }),
-      "Base response looks good",
-    );
+    subtest "$name" => sub {
+      my $res = $tester->request({
+        using => [ "ietf:jmapmail" ],
+        methodCalls => [[
+          "Mailbox/get" => $args,
+        ]],
+      });
+      ok($res->is_success, "Mailbox/get")
+        or diag explain $res->http_response->as_string;
 
-    my @found = grep {;
-      $_->{id} eq $mailbox1->id
-    } @{ $res->single_sentence("Mailbox/get")->arguments->{list} };
-
-    is(@found, 1, 'found our mailbox');
-
-    jcmp_deeply(
-      $found[0],
-      superhashof({
-        id           => jstr($mailbox1->id),
-        name         => jstr("A new mailbox"),
-        parentId     => undef, # XXX - May be decided by server?
-        role         => undef,
-        sortOrder    => jnum(),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        myRights     => superhashof({
-          map {
-            $_ => jbool(),
-          } qw(
-            mayReadItems
-            mayAddItems
-            mayRemoveItems
-            maySetSeen
-            maySetKeywords
-            mayCreateChild
-            mayRename
-            mayDelete
-            maySubmit
-          )
+      jcmp_deeply(
+        $res->single_sentence("Mailbox/get")->arguments,
+        superhashof({
+          accountId => jstr($self->context->accountId),
+          state     => jstr(),
+          notFound  => undef,
         }),
-      }),
-      "Our mailbox looks good"
-    ) or diag explain $res->as_stripped_triples;
-  };
+        "Base response looks good",
+      );
+
+      my @found = grep {;
+        $_->{id} eq $mailbox1->id
+      } @{ $res->single_sentence("Mailbox/get")->arguments->{list} };
+
+      is(@found, 1, 'found our mailbox');
+
+      jcmp_deeply(
+        $found[0],
+        superhashof({
+          id           => jstr($mailbox1->id),
+          name         => jstr("A new mailbox"),
+          parentId     => undef, # XXX - May be decided by server?
+          role         => undef,
+          sortOrder    => jnum(),
+          totalEmails  => jnum(0),
+          unreadEmails => jnum(0),
+          totalEmails  => jnum(0),
+          unreadEmails => jnum(0),
+          myRights     => superhashof({
+            map {
+              $_ => jbool(),
+            } qw(
+              mayReadItems
+              mayAddItems
+              mayRemoveItems
+              maySetSeen
+              maySetKeywords
+              mayCreateChild
+              mayRename
+              mayDelete
+              maySubmit
+            )
+          }),
+        }),
+        "Our mailbox looks good"
+      ) or diag explain $res->as_stripped_triples;
+    };
+  }
 
   subtest "Limit by id" => sub {
     my $res = $tester->request({
@@ -170,6 +177,28 @@ pristine_test "Mailbox/get when some entities exist" => sub {
         }),
       }),
       "Our mailbox looks good"
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "Limit to no ids" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Mailbox/get" => { ids => [ ], },
+      ]],
+    });
+    ok($res->is_success, "Mailbox/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Mailbox/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [],
+        notFound  => undef,
+      }),
+      "Base response looks good, has no mailboxes",
     ) or diag explain $res->as_stripped_triples;
   };
 };
