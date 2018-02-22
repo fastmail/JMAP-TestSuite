@@ -121,6 +121,9 @@ test "Mailbox/set create with all settable fields provided" => sub {
 
   my $parent = $self->context->create_mailbox;
 
+  # We should have state after creating a parent mailbox
+  my $state = $self->context->get_state('mailbox');
+
   # XXX - Create with role test -- alh, 2018-02-22
 
   my $res = $tester->request({
@@ -146,6 +149,7 @@ test "Mailbox/set create with all settable fields provided" => sub {
     superhashof({
       accountId => jstr($self->context->accountId),
       newState  => jstr(),
+      oldState  => jstr($state),
     }),
     "Set response looks good",
   );

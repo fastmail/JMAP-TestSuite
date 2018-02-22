@@ -213,6 +213,31 @@ package JMAP::TestSuite::EntityRole::Common {
 
   sub retrieve { ... }
 
+  sub get_state {
+    my ($pkg, $extra) = @_;
+
+    my $context = $extra->{context}
+               || (blessed $pkg ? $pkg->tester  : die 'no context');
+
+    my $get_method = $pkg->get_method;
+    my $get_expect = $pkg->get_result;
+
+    my $get_res = $context->tester->request({
+      using => ["ietf:jmapmail"],
+      methodCalls => [
+        [ $get_method => { ids => [], }, ],
+      ],
+    });
+
+    my $get_res_arg = $get_res->single_sentence($get_expect)
+                              ->as_stripped_pair->[1];
+
+    unless (exists $get_res_arg->{state}) {
+      die "No state found for $get_expect\n";
+    }
+
+    return $get_res_arg->{state};
+  }
 }
 
 

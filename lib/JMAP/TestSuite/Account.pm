@@ -64,6 +64,16 @@ package JMAP::TestSuite::AccountContext {
     *$method = $code;
   }
 
+  for my $method (qw(get_state)) {
+    my $code = sub {
+      my ($self, $moniker) = @_;
+      my $class = "JMAP::TestSuite::Entity::\u$moniker";
+      $class->$method({ context => $self });
+    };
+    no strict 'refs';
+    *$method = $code;
+  }
+
   sub create_mailbox {
     # XXX - This should probably not use Test::* functions and
     #       instead hard fail if something goes wrong.
