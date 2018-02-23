@@ -10,6 +10,44 @@ has base_uri => (
   required => 1,
 );
 
+has saslpasswd2_path => (
+  is => 'ro',
+  default => 'saslpasswd2',
+);
+
+has no_sasl => (
+  is => 'ro',
+);
+
+has cyradm_path => (
+  is      => 'ro',
+  default => '/usr/cyrus/bin/cyradm',
+);
+
+has cyrus_host => (
+  is => 'ro',
+  default => 'localhost',
+);
+
+has cyrus_port => (
+  is => 'ro',
+);
+
+has cyrus_admin_user => (
+  is => 'ro',
+  default => 'imapuser',
+);
+
+has cyrus_admin_pass => (
+  is => 'ro',
+  default => 'secret',
+);
+
+has cyrus_hierarchy_separator => (
+  is => 'ro',
+  default => '/',
+);
+
 has credentials => (
   isa => 'ArrayRef[HashRef]',
   traits  => [ 'Array' ],
@@ -44,15 +82,34 @@ sub pristine_account {
   # These must be lowercase or cyrus can't auth them
   my $user = "jt-" . lc guid_string();
 
-  my $res = `echo 'mypassword' | saslpasswd2 -p -c $user`;
-  my $ps = Process::Status->new;
+  unless ($self->no_sasl) {
+    my $sasl = $self->saslpasswd2_path;
 
-  unless ($ps->is_success) {
-    die "Failed to create sasl auth for new user. Got output: $res\n";
+    my $res = `echo 'mypassword' | $sasl -p -c $user 2>&1`;
+    my $ps = Process::Status->new;
+
+    unless ($ps->is_success) {
+      die "Failed to create sasl auth for new user. Got output: $res\n";
+    }
   }
 
-  $res = `echo 'createmailbox user/$user\@localhost' | /usr/cyrus/bin/cyradm -u imapuser -w secret localhost`;
-  $ps = Process::Status->new;
+  my $cyradm = $self->cyradm_path;
+
+  my $host = $self->cyrus_host;
+  my $port = $self->cyrus_port ? "--port " . $self->cyrus_port : "";
+  my $cyr_user = $self->cyrus_admin_user;
+  my $cyr_pass = $self->cyrus_admin_pass;
+  my $sep = $self->cyrus_hierarchy_separator;
+
+  my $cmd = "echo 'createmailbox user$sep$user\@localhost' \\
+             | /usr/cyrus/bin/cyradm --notls -u $cyr_user -w $cyr_pass $host $port";
+
+  my $res = `$cmd 2>&1`;
+  unless ($res =~ /^\s*[^\s]+>\s*[^\s]+>\s*$/) {
+    die "Failed to run $cmd: $res\n";
+  }
+
+  my $ps = Process::Status->new;
 
   unless ($ps->is_success) {
     die "Failed to create a new account in cyrus. Got output: $res\n";
