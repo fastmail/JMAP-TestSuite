@@ -54,44 +54,21 @@ test "Mailbox/set create with defaults omitted" => sub {
   my $id = $res->single_sentence("Mailbox/set")->as_set->created_id('new');
   ok($id, 'got a new id');
 
-  # Spec says server should return all fields we didn't pass in
+  # Server does not have to return fields, but does need to return id
   jcmp_deeply(
     $created,
     superhashof({
-      id           => jstr(),
-      parentId     => undef, # XXX - May be decided by server?
-      role         => undef,
-      sortOrder    => jnum(0),
-      totalEmails  => jnum(0),
-      unreadEmails => jnum(0),
-      totalEmails  => jnum(0),
-      unreadEmails => jnum(0),
-      myRights     => superhashof({
-        map {
-          $_ => jbool(),
-        } qw(
-          mayReadItems
-          mayAddItems
-          mayRemoveItems
-          maySetSeen
-          maySetKeywords
-          mayCreateChild
-          mayRename
-          mayDelete
-          maySubmit
-        )
-      }),
+      id => jstr(),
     }),
     "Our mailbox looks good"
   ) or diag explain $res->as_stripped_triples;
 
-  subtest "Confirm our name is good" => sub {
+  subtest "Confirm our name/defaults good" => sub {
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {
           ids => [ $id ],
-          properties => [ 'name', ],
         },
       ]],
     });
@@ -106,9 +83,31 @@ test "Mailbox/set create with defaults omitted" => sub {
       superhashof({
         id           => jstr($id),
         name         => jstr($new_name),
+        parentId     => undef, # XXX - Maybe decided by server
+        role         => undef,
+        sortOrder    => jnum(0),
+        totalEmails  => jnum(0),
+        unreadEmails => jnum(0),
+        totalEmails  => jnum(0),
+        unreadEmails => jnum(0),
+        myRights     => superhashof({
+          map {
+            $_ => jbool(),
+          } qw(
+            mayReadItems
+            mayAddItems
+            mayRemoveItems
+            maySetSeen
+            maySetKeywords
+            mayCreateChild
+            mayRename
+            mayDelete
+            maySubmit
+          )
+        }),
       }),
-      "Our mailbox name looks good"
-    ) or diag explain $res->as_stripped_triples;
+      "Our mailbox looks good",
+    );
   };
 };
 
@@ -162,31 +161,11 @@ test "Mailbox/set create with all settable fields provided" => sub {
   my $id = $res->single_sentence("Mailbox/set")->as_set->created_id('new');
   ok($id, 'got a new id');
 
-  # Spec says server should return all fields we didn't pass in
+  # Server does not have to return fields, but does need to return id
   jcmp_deeply(
     $created,
     superhashof({
       id           => jstr(),
-      role         => undef,
-      totalEmails  => jnum(0),
-      unreadEmails => jnum(0),
-      totalEmails  => jnum(0),
-      unreadEmails => jnum(0),
-      myRights     => superhashof({
-        map {
-          $_ => jbool(),
-        } qw(
-          mayReadItems
-          mayAddItems
-          mayRemoveItems
-          maySetSeen
-          maySetKeywords
-          mayCreateChild
-          mayRename
-          mayDelete
-          maySubmit
-        )
-      }),
     }),
     "Our mailbox looks good"
   ) or diag explain $res->as_stripped_triples;
