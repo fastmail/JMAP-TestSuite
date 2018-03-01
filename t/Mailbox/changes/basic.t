@@ -33,8 +33,10 @@ test "Mailbox/changes with no changes" => sub {
   ok($res->is_success, "Mailbox/changes")
     or diag explain $res->http_response->as_string;
 
+  my $changes = $res->single_sentence("Mailbox/changes")->arguments;
+
   jcmp_deeply(
-    $res->single_sentence("Mailbox/changes")->arguments,
+    $changes,
     superhashof({
       accountId      => jstr($self->context->accountId),
       oldState       => jstr($state),
@@ -44,6 +46,12 @@ test "Mailbox/changes with no changes" => sub {
       destroyed      => undef,
     }),
     "Response looks good",
+  );
+
+  ok(
+       ! exists $changes->{changedProperties}
+    || ! defined $changes->{changedProperties},
+    "changedProperties is null or omitted"
   );
 };
 
@@ -279,6 +287,101 @@ test "maxChanges and hasMoreChanges" => sub {
         destroyed      => undef,
       }),
       "Response looks good",
+    );
+  };
+};
+
+test "changedProperties" => sub {
+  my ($self) = @_;
+
+  my $tester = $self->tester;
+
+  subtest "Only counts changed, should get changedProperties" => sub {
+    my $mailbox = $self->context->create_mailbox({
+      name => "A new mailbox",
+    });
+
+    my $mailbox2 = $self->context->create_mailbox({
+      name => "Another new mailbox",
+    });
+
+    my $state = $self->context->get_state('mailbox');
+
+    # Add an email to one of them
+    $self->context->add_message_to_mailboxes($mailbox->id);
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Mailbox/changes" => { sinceState => $state, },
+      ]],
+    });
+    ok($res->is_success, "Mailbox/changes")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Mailbox/changes")->arguments,
+      superhashof({
+        accountId      => jstr($self->context->accountId),
+        oldState       => jstr($state),
+        newState       => all(jstr, none($state)),
+        hasMoreChanges => jfalse,
+        changed        => [ $mailbox->id ],
+        destroyed      => undef,
+        changedProperties => set(qw(
+          totalEmails
+          unreadEmails
+          totalThreads
+          unreadThreads
+        )),
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "Counts and other things changed, should not get" => sub {
+    my $mailbox = $self->context->create_mailbox({
+      name => "A new mailbox",
+    });
+
+    my $state = $self->context->get_state('mailbox');
+
+    # Add an email to one of them
+    $self->context->add_message_to_mailboxes($mailbox->id);
+
+    # Add a new mailbox
+    my $mailbox2 = $self->context->create_mailbox({
+      name => "Another new mailbox",
+    });
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Mailbox/changes" => { sinceState => $state, },
+      ]],
+    });
+    ok($res->is_success, "Mailbox/changes")
+      or diag explain $res->http_response->as_string;
+
+    my $changes = $res->single_sentence("Mailbox/changes")->arguments;
+
+    jcmp_deeply(
+      $changes,
+      superhashof({
+        accountId      => jstr($self->context->accountId),
+        oldState       => jstr($state),
+        newState       => all(jstr, none($state)),
+        hasMoreChanges => jfalse,
+        changed        => [ $mailbox->id, $mailbox2->id ],
+        destroyed      => undef,
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+
+    ok(
+         ! exists $changes->{changedProperties}
+      || ! defined $changes->{changedProperties},
+      "changedProperties is null or omitted"
     );
   };
 };
