@@ -36,7 +36,7 @@ test "Mailbox/set create with defaults omitted" => sub {
   ok($res->is_success, "Mailbox/set create")
     or diag explain $res->http_response->as_string;
 
-  # Not checking oldState here as server may not have one
+  # Not checking oldState here as server may not have one yet
   jcmp_deeply(
     $res->single_sentence("Mailbox/set")->arguments,
     superhashof({
@@ -142,7 +142,6 @@ test "Mailbox/set create with all settable fields provided" => sub {
   ok($res->is_success, "Mailbox/set create")
     or diag explain $res->http_response->as_string;
 
-  # Not checking oldState here as server may not have one
   jcmp_deeply(
     $res->single_sentence("Mailbox/set")->arguments,
     superhashof({
