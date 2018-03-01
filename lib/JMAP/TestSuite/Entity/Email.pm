@@ -37,6 +37,29 @@ with 'JMAP::TestSuite::Entity' => {
 };
 
 use Safe::Isa;
+use Data::Dumper;
+
+sub add_message_to_mailboxes {
+  my ($self, $context, @mailboxes) = @_;
+
+  my $email = $context->email_blob(generic => {});
+
+  my $batch = $self->import_messages(
+    {
+      msg => {
+        blobId => $email,
+        mailboxIds => { map { $_ => \1 } @mailboxes },
+      },
+    },
+    {
+      context => $context,
+    },
+  );
+
+  unless ($batch->is_entirely_successful) {
+    die "Failed to import messages: " . Dumper($batch->_batch);
+  }
+}
 
 sub import_messages {
   my ($pkg, $to_import, $extra) = @_;

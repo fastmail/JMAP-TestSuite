@@ -18,6 +18,7 @@ package JMAP::TestSuite::AccountContext {
 
   use JMAP::TestSuite::Util qw(batch_ok);
   use Test::More;
+  use Email::MessageID;
 
   has account => (
     is => 'ro',
@@ -43,7 +44,8 @@ package JMAP::TestSuite::AccountContext {
         From => 'example@example.com',
         To   => 'example@example.biz',
         Subject => 'This is a test',
-        'Message-Id' => $arg->{message_id} // "<default.$$.$^T\@$$.example.com>",
+        'Message-Id' =>    $arg->{message_id}
+                        // Email::MessageID->new->in_brackets,
       ],
       body => "This is a very simple message.",
     );
@@ -95,6 +97,10 @@ package JMAP::TestSuite::AccountContext {
     my $x = $batch->result_for('x');
 
     return $x;
+  }
+
+  sub add_message_to_mailboxes {
+    JMAP::TestSuite::Entity::Email->add_message_to_mailboxes(@_);
   }
 
   sub import_messages {
