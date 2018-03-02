@@ -174,7 +174,172 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
   };
 };
 
-# XXX - sort, position, anchor, achorOffset, limit
+pristine_test "sorting" => sub {
+  my ($self) = @_;
+
+  my %mailboxes = (
+    zzz => $self->context->create_mailbox({
+      name => "zzz", sortOrder => 1,
+    }),
+    xxx => $self->context->create_mailbox({
+      name => "xxx", sortOrder => 2,
+    }),
+    yyy => $self->context->create_mailbox({
+      name => "yyy", sortOrder => 3,
+    }),
+  );
+
+  $mailboxes{bbb} = $self->context->create_mailbox({
+    name => 'bbb', sortOrder => 4, parentId => $mailboxes{zzz}->id,
+  });
+  $mailboxes{aaa} = $self->context->create_mailbox({
+    name => 'aaa', sortOrder => 5, parentId => $mailboxes{zzz}->id,
+  });
+
+  $mailboxes{ccc} = $self->context->create_mailbox({
+    name => 'ccc', sortOrder => 6, parentId => $mailboxes{xxx}->id,
+  });
+
+  $mailboxes{ddd} = $self->context->create_mailbox({
+    name => 'ddd', sortOrder => 7, parentId => $mailboxes{yyy}->id,
+  });
+
+  my %mailboxes_by_id = map {; $_->id => $_ } values %mailboxes;
+
+  my @name_asc = map {; $_->id } @mailboxes{qw(
+    aaa bbb ccc ddd xxx yyy zzz
+  )};
+  my @name_desc = reverse @name_asc;
+
+  my @sort_order_asc = map {; $_->id } @mailboxes{qw(
+    zzz xxx yyy bbb aaa ccc ddd
+  )};
+  my @sort_order_desc = reverse @sort_order_asc;
+
+  my @parent_name_asc = map {; $_->id } @mailboxes{qw(
+    xxx
+      ccc
+    yyy
+      ddd
+    zzz
+      aaa
+      bbb
+  )};
+  my @parent_name_desc = reverse @parent_name_asc;
+
+  # name
+  $self->test_sort(
+    [{ property => 'name', }],
+    \@name_asc,
+    \%mailboxes_by_id,
+    "sort by name, implicit ascending order (default)",
+  );
+
+  $self->test_sort(
+    [{ property => 'name', isAscending => JSON::true, }],
+    \@name_asc,
+    \%mailboxes_by_id,
+    "sort by name, explicit ascending order",
+  );
+
+  $self->test_sort(
+    [{ property => 'name', isAscending => JSON::false, }],
+    \@name_desc,
+    \%mailboxes_by_id,
+    "sort by name, explicit descending order",
+  );
+
+  # sortOrder
+  $self->test_sort(
+    [{ property => 'sortOrder', }],
+    \@sort_order_asc,
+    \%mailboxes_by_id,
+    "sort by sortOrder, implict ascending order"
+  );
+
+  $self->test_sort(
+    [{ property => 'sortOrder', isAscending => JSON::true, }],
+    \@sort_order_asc,
+    \%mailboxes_by_id,
+    "sort by sortOrder, explicit ascending order"
+  );
+
+  $self->test_sort(
+    [{ property => 'sortOrder', isAscending => JSON::false, }],
+    \@sort_order_desc,
+    \%mailboxes_by_id,
+    "sort by sortOrder, explicit descending order"
+  );
+
+  # parent/name
+  $self->test_sort(
+    [{ property => 'parent/name', }],
+    \@parent_name_asc,
+    \%mailboxes_by_id,
+    "sort by parent/name, implict ascending order"
+  );
+
+  $self->test_sort(
+    [{ property => 'parent/name', isAscending => JSON::true, }],
+    \@parent_name_asc,
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order"
+  );
+
+  $self->test_sort(
+    [{ property => 'parent/name', isAscending => JSON::false, }],
+    \@parent_name_desc,
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit descending order"
+  );
+};
+
+sub test_sort {
+  my ($self, $sort, $expect, $mailboxes_by_id, $test) = @_;
+
+  my $tester = $self->tester;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  subtest "$test" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Mailbox/query" => {
+          filter => { hasRole => JSON::false },
+          sort => $sort,
+        },
+      ]],
+    });
+    ok($res->is_success, "Mailbox/query")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Mailbox/query")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        position  => jnum(0),
+        total     => jnum,
+        ids       => $expect,
+        canCalculateChanges => jbool(),
+      }),
+      "sorted as expected",
+    ) or $self->explain_sort_failure($res, $expect, $mailboxes_by_id);
+  };
+}
+
+sub explain_sort_failure {
+  my ($self, $res, $expect, $mailboxes_by_id) = @_;
+
+  my $got = $res->single_sentence("Mailbox/query")->arguments->{ids};
+
+  my @got_names = map {; $mailboxes_by_id->{$_}->name } @$got;
+  my @exp_names = map {; $mailboxes_by_id->{$_}->name } @$expect;
+
+  note("Got:    @got_names");
+  note("Wanted: @exp_names");
+}
 
 run_me;
 done_testing;
