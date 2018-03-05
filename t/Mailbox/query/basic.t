@@ -55,12 +55,9 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
   my $tester = $self->tester;
 
-  my $mailbox1 = $self->context->create_mailbox({
-    name => "A simple mailbox",
-  });
+  my $mailbox1 = $self->context->create_mailbox;
 
   my $mailbox2 = $self->context->create_mailbox({
-    name     => "A simple mailbox",
     parentId => $mailbox1->id,
   });
 

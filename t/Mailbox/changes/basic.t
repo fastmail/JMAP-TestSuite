@@ -18,9 +18,7 @@ test "Mailbox/changes with no changes" => sub {
 
   my $tester = $self->tester;
 
-  my $mailbox = $self->context->create_mailbox({
-    name => "A new mailbox",
-  });
+  my $mailbox = $self->context->create_mailbox;
 
   my $state = $self->context->get_state('mailbox');
 
@@ -63,9 +61,7 @@ test "Mailbox/changes with changes" => sub {
   subtest "created entities show up in changed" => sub {
     my $state = $self->context->get_state('mailbox');
 
-    my $mailbox = $self->context->create_mailbox({
-      name => "A new mailbox",
-    });
+    my $mailbox = $self->context->create_mailbox;
 
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],
@@ -91,9 +87,7 @@ test "Mailbox/changes with changes" => sub {
   };
 
   subtest "updated entities show up in changed" => sub {
-    my $mailbox = $self->context->create_mailbox({
-      name => "A new mailbox",
-    });
+    my $mailbox = $self->context->create_mailbox;
 
     my $state = $self->context->get_state('mailbox');
 
@@ -103,7 +97,7 @@ test "Mailbox/changes with changes" => sub {
         methodCalls => [[
           "Mailbox/set" => {
             update => {
-              $mailbox->id => { name => "An updated mailbox" },
+              $mailbox->id => { name => "An updated mailbox $^T:$$" },
             },
           },
         ]],
@@ -136,9 +130,7 @@ test "Mailbox/changes with changes" => sub {
   };
 
   subtest "destroyed entities show up in destroyed" => sub {
-    my $mailbox = $self->context->create_mailbox({
-      name => "A new mailbox",
-    });
+    my $mailbox = $self->context->create_mailbox;
 
     my $state = $self->context->get_state('mailbox');
 
@@ -193,13 +185,9 @@ test "maxChanges and hasMoreChanges" => sub {
 
   my $start_state = $self->context->get_state('mailbox');
 
-  my $mailbox1 = $self->context->create_mailbox({
-    name => "A new mailbox",
-  });
+  my $mailbox1 = $self->context->create_mailbox;
 
-  my $mailbox2 = $self->context->create_mailbox({
-    name => "A second new mailbox",
-  });
+  my $mailbox2 = $self->context->create_mailbox;
 
   my $end_state = $self->context->get_state('mailbox');
 
@@ -297,13 +285,9 @@ test "changedProperties" => sub {
   my $tester = $self->tester;
 
   subtest "Only counts changed, should get changedProperties" => sub {
-    my $mailbox = $self->context->create_mailbox({
-      name => "A new mailbox",
-    });
+    my $mailbox = $self->context->create_mailbox;
 
-    my $mailbox2 = $self->context->create_mailbox({
-      name => "Another new mailbox",
-    });
+    my $mailbox2 = $self->context->create_mailbox;
 
     my $state = $self->context->get_state('mailbox');
 
@@ -340,9 +324,7 @@ test "changedProperties" => sub {
   };
 
   subtest "Counts and other things changed, should not get" => sub {
-    my $mailbox = $self->context->create_mailbox({
-      name => "A new mailbox",
-    });
+    my $mailbox = $self->context->create_mailbox;
 
     my $state = $self->context->get_state('mailbox');
 
@@ -350,9 +332,7 @@ test "changedProperties" => sub {
     $self->context->add_message_to_mailboxes($mailbox->id);
 
     # Add a new mailbox
-    my $mailbox2 = $self->context->create_mailbox({
-      name => "Another new mailbox",
-    });
+    my $mailbox2 = $self->context->create_mailbox;
 
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],

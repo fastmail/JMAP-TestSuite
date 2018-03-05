@@ -76,6 +76,8 @@ package JMAP::TestSuite::AccountContext {
     *$method = $code;
   }
 
+  my $inc = 0;
+
   sub create_mailbox {
     # XXX - This should probably not use Test::* functions and
     #       instead hard fail if something goes wrong.
@@ -84,7 +86,8 @@ package JMAP::TestSuite::AccountContext {
     my ($self, $arg) = @_;
 
     $arg ||= {};
-    $arg->{name} ||= "Folder X at $^T.$$";
+    $arg->{name} ||= "Folder $inc at $^T.$$";
+    $inc++;
 
     my $batch = $self->create_batch(mailbox => {
       x => $arg,

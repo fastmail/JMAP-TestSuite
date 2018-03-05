@@ -49,13 +49,9 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
   my $tester = $self->tester;
 
-  my $mailbox1 = $self->context->create_mailbox({
-    name => "A new mailbox",
-  });
+  my $mailbox1 = $self->context->create_mailbox;
 
-  my $mailbox2 = $self->context->create_mailbox({
-    name => "Another mailbox",
-  });
+  my $mailbox2 = $self->context->create_mailbox;
 
   # Standard /get method. The ids argument may be null to fetch all at once.
 
@@ -95,7 +91,7 @@ pristine_test "Mailbox/get when some entities exist" => sub {
         $found[0],
         superhashof({
           id           => jstr($mailbox1->id),
-          name         => jstr("A new mailbox"),
+          name         => jstr($mailbox1->name),
           parentId     => undef, # XXX - May be decided by server?
           role         => undef,
           sortOrder    => jnum(),
@@ -152,7 +148,7 @@ pristine_test "Mailbox/get when some entities exist" => sub {
       $found[0],
       superhashof({
         id           => jstr($mailbox1->id),
-        name         => jstr("A new mailbox"),
+        name         => jstr($mailbox1->name),
         parentId     => undef, # XXX - May be decided by server?
         role         => undef,
         sortOrder    => jnum(),
@@ -208,9 +204,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
 
   my $tester = $self->tester;
 
-  my $mailbox1 = $self->context->create_mailbox({
-    name => "A new mailbox",
-  });
+  my $mailbox1 = $self->context->create_mailbox;
 
   subtest "properties => null gives us all properties" => sub {
     my $res = $tester->request({
@@ -243,7 +237,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
       $found[0],
       superhashof({
         id           => jstr($mailbox1->id),
-        name         => jstr("A new mailbox"),
+        name         => jstr($mailbox1->name),
         parentId     => undef, # XXX - May be decided by server?
         role         => undef,
         sortOrder    => jnum(),
@@ -302,7 +296,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
       $found[0],
       {
         id           => jstr($mailbox1->id),
-        name         => jstr("A new mailbox"),
+        name         => jstr($mailbox1->name),
         sortOrder    => jnum(),
       },
       "Our mailbox looks good"
