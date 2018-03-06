@@ -386,6 +386,52 @@ pristine_test "sorting and limiting" => sub {
         "got invalidArguments for negative limit",
       ) or diag explain $res->as_stripped_triples;
     };
+
+    $self->test_sort(
+      {
+        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
+        limit => @parent_name_asc + 5,
+      },
+      { ids => \@parent_name_asc, total => 0+@parent_name_asc, },
+      \%mailboxes_by_id,
+      "limit > total returns total"
+    );
+
+    $self->test_sort(
+      {
+        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
+        limit => 0 + @parent_name_asc,
+      },
+      { ids => \@parent_name_asc, total => 0+@parent_name_asc, },
+      \%mailboxes_by_id,
+      "limit == total returns total"
+    );
+
+    $self->test_sort(
+      {
+        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
+        limit => @parent_name_asc - 2,
+      },
+      {
+        ids => [ @parent_name_asc[0..($#parent_name_asc - 2)] ],
+        total => 0+@parent_name_asc,
+      },
+      \%mailboxes_by_id,
+      "limit < total returns limit"
+    );
+
+    $self->test_sort(
+      {
+        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
+        limit => 0,
+      },
+      {
+        ids => [ ],
+        total => 0+@parent_name_asc,
+      },
+      \%mailboxes_by_id,
+      "limit 0 returns none"
+    );
   };
 };
 
