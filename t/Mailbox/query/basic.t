@@ -342,6 +342,29 @@ pristine_test "sorting" => sub {
     \%mailboxes_by_id,
     "sort by parent/name, explicit ascending order, explicit position 3"
   );
+
+  # position > total = no results
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => $#parent_name_asc + 5,
+    },
+    { ids => [], position => $#parent_name_asc + 5, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position too high"
+  );
+
+  # negative position too low clamped to 0
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => $#parent_name_asc - ($#parent_name_asc + 10),
+    },
+    { ids => \@parent_name_asc, position => 0, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position too low"
+  );
+
 };
 
 sub test_sort {
