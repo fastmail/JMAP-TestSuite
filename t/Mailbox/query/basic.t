@@ -171,7 +171,7 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
   };
 };
 
-pristine_test "sorting" => sub {
+pristine_test "sorting and limiting" => sub {
   my ($self) = @_;
 
   my %mailboxes = (
@@ -365,6 +365,28 @@ pristine_test "sorting" => sub {
     "sort by parent/name, explicit ascending order, explicit position too low"
   );
 
+  subtest "limits" => sub {
+    subtest "Negative limit" => sub {
+      my $res = $self->tester->request({
+        using => [ "ietf:jmapmail" ],
+        methodCalls => [[
+          "Mailbox/query" => { limit => -5 },
+        ]],
+      });
+
+      ok($res->is_success, "Mailbox/query")
+        or diag explain $res->http_response->as_string;
+
+      jcmp_deeply(
+        $res->sentence(0)->arguments,
+        superhashof({
+          type => 'invalidArguments',
+          arguments => [ 'limit' ],
+        }),
+        "got invalidArguments for negative limit",
+      ) or diag explain $res->as_stripped_triples;
+    };
+  };
 };
 
 sub test_sort {
