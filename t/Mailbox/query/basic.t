@@ -227,21 +227,21 @@ pristine_test "sorting" => sub {
   # name
   $self->test_sort(
     { sort => [{ property => 'name', }], },
-    \@name_asc,
+    { ids => \@name_asc, },
     \%mailboxes_by_id,
     "sort by name, implicit ascending order (default)",
   );
 
   $self->test_sort(
-    {sort => [{ property => 'name', isAscending => JSON::true, }], },
-    \@name_asc,
+    { sort => [{ property => 'name', isAscending => JSON::true, }], },
+    { ids => \@name_asc, },
     \%mailboxes_by_id,
     "sort by name, explicit ascending order",
   );
 
   $self->test_sort(
     { sort => [{ property => 'name', isAscending => JSON::false, }], },
-    \@name_desc,
+    { ids => \@name_desc, },
     \%mailboxes_by_id,
     "sort by name, explicit descending order",
   );
@@ -249,21 +249,21 @@ pristine_test "sorting" => sub {
   # sortOrder
   $self->test_sort(
     { sort => [{ property => 'sortOrder', }], },
-    \@sort_order_asc,
+    { ids => \@sort_order_asc, },
     \%mailboxes_by_id,
     "sort by sortOrder, implict ascending order"
   );
 
   $self->test_sort(
     { sort => [{ property => 'sortOrder', isAscending => JSON::true, }], },
-    \@sort_order_asc,
+    { ids => \@sort_order_asc, },
     \%mailboxes_by_id,
     "sort by sortOrder, explicit ascending order"
   );
 
   $self->test_sort(
     { sort => [{ property => 'sortOrder', isAscending => JSON::false, }], },
-    \@sort_order_desc,
+    { ids => \@sort_order_desc, },
     \%mailboxes_by_id,
     "sort by sortOrder, explicit descending order"
   );
@@ -271,23 +271,76 @@ pristine_test "sorting" => sub {
   # parent/name
   $self->test_sort(
     { sort => [{ property => 'parent/name', }], },
-    \@parent_name_asc,
+    { ids => \@parent_name_asc, },
     \%mailboxes_by_id,
     "sort by parent/name, implict ascending order"
   );
 
   $self->test_sort(
     { sort => [{ property => 'parent/name', isAscending => JSON::true, }], },
-    \@parent_name_asc,
+    { ids => \@parent_name_asc, },
     \%mailboxes_by_id,
     "sort by parent/name, explicit ascending order"
   );
 
   $self->test_sort(
     { sort => [{ property => 'parent/name', isAscending => JSON::false, }], },
-    \@parent_name_desc,
+    { ids => \@parent_name_desc, },
     \%mailboxes_by_id,
     "sort by parent/name, explicit descending order"
+  );
+
+  # position 0, explicit
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => 0,
+    },
+    { ids => \@parent_name_asc, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position 0"
+  );
+
+  # negative positions start at end of list
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => -1,
+    },
+    { ids => [ $parent_name_asc[-1] ], position => $#parent_name_asc, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position -1"
+  );
+
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => -3,
+    },
+    { ids => [ @parent_name_asc[-3..-1] ], position => $#parent_name_asc - 2, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position -3"
+  );
+
+  # positive positions start at beginning
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => 1,
+    },
+    { ids => [ @parent_name_asc[1..$#parent_name_asc] ], position => 1, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position 1"
+  );
+
+  $self->test_sort(
+    {
+      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
+      position => 3,
+    },
+    { ids => [ @parent_name_asc[3..$#parent_name_asc] ], position => 3, },
+    \%mailboxes_by_id,
+    "sort by parent/name, explicit ascending order, explicit position 3"
   );
 };
 
@@ -315,13 +368,13 @@ sub test_sort {
       superhashof({
         accountId => jstr($self->context->accountId),
         state     => jstr(),
-        position  => jnum(0),
         total     => jnum,
-        ids       => $expect,
+        position  => jnum(0),
         canCalculateChanges => jbool(),
+        %$expect, # can override position
       }),
       "sorted as expected",
-    ) or $self->explain_sort_failure($res, $expect, $mailboxes_by_id);
+    ) or $self->explain_sort_failure($res, $expect->{ids}, $mailboxes_by_id);
   };
 }
 
