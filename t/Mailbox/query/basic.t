@@ -226,21 +226,21 @@ pristine_test "sorting" => sub {
 
   # name
   $self->test_sort(
-    [{ property => 'name', }],
+    { sort => [{ property => 'name', }], },
     \@name_asc,
     \%mailboxes_by_id,
     "sort by name, implicit ascending order (default)",
   );
 
   $self->test_sort(
-    [{ property => 'name', isAscending => JSON::true, }],
+    {sort => [{ property => 'name', isAscending => JSON::true, }], },
     \@name_asc,
     \%mailboxes_by_id,
     "sort by name, explicit ascending order",
   );
 
   $self->test_sort(
-    [{ property => 'name', isAscending => JSON::false, }],
+    { sort => [{ property => 'name', isAscending => JSON::false, }], },
     \@name_desc,
     \%mailboxes_by_id,
     "sort by name, explicit descending order",
@@ -248,21 +248,21 @@ pristine_test "sorting" => sub {
 
   # sortOrder
   $self->test_sort(
-    [{ property => 'sortOrder', }],
+    { sort => [{ property => 'sortOrder', }], },
     \@sort_order_asc,
     \%mailboxes_by_id,
     "sort by sortOrder, implict ascending order"
   );
 
   $self->test_sort(
-    [{ property => 'sortOrder', isAscending => JSON::true, }],
+    { sort => [{ property => 'sortOrder', isAscending => JSON::true, }], },
     \@sort_order_asc,
     \%mailboxes_by_id,
     "sort by sortOrder, explicit ascending order"
   );
 
   $self->test_sort(
-    [{ property => 'sortOrder', isAscending => JSON::false, }],
+    { sort => [{ property => 'sortOrder', isAscending => JSON::false, }], },
     \@sort_order_desc,
     \%mailboxes_by_id,
     "sort by sortOrder, explicit descending order"
@@ -270,21 +270,21 @@ pristine_test "sorting" => sub {
 
   # parent/name
   $self->test_sort(
-    [{ property => 'parent/name', }],
+    { sort => [{ property => 'parent/name', }], },
     \@parent_name_asc,
     \%mailboxes_by_id,
     "sort by parent/name, implict ascending order"
   );
 
   $self->test_sort(
-    [{ property => 'parent/name', isAscending => JSON::true, }],
+    { sort => [{ property => 'parent/name', isAscending => JSON::true, }], },
     \@parent_name_asc,
     \%mailboxes_by_id,
     "sort by parent/name, explicit ascending order"
   );
 
   $self->test_sort(
-    [{ property => 'parent/name', isAscending => JSON::false, }],
+    { sort => [{ property => 'parent/name', isAscending => JSON::false, }], },
     \@parent_name_desc,
     \%mailboxes_by_id,
     "sort by parent/name, explicit descending order"
@@ -292,20 +292,19 @@ pristine_test "sorting" => sub {
 };
 
 sub test_sort {
-  my ($self, $sort, $expect, $mailboxes_by_id, $test) = @_;
+  my ($self, $args, $expect, $mailboxes_by_id, $test) = @_;
 
   my $tester = $self->tester;
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
+  $args->{filter}{hasRole} = JSON::false;
+
   subtest "$test" => sub {
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],
       methodCalls => [[
-        "Mailbox/query" => {
-          filter => { hasRole => JSON::false },
-          sort => $sort,
-        },
+        "Mailbox/query" => $args,
       ]],
     });
     ok($res->is_success, "Mailbox/query")
