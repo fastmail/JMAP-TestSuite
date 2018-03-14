@@ -40,11 +40,11 @@ test "Mailbox/changes with no changes" => sub {
       oldState       => jstr($state),
       newState       => jstr($state),
       hasMoreChanges => jfalse,
-      changed        => undef,
-      destroyed      => undef,
+      changed        => [],
+      destroyed      => [],
     }),
     "Response looks good",
-  );
+  ) or diag explain $res->as_stripped_triples;
 
   ok(
        ! exists $changes->{changedProperties}
@@ -80,7 +80,7 @@ test "Mailbox/changes with changes" => sub {
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
         changed        => [ $mailbox->id ],
-        destroyed      => undef,
+        destroyed      => [],
       }),
       "Response looks good",
     );
@@ -123,7 +123,7 @@ test "Mailbox/changes with changes" => sub {
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
         changed        => [ $mailbox->id ],
-        destroyed      => undef,
+        destroyed      => [],
       }),
       "Response looks good",
     );
@@ -163,7 +163,7 @@ test "Mailbox/changes with changes" => sub {
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
-        changed        => undef,
+        changed        => [],
         destroyed      => [ $mailbox->id ],
       }),
       "Response looks good",
@@ -214,7 +214,7 @@ test "maxChanges and hasMoreChanges" => sub {
         newState       => all(jstr, none($start_state, $end_state)),
         hasMoreChanges => jtrue,
         changed        => [ $mailbox1->id ],
-        destroyed      => undef,
+        destroyed      => [],
       }),
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
@@ -245,7 +245,7 @@ test "maxChanges and hasMoreChanges" => sub {
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
         changed        => [ $mailbox2->id ],
-        destroyed      => undef,
+        destroyed      => [],
       }),
       "Response looks good",
     );
@@ -271,8 +271,8 @@ test "maxChanges and hasMoreChanges" => sub {
         oldState       => jstr($end_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
-        changed        => undef,
-        destroyed      => undef,
+        changed        => [],
+        destroyed      => [],
       }),
       "Response looks good",
     );
@@ -311,7 +311,7 @@ test "changedProperties" => sub {
         newState       => all(jstr, none($state)),
         hasMoreChanges => jfalse,
         changed        => [ $mailbox->id ],
-        destroyed      => undef,
+        destroyed      => [],
         changedProperties => set(qw(
           totalEmails
           unreadEmails
@@ -353,7 +353,7 @@ test "changedProperties" => sub {
         newState       => all(jstr, none($state)),
         hasMoreChanges => jfalse,
         changed        => [ $mailbox->id, $mailbox2->id ],
-        destroyed      => undef,
+        destroyed      => [],
       }),
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
