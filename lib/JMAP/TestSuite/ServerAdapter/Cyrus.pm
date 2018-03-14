@@ -19,9 +19,9 @@ has no_sasl => (
   is => 'ro',
 );
 
-has cyradm_path => (
+has cyrus_prefix => (
   is      => 'ro',
-  default => '/usr/cyrus/bin/cyradm',
+  default => '/usr/cyrus/',
 );
 
 has cyrus_host => (
@@ -93,7 +93,7 @@ sub pristine_account {
     }
   }
 
-  my $cyradm = $self->cyradm_path;
+  my $cyradm = $self->cyrus_prefix . "/bin/cyradm";
 
   my $host = $self->cyrus_host;
   my $port = $self->cyrus_port ? "--port " . $self->cyrus_port : "";
