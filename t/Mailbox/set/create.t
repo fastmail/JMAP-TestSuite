@@ -15,7 +15,7 @@ use JSON::Typist;
 use Data::GUID qw(guid_string);
 use Test::Abortable;
 
-test "Mailbox/set create with defaults omitted" => sub {
+pristine_test "Mailbox/set create with defaults omitted" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -112,7 +112,7 @@ test "Mailbox/set create with defaults omitted" => sub {
   };
 };
 
-test "Mailbox/set create with all settable fields provided" => sub {
+pristine_test "Mailbox/set create with all settable fields provided" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

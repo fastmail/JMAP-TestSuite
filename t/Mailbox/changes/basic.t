@@ -14,7 +14,7 @@ use JSON qw(decode_json);
 use JSON::Typist;
 use Test::Abortable;
 
-test "Mailbox/changes with no changes" => sub {
+pristine_test "Mailbox/changes with no changes" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -54,7 +54,7 @@ test "Mailbox/changes with no changes" => sub {
   );
 };
 
-test "Mailbox/changes with changes" => sub {
+pristine_test "Mailbox/changes with changes" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -98,7 +98,7 @@ test "Mailbox/changes with changes" => sub {
         methodCalls => [[
           "Mailbox/set" => {
             update => {
-              $mailbox->id => { name => "An updated mailbox $^T:$$" },
+              $mailbox->id => { name => "An updated mailbox $^T - $$" },
             },
           },
         ]],
@@ -172,7 +172,7 @@ test "Mailbox/changes with changes" => sub {
   };
 };
 
-test "maxChanges and hasMoreChanges" => sub {
+pristine_test "maxChanges and hasMoreChanges" => sub {
   my ($self) = @_;
 
   # XXX - Skip if the server under test doesn't support it
@@ -280,7 +280,7 @@ test "maxChanges and hasMoreChanges" => sub {
   };
 };
 
-test "changedProperties" => sub {
+pristine_test "changedProperties" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
