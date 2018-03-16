@@ -102,7 +102,7 @@ sub pristine_account {
   my $sep = $self->cyrus_hierarchy_separator;
 
   my $cmd = "echo 'createmailbox user$sep$user\@localhost' \\
-             | /usr/cyrus/bin/cyradm --notls -u $cyr_user -w $cyr_pass $host $port";
+             | $cyradm --notls -u $cyr_user -w $cyr_pass $host $port";
 
   my $res = `$cmd 2>&1`;
   unless ($res =~ /^\s*[^\s]+>\s*[^\s]+>\s*$/) {
