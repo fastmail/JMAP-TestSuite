@@ -12,6 +12,7 @@ use Test::Deep::JType;
 use Test::More;
 use JSON qw(decode_json);
 use JSON::Typist;
+use Test::Abortable;
 
 pristine_test "Mailbox/get with no existing entities" => sub {
   my ($self) = @_;

@@ -12,6 +12,7 @@ use Test::Deep::JType;
 use Test::More;
 use JSON qw(decode_json);
 use JSON::Typist;
+use Test::Abortable;
 
 pristine_test "Ensure pristine accounts are pristine" => sub {
   my ($self) = @_;

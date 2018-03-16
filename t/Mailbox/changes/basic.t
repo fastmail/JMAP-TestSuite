@@ -12,6 +12,7 @@ use Test::Deep::JType;
 use Test::More;
 use JSON qw(decode_json);
 use JSON::Typist;
+use Test::Abortable;
 
 test "Mailbox/changes with no changes" => sub {
   my ($self) = @_;

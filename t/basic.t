@@ -9,6 +9,7 @@ use JMAP::TestSuite::Util qw(batch_ok pristine_test);
 
 use Test::Deep::JType;
 use Test::More;
+use Test::Abortable;
 
 test "basic" => sub {
   my ($self) = @_;

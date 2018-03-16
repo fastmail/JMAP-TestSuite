@@ -13,6 +13,7 @@ use Test::More;
 use JSON qw(decode_json);
 use JSON::Typist;
 use Data::GUID qw(guid_string);
+use Test::Abortable;
 
 test "Mailbox/set create with defaults omitted" => sub {
   my ($self) = @_;
