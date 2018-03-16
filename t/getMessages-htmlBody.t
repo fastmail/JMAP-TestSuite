@@ -1,19 +1,23 @@
 use strict;
 use warnings;
+use Test::Routine;
+use Test::Routine::Util;
 
-use JMAP::TestSuite;
-use JMAP::TestSuite::Util qw(batch_ok);
+with 'JMAP::TestSuite::Tester';
+
+use JMAP::TestSuite::Util qw(batch_ok pristine_test);
 
 use Test::Deep::JType;
 use Test::More;
+use Test::Abortable;
 
 use DateTime;
 use Email::MessageID;
 
-my $server = JMAP::TestSuite->get_server;
+test "getMessages-htmlBody" => sub {
+  my ($self) = @_;
 
-$server->simple_test(sub {
-  my ($context) = @_;
+  my ($context) = $self->context;
 
   my $tester = $context->tester;
 
@@ -31,20 +35,24 @@ $server->simple_test(sub {
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
   $batch = $context->import_messages({
-    msg => { blobId => $blob, mailboxIds => [ $x->id ] },
+    msg => { blobId => $blob, mailboxIds => { $x->id => \1 }, },
   });
 
   batch_ok($batch);
 
   ok($batch->is_entirely_successful, "we uploaded and imported messages");
 
-  my $res = $tester->request([
-    [
-      getMessages => {
-        ids => [ $batch->result_for('msg')->id ],
-      }
+  my $res = $tester->request({
+    using => ["ietf:jmapmail"],
+
+    methodCalls => [
+      [
+        'Email/get' => {
+          ids => [ $batch->result_for('msg')->id ],
+        }
+      ],
     ],
-  ]);
+  });
 
   is(
     $res->single_sentence->arguments->{list}[0]{textBody},
@@ -57,6 +65,7 @@ $server->simple_test(sub {
     'This is a very simple message.',
     'htmlBody is correct'
   );
-});
+};
 
+run_me;
 done_testing;

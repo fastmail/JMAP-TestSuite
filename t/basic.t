@@ -1,21 +1,24 @@
 use strict;
 use warnings;
+use Test::Routine;
+use Test::Routine::Util;
 
-use JMAP::TestSuite;
-use JMAP::TestSuite::Util qw(batch_ok);
+with 'JMAP::TestSuite::Tester';
+
+use JMAP::TestSuite::Util qw(batch_ok pristine_test);
 
 use Test::Deep::JType;
 use Test::More;
+use Test::Abortable;
 
-my $server = JMAP::TestSuite->get_server;
+test "basic" => sub {
+  my ($self) = @_;
 
-$server->simple_test(sub {
-  my ($context) = @_;
+  my $context = $self->context;
 
   my $tester = $context->tester;
-  my $res = $tester->request([[ getMailboxes => {} ]]);
-
-  my $pairs = $res->as_pairs;
+  my $res = $tester->request({ using => ["ietf:jmapmail"], methodCalls => [[ "Mailbox/get" => {} ]]});
+  my $pairs = $res->as_triples;
 
   is(@$pairs, 1, "one sentence of response to getMailboxes");
 
@@ -61,13 +64,14 @@ $server->simple_test(sub {
     ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
     my $batch = $context->import_messages({
-      msg => { blobId => $blob, mailboxIds => [ $role{inbox}{id} ] },
+      msg => { blobId => $blob, mailboxIds => { $role{inbox}{id} => \1 }, },
     });
 
     batch_ok($batch);
 
     ok($batch->is_entirely_successful, "we uploaded");
   }
-});
+};
 
+run_me;
 done_testing;

@@ -16,6 +16,10 @@ package JMAP::TestSuite::Account {
 package JMAP::TestSuite::AccountContext {
   use Moose;
 
+  use JMAP::TestSuite::Util qw(batch_ok);
+  use Test::More;
+  use Email::MessageID;
+
   has account => (
     is => 'ro',
     handles  => [ qw(accountId) ],
@@ -40,7 +44,8 @@ package JMAP::TestSuite::AccountContext {
         From => 'example@example.com',
         To   => 'example@example.biz',
         Subject => 'This is a test',
-        'Message-Id' => $arg->{message_id} // "<default.$$.$^T\@$$.example.com>",
+        'Message-Id' =>    $arg->{message_id}
+                        // Email::MessageID->new->in_brackets,
       ],
       body => "This is a very simple message.",
     );
@@ -61,9 +66,49 @@ package JMAP::TestSuite::AccountContext {
     *$method = $code;
   }
 
+  for my $method (qw(get_state)) {
+    my $code = sub {
+      my ($self, $moniker) = @_;
+      my $class = "JMAP::TestSuite::Entity::\u$moniker";
+      $class->$method({ context => $self });
+    };
+    no strict 'refs';
+    *$method = $code;
+  }
+
+  my $inc = 0;
+
+  sub create_mailbox {
+    # XXX - This should probably not use Test::* functions and
+    #       instead hard fail if something goes wrong.
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+
+    $arg ||= {};
+    $arg->{name} ||= "Folder $inc at $^T.$$";
+    $inc++;
+
+    my $batch = $self->create_batch(mailbox => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created a mailbox");
+
+    my $x = $batch->result_for('x');
+
+    return $x;
+  }
+
+  sub add_message_to_mailboxes {
+    JMAP::TestSuite::Entity::Email->add_message_to_mailboxes(@_);
+  }
+
   sub import_messages {
     my ($self, $to_pass, $to_munge) = @_;
-    JMAP::TestSuite::Entity::Message->import_messages(
+    JMAP::TestSuite::Entity::Email->import_messages(
       $to_pass,
       { ($to_munge ? %$to_munge : ()), context => $self },
     );
