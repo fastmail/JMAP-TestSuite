@@ -19,6 +19,16 @@ has no_sasl => (
   is => 'ro',
 );
 
+has virtual_domain => (
+  is      => 'ro',
+  default => 'localhost',
+);
+
+has virtual_domain_enabled => (
+  is      => 'ro',
+  default => '0',
+);
+
 has cyrus_prefix => (
   is      => 'ro',
   default => '/usr/cyrus/',
@@ -66,7 +76,11 @@ sub any_account {
   # simplest thing I've thought of: this. -- rjbs, 2016-11-18
   # ^^ This comment stolen from the Simple account.
   my $account_id = $credentials->{username};
-  $account_id =~ s/@.*//;
+
+  if ($self->virtual_domain_enabled) {
+    my $virtual_domain = $self->virtual_domain;
+    $account_id =~ s/\@\Q$virtual_domain\E$//i;
+  }
 
   return JMAP::TestSuite::Account::Cyrus->new({
     server      => $self,
@@ -117,9 +131,16 @@ sub pristine_account {
 
   my $username = "$user\@localhost";
 
+  my $account_id = $username;
+
+  if ($self->virtual_domain_enabled) {
+    my $virtual_domain = $self->virtual_domain;
+    $account_id =~ s/\@\Q$virtual_domain\E$//i;
+  }
+
   return JMAP::TestSuite::Account::Cyrus->new({
     server      => $self,
-    accountId   => $user,
+    accountId   => $account_id,
     credentials => {
       username => $username,
       password => 'mypassword',
