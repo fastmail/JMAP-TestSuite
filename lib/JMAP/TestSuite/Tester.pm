@@ -1,11 +1,20 @@
 use strict;
 use warnings;
 package JMAP::TestSuite::Tester;
+
 use Test::Routine 0.025;
+use Test::More;
+
+if ($ENV{JMTS_TELEMETRY}) {
+  $ENV{JMAP_TESTER_LOGGER} = 'HTTP:-2'; # STDERR
+}
+
+if ($ENV{JMTS_TEST_OUTPUT_TO_STDERR}) {
+  Test::More->builder->output(*STDERR);
+}
 
 use JMAP::TestSuite;
 use JMAP::TestSuite::Util;
-use Test::More;
 use Test::Deep ':v1';
 use Test::Deep::JType;
 
