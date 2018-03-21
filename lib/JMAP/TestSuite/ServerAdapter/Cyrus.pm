@@ -119,7 +119,7 @@ sub pristine_account {
              | $cyradm --notls -u $cyr_user -w $cyr_pass $host $port";
 
   my $res = `$cmd 2>&1`;
-  unless ($res =~ /^\s*[^\s]+>\s*[^\s]+>\s*$/) {
+  unless ($res =~ /\s*[^\s]+>\s*[^\s]+>\s*$/) {
     die "Failed to run $cmd: $res\n";
   }
 
