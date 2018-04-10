@@ -13,6 +13,7 @@ use Test::Abortable;
 
 use DateTime;
 use Email::MessageID;
+use JSON;
 
 test "getMessages-htmlBody" => sub {
   my ($self) = @_;
@@ -49,22 +50,27 @@ test "getMessages-htmlBody" => sub {
       [
         'Email/get' => {
           ids => [ $batch->result_for('msg')->id ],
+          properties => [ qw(bodyValues htmlBody textBody) ],
+          fetchAllBodyValues => JSON::true,
         }
       ],
     ],
   });
 
-  is(
-    $res->single_sentence->arguments->{list}[0]{textBody},
-    'This is a very simple message.',
-    'textBody is correct'
-  );
+  my $email = $res->single_sentence->arguments->{list}[0];
 
-  isnt(
-    $res->single_sentence->arguments->{list}[0]{htmlBody},
+  my $html_id = $email->{htmlBody}[0]{partId};
+  my $text_id = $email->{textBody}[0]{partId};
+
+  is($html_id, $text_id, 'no html-specific body part');
+
+  is($email->{htmlBody}[0]{type}, 'text/plain', 'no html type!');
+
+  is(
+    $email->{bodyValues}{$text_id}{value},
     'This is a very simple message.',
-    'htmlBody is correct'
-  );
+    'text body is correct'
+  ) or diag explain $res->as_stripped_triples;
 };
 
 run_me;

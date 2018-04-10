@@ -13,6 +13,7 @@ use Test::Abortable;
 
 use DateTime;
 use Email::MessageID;
+use JSON;
 
 test "previews" => sub {
   my ($self) = @_;
@@ -50,21 +51,24 @@ test "previews" => sub {
         [
           'Email/get' => {
             ids => [ $batch->result_for('msg')->id ],
-            properties => [ qw(body preview) ],
-          }
+            properties => [ qw(preview bodyValues) ],
+            fetchTextBodyValues => JSON::true,
+          },
         ],
       ],
     });
 
     my $email = $res->single_sentence->arguments->{list}[0];
 
-    is(
-      $email->{textBody},
-      'This is a very simple message.',
-      'textBody is correct'
-    );
+    my $text_body = $email->{bodyValues}{1}{value};
 
-    my $preview = substr $email->{textBody}, 0, 5;
+    is(
+      $text_body,
+      'This is a very simple message.',
+      'text body is correct'
+    ) or diag explain $email;
+
+    my $preview = substr $text_body, 0, 5;
 
     like(
       $email->{preview},
@@ -90,7 +94,8 @@ test "previews" => sub {
               name     => 'Email/query',
               path     => '/ids',
             },
-            properties => [ qw(body preview) ],
+            properties => [ qw(preview bodyValues) ],
+            fetchTextBodyValues => JSON::true,
           },
         ],
       ],
@@ -98,13 +103,15 @@ test "previews" => sub {
 
     my $email = $res->sentence(1)->arguments->{list}[0];
 
+    my $text_body = $email->{bodyValues}{1}{value};
+
     is(
-      $email->{textBody},
+      $text_body,
       'This is a very simple message.',
-      'textBody is correct'
+      'text body is correct'
     );
 
-    my $preview = substr $email->{textBody}, 0, 5;
+    my $preview = substr $text_body, 0, 5;
 
     like(
       $email->{preview},
