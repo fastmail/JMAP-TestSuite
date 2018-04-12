@@ -268,6 +268,52 @@ test "Setting with immutable fields" => sub {
       "created our mailbox passing in immutable params!"
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "immutable properties with wrong values is not okay" => sub {
+    $mb->{name} .= " and another";
+    $mb->{id} = $mailbox1->id;
+
+    my %rights = map {;
+      $_ => $mailbox1->$_ ? JSON::false : JSON::true
+    } keys %{ $mailbox1->myRights };
+
+    $mb->{myRights} = \%rights;
+    $mb->{$_} = 52 for qw(
+      totalEmails
+      unrealEmails
+      totalThreads
+      unreadThreads
+    );
+
+    my $set_res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Mailbox/set" => {
+          create => {
+            new => $mb,
+          },
+        },
+      ]],
+    });
+
+    jcmp_deeply(
+      $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
+      {
+        type => 'invalidProperties',
+        properties => set(
+          qw(
+            id
+            totalEmails
+            unreadEmails
+            totalThreads
+            unreadThreads
+          ),
+          map {; "myRights/$_" } keys %rights,
+        ),
+      },
+      'got errors for immutable properties'
+    ) or diag explain $set_res->as_stripped_triples;
+  };
 };
 
 run_me;
