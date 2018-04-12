@@ -199,5 +199,76 @@ pristine_test "Mailbox/set create with all settable fields provided" => sub {
   };
 };
 
+test "Setting with immutable fields" => sub {
+  my ($self) = @_;
+
+  my $tester = $self->tester;
+
+  # First, figure out our defaults. See if they are consistent across
+  # at least two creates
+  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox2 = $self->context->create_mailbox;
+
+  my @immutable = qw(
+    totalEmails
+    unreadEmails
+    totalThreads
+    unreadThreads
+  );
+
+  my @immutable_rights = qw(
+    mayReadItems
+    mayAddItems
+    mayRemoveItems
+    maySetSeen
+    maySetKeywords
+    mayCreateChild
+    mayRename
+    mayDelete
+    maySubmit
+  );
+
+  for my $f (@immutable, @immutable_rights) {
+    unless ($mailbox1->$f eq $mailbox2->$f) {
+      plan skip_all => "$f differed with two fresh mailboxes. Cannot test without predictable values";
+    }
+  }
+
+  my $get_res = $tester->request({
+    using => [ "ietf:jmapmail" ],
+    methodCalls => [[
+      "Mailbox/get" => { ids => [ $mailbox1->id ] },
+    ]],
+  });
+
+  my $mb = $get_res->single_sentence('Mailbox/get')->arguments->{list}[0];
+  ok($mb, 'got a fresh mailbox');
+
+  delete($mb->{id});
+
+  subtest "immutable properties with correct values is okay" => sub {
+    $mb->{name} .= " a change";
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Mailbox/set" => {
+          create => {
+            new => $mb,
+          },
+        },
+      ]],
+    });
+
+    ok($res->is_success, "Mailbox/set create")
+      or diag explain $res->http_response->as_string;
+
+    ok(
+      $res->single_sentence("Mailbox/set")->arguments->{created}{new},
+      "created our mailbox passing in immutable params!"
+    ) or diag explain $res->as_stripped_triples;
+  };
+};
+
 run_me;
 done_testing;
