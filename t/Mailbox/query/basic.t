@@ -226,21 +226,21 @@ pristine_test "sorting and limiting" => sub {
   my @parent_name_desc = reverse @parent_name_asc;
 
   # name
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'name', }], },
     { ids => \@name_asc, },
     \%mailboxes_by_id,
     "sort by name, implicit ascending order (default)",
   );
 
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'name', isAscending => JSON::true, }], },
     { ids => \@name_asc, },
     \%mailboxes_by_id,
     "sort by name, explicit ascending order",
   );
 
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'name', isAscending => JSON::false, }], },
     { ids => \@name_desc, },
     \%mailboxes_by_id,
@@ -248,21 +248,21 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # sortOrder
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'sortOrder', }], },
     { ids => \@sort_order_asc, },
     \%mailboxes_by_id,
     "sort by sortOrder, implict ascending order"
   );
 
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'sortOrder', isAscending => JSON::true, }], },
     { ids => \@sort_order_asc, },
     \%mailboxes_by_id,
     "sort by sortOrder, explicit ascending order"
   );
 
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'sortOrder', isAscending => JSON::false, }], },
     { ids => \@sort_order_desc, },
     \%mailboxes_by_id,
@@ -270,21 +270,21 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # parent/name
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'parent/name', }], },
     { ids => \@parent_name_asc, },
     \%mailboxes_by_id,
     "sort by parent/name, implict ascending order"
   );
 
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'parent/name', isAscending => JSON::true, }], },
     { ids => \@parent_name_asc, },
     \%mailboxes_by_id,
     "sort by parent/name, explicit ascending order"
   );
 
-  $self->test_sort(
+  $self->test_query(
     { sort => [{ property => 'parent/name', isAscending => JSON::false, }], },
     { ids => \@parent_name_desc, },
     \%mailboxes_by_id,
@@ -292,7 +292,7 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # position 0, explicit
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => 0,
@@ -303,7 +303,7 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # negative positions start at end of list
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => -1,
@@ -313,7 +313,7 @@ pristine_test "sorting and limiting" => sub {
     "sort by parent/name, explicit ascending order, explicit position -1"
   );
 
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => -3,
@@ -324,7 +324,7 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # positive positions start at beginning
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => 1,
@@ -334,7 +334,7 @@ pristine_test "sorting and limiting" => sub {
     "sort by parent/name, explicit ascending order, explicit position 1"
   );
 
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => 3,
@@ -345,7 +345,7 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # position > total = no results
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => $#parent_name_asc + 5,
@@ -356,7 +356,7 @@ pristine_test "sorting and limiting" => sub {
   );
 
   # negative position too low clamped to 0
-  $self->test_sort(
+  $self->test_query(
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => $#parent_name_asc - ($#parent_name_asc + 10),
@@ -388,7 +388,7 @@ pristine_test "sorting and limiting" => sub {
       ) or diag explain $res->as_stripped_triples;
     };
 
-    $self->test_sort(
+    $self->test_query(
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => @parent_name_asc + 5,
@@ -398,7 +398,7 @@ pristine_test "sorting and limiting" => sub {
       "limit > total returns total"
     );
 
-    $self->test_sort(
+    $self->test_query(
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => 0 + @parent_name_asc,
@@ -408,7 +408,7 @@ pristine_test "sorting and limiting" => sub {
       "limit == total returns total"
     );
 
-    $self->test_sort(
+    $self->test_query(
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => @parent_name_asc - 2,
@@ -421,7 +421,7 @@ pristine_test "sorting and limiting" => sub {
       "limit < total returns limit"
     );
 
-    $self->test_sort(
+    $self->test_query(
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => 0,
@@ -436,14 +436,17 @@ pristine_test "sorting and limiting" => sub {
   };
 };
 
-sub test_sort {
+sub test_query {
   my ($self, $args, $expect, $mailboxes_by_id, $test) = @_;
 
   my $tester = $self->tester;
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  $args->{filter}{hasRole} = JSON::false;
+  # sort/limit tests don't want to know about server-provided folders
+  unless ($args->{filter}) {
+    $args->{filter}{hasRole} = JSON::false;
+  }
 
   subtest "$test" => sub {
     my $res = $tester->request({
@@ -475,8 +478,8 @@ sub explain_sort_failure {
 
   my $got = $res->single_sentence("Mailbox/query")->arguments->{ids};
 
-  my @got_names = map {; $mailboxes_by_id->{$_}->name } @$got;
-  my @exp_names = map {; $mailboxes_by_id->{$_}->name } @$expect;
+  my @got_names = map {; $mailboxes_by_id->{$_}->{name} } @$got;
+  my @exp_names = map {; $mailboxes_by_id->{$_}->{name} } @$expect;
 
   note("Got:    @got_names");
   note("Wanted: @exp_names");
