@@ -46,6 +46,11 @@ package JMAP::TestSuite::Account::JMAPProxy {
       api_uri     => $_[0]->api_uri,
       upload_uri  => $_[0]->upload_uri,
     });
+
+    $tester->ua->ssl_opts(verify_hostname => 0);
+    $tester->ua->ssl_opts(SSL_verify_mode => 0x00);
+
+    $tester;
   }
 
   no Moose;
