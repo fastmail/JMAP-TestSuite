@@ -238,8 +238,37 @@ package JMAP::TestSuite::EntityRole::Common {
 
     return $get_res_arg->{state};
   }
-}
 
+  sub destroy {
+    my ($self) = @_;
+
+    my $set_method = $self->set_method;
+    my $set_expect = $self->set_result;
+
+    my $set_res = $self->tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        $set_method => {
+          destroy => [ $self->id ],
+        },
+      ]],
+    });
+
+    my $set_res_arg = $set_res->single_sentence($set_expect)->arguments;
+    unless (
+         $set_res_arg->{destroyed}
+      && $set_res_arg->{destroyed}[0] eq $self->id
+    ) {
+      require Data::Dumper;
+      Carp::confess(
+          "failed to destroy test entity: "
+        . Data::Dumper::Dumper($set_res->as_stripped_triples)
+      );
+    }
+
+    return;
+  }
+}
 
 # retrieve
 # retrieve_batch
