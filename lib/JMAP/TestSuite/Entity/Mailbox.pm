@@ -37,5 +37,11 @@ for my $f (qw(
   };
 }
 
+sub add_message {
+  my ($self) = @_;
+
+  $self->context->add_message_to_mailboxes($self->id);
+}
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
