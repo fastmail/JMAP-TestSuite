@@ -8,6 +8,7 @@ with 'JMAP::TestSuite::Entity' => {
     blobId
     threadId
     mailboxIds
+    messageId
     keywords
     hasAttachment
     headers
@@ -38,17 +39,62 @@ with 'JMAP::TestSuite::Entity' => {
 
 use Safe::Isa;
 use Data::Dumper;
+use feature qw(state);
+use DateTime;
+
+sub next_time {
+  state $start = DateTime->now(time_zone => 'UTC');
+
+  # Move the clock forward a few seconds so our replies are sorted in
+  # the expected order
+  $start = $start->add(seconds => 2);
+
+  return "${start}Z"; # Cheating
+}
+
+sub reply {
+  my ($self, $arg) = @_;
+
+  $arg ||= {};
+
+  $arg->{receivedAt} //= next_time();
+
+  $arg->{headers} ||= [];
+
+  push @{ $arg->{headers} }, (
+    'In-Reply-To' => '<' . $self->messageId->[0] . '>',
+    'References'  => '<' . $self->messageId->[0] . '>',
+  );
+
+  my @mailbox_ids = keys %{ $self->mailboxIds };
+
+  $self->add_message_to_mailboxes($self->context, $arg, @mailbox_ids);
+}
 
 sub add_message_to_mailboxes {
-  my ($self, $context, @mailboxes) = @_;
+  my ($pkg, $context, @mailboxes) = @_;
 
-  my $email = $context->email_blob(generic => {});
+  my $arg = {};
 
-  my $batch = $self->import_messages(
+  if (
+       $mailboxes[0]
+    && ref($mailboxes[0])
+    && ref($mailboxes[0]) eq 'HASH')
+  {
+    $arg = shift @mailboxes;
+  }
+
+  my $email = $context->email_blob(generic => $arg);
+
+  my $batch = $pkg->import_messages(
     {
       msg => {
         blobId => $email,
         mailboxIds => { map { $_ => \1 } @mailboxes },
+        ( $arg->{receivedAt}
+            ? ( receivedAt => $arg->{receivedAt} )
+            : ( )
+        ),
       },
     },
     {
@@ -124,6 +170,12 @@ sub _import_batch {
       [ "Email/import" => { emails => $to_create }, ],
     ],
   });
+
+  unless ($set_res->sentence(0)->name eq 'Email/import') {
+    die(
+      "Failed to import a message: " . Dumper($set_res->as_stripped_triples)
+    );
+  }
 
   # this isn't quite a "set" sentence, but this will work anyway for created
   # and notCreated -- rjbs, 2016-11-16

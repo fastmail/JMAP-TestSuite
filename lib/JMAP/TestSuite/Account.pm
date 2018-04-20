@@ -46,6 +46,7 @@ package JMAP::TestSuite::AccountContext {
         Subject => 'This is a test',
         'Message-Id' =>    $arg->{message_id}
                         // Email::MessageID->new->in_brackets,
+        ( $arg->{headers} ? @{ $arg->{headers} } : () ),
       ],
       body => "This is a very simple message.",
     );
