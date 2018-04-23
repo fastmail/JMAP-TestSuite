@@ -268,6 +268,38 @@ package JMAP::TestSuite::EntityRole::Common {
 
     return;
   }
+
+  sub update {
+    my ($self, $updates) = @_;
+
+    my $set_method = $self->set_method;
+    my $set_expect = $self->set_result;
+
+    my $set_res = $self->tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        $set_method => {
+          update => {
+            $self->id => $updates,
+          },
+        },
+      ]],
+    });
+
+    my $set_res_arg = $set_res->single_sentence($set_expect)->arguments;
+    unless (
+         $set_res_arg->{updated}
+      && exists $set_res_arg->{updated}{$self->id}
+    ) {
+      require Data::Dumper;
+      Carp::confess(
+          "failed to update test entity: "
+        . Data::Dumper::Dumper($set_res->as_stripped_triples)
+      );
+    }
+
+    return;
+  }
 }
 
 # retrieve
