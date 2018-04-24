@@ -38,7 +38,7 @@ pristine_test "Mailbox/get with no existing entities" => sub {
         accountId => jstr($self->context->accountId),
         state     => jstr(),
         list      => [],
-        notFound  => undef,
+        notFound  => [],
       }),
       "No mailboxes looks good",
     );
@@ -77,7 +77,7 @@ pristine_test "Mailbox/get when some entities exist" => sub {
         superhashof({
           accountId => jstr($self->context->accountId),
           state     => jstr(),
-          notFound  => undef,
+          notFound  => [],
         }),
         "Base response looks good",
       );
@@ -136,7 +136,7 @@ pristine_test "Mailbox/get when some entities exist" => sub {
       superhashof({
         accountId => jstr($self->context->accountId),
         state     => jstr(),
-        notFound  => undef,
+        notFound  => [],
       }),
       "Base response looks good",
     ) or diag explain $res->as_stripped_triples;
@@ -193,7 +193,7 @@ pristine_test "Mailbox/get when some entities exist" => sub {
         accountId => jstr($self->context->accountId),
         state     => jstr(),
         list      => [],
-        notFound  => undef,
+        notFound  => [],
       }),
       "Base response looks good, has no mailboxes",
     ) or diag explain $res->as_stripped_triples;
@@ -225,7 +225,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
       superhashof({
         accountId => jstr($self->context->accountId),
         state     => jstr(),
-        notFound  => undef,
+        notFound  => [],
       }),
       "Base response looks good",
     ) or diag explain $res->as_stripped_triples;
@@ -284,7 +284,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
       superhashof({
         accountId => jstr($self->context->accountId),
         state     => jstr(),
-        notFound  => undef,
+        notFound  => [],
       }),
       "Base response looks good",
     ) or diag explain $res->as_stripped_triples;
