@@ -36,7 +36,7 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
-          hasDataFor => [jstr], # XXX - Spec updates might change
+          hasDataFor => [jstr, jstr, jstr], # XXX - Spec updates might change
         },
       },
       capabilities => superhashof({
