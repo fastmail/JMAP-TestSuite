@@ -322,11 +322,12 @@ test "good imports" => sub {
   my $tester = $self->tester;
   my $context = $self->context;
 
-  my $mailbox = $context->create_mailbox;
-  my $mailbox2 = $context->create_mailbox;
-
   subtest "single mailbox import, all values" => sub {
-    my $blob = $context->email_blob(generic => {});
+    my $blob = $context->email_blob(generic => {
+      body => "My pid is $$",
+    });
+
+    my $mailbox = $context->create_mailbox;
 
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],
@@ -360,12 +361,65 @@ test "good imports" => sub {
       },
     ) or diag explain $res->as_stripped_triples;
 
-    # XXX - Verify it made it to the mailbox?    
-    # XXX - Verify keywords/utcdate
+    ok(
+      my $id = $res->sentence(0)->arguments->{created}{new}{id},
+      'got our email id'
+    );
+
+    # Verify mailbox, and message data
+    my $verify_res = $tester->request({
+      using => ["ietf:jmapmail"],
+
+      methodCalls => [
+        [
+          'Email/query' => {
+            filter => { inMailbox => $mailbox->id },
+          }, 'query',
+        ],
+        [
+          'Email/get' => {
+            '#ids' => {
+              resultOf => 'query',
+              name     => 'Email/query',
+              path     => '/ids',
+            },
+            properties => [ qw(textBody keywords bodyValues receivedAt) ],
+            fetchTextBodyValues => JSON::true,
+          },
+        ],
+      ],
+    });
+
+    jcmp_deeply(
+      $verify_res->sentence(0)->arguments->{ids},
+      [ $id ],
+      'Our message was imported to the correct mailbox'
+    );
+
+    my $email = $verify_res->sentence_named('Email/get')->arguments->{list}[0];
+    my $text_id = $email->{textBody}[0]{partId};
+
+    jcmp_deeply(
+      $email,
+      superhashof({
+        bodyValues => superhashof({
+          $text_id => superhashof({
+            value => "My pid is $$",
+          }),
+        }),
+        receivedAt => jstr('2017-08-08T05:04:03Z'),
+        keywords   => superhashof({ 'foo' => JSON::true }),
+      }),
+      'email looks good',
+    );
   };
 
   subtest "single mailbox import, default values" => sub {
-    my $blob = $context->email_blob(generic => {});
+    my $blob = $context->email_blob(generic => {
+      body => "My pid is still $$",
+    });
+
+    my $mailbox = $context->create_mailbox;
 
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],
@@ -397,13 +451,65 @@ test "good imports" => sub {
       },
     ) or diag explain $res->as_stripped_triples;
 
-    # XXX - Verify it made it to the mailbox?    
-    # XXX - Verify keywords/utcdate
+    ok(
+      my $id = $res->sentence(0)->arguments->{created}{new}{id},
+      'got our email id'
+    );
 
+    # Verify mailbox, and message data
+    my $verify_res = $tester->request({
+      using => ["ietf:jmapmail"],
+
+      methodCalls => [
+        [
+          'Email/query' => {
+            filter => { inMailbox => $mailbox->id },
+          }, 'query',
+        ],
+        [
+          'Email/get' => {
+            '#ids' => {
+              resultOf => 'query',
+              name     => 'Email/query',
+              path     => '/ids',
+            },
+            properties => [ qw(textBody keywords bodyValues receivedAt) ],
+            fetchTextBodyValues => JSON::true,
+          },
+        ],
+      ],
+    });
+
+    jcmp_deeply(
+      $verify_res->sentence(0)->arguments->{ids},
+      [ $id ],
+      'Our message was imported to the correct mailbox'
+    );
+
+    my $email = $verify_res->sentence_named('Email/get')->arguments->{list}[0];
+    my $text_id = $email->{textBody}[0]{partId};
+
+    jcmp_deeply(
+      $email,
+      superhashof({
+        bodyValues => superhashof({
+          $text_id => superhashof({
+            value => "My pid is still $$",
+          }),
+        }),
+        receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+      }),
+      'email looks good',
+    );
   };
 
   subtest "multiple mailboxes" => sub {
-    my $blob = $context->email_blob(generic => {});
+    my $blob = $context->email_blob(generic => {
+      body => "Still $$ for my pid",
+    });
+
+    my $mailbox = $context->create_mailbox;
+    my $mailbox2 = $context->create_mailbox;
 
     my $res = $tester->request({
       using => [ "ietf:jmapmail" ],
@@ -438,7 +544,58 @@ test "good imports" => sub {
       },
     ) or diag explain $res->as_stripped_triples;
 
-    # XXX - Confirm
+    ok(
+      my $id = $res->sentence(0)->arguments->{created}{new}{id},
+      'got our email id'
+    );
+
+    for my $mailbox_id ($mailbox->id, $mailbox2->id) {
+      # Verify mailbox, and message data
+      my $verify_res = $tester->request({
+        using => ["ietf:jmapmail"],
+
+        methodCalls => [
+          [
+            'Email/query' => {
+              filter => { inMailbox => $mailbox_id },
+            }, 'query',
+          ],
+          [
+            'Email/get' => {
+              '#ids' => {
+                resultOf => 'query',
+                name     => 'Email/query',
+                path     => '/ids',
+              },
+              properties => [ qw(textBody keywords bodyValues receivedAt) ],
+              fetchTextBodyValues => JSON::true,
+            },
+          ],
+        ],
+      });
+
+      jcmp_deeply(
+        $verify_res->sentence(0)->arguments->{ids},
+        [ $id ],
+        'Our message was imported to the correct mailbox'
+     );
+
+      my $email = $verify_res->sentence_named('Email/get')->arguments->{list}[0];
+      my $text_id = $email->{textBody}[0]{partId};
+
+      jcmp_deeply(
+        $email,
+        superhashof({
+          bodyValues => superhashof({
+            $text_id => superhashof({
+              value => "Still $$ for my pid",
+            }),
+          }),
+          receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+        }),
+        'email looks good',
+      );
+    }
   };
 };
 
@@ -450,8 +607,12 @@ test "one import fails, another succeeds" => sub {
 
   my $mailbox = $context->create_mailbox;
 
-  my $blob = $context->email_blob(generic => {});
-  my $blob2 = $context->email_blob(generic => {});
+  my $blob = $context->email_blob(generic => {
+    body => "This one worked ($$)",
+  });
+  my $blob2 = $context->email_blob(generic => {
+    body => "This one didn't work ($$)",
+  });
 
   my $res = $tester->request({
     using => [ "ietf:jmapmail" ],
@@ -492,8 +653,56 @@ test "one import fails, another succeeds" => sub {
     },
   ) or diag explain $res->as_stripped_triples;
 
-  # XXX - Verify it made it to the mailbox?    
-  # XXX - Verify keywords/utcdate
+  ok(
+    my $id = $res->sentence(0)->arguments->{created}{new}{id},
+    'got our email id'
+  );
+
+  # Verify mailbox, and message data
+  my $verify_res = $tester->request({
+    using => ["ietf:jmapmail"],
+
+    methodCalls => [
+      [
+        'Email/query' => {
+          filter => { inMailbox => $mailbox->id },
+        }, 'query',
+      ],
+      [
+        'Email/get' => {
+          '#ids' => {
+            resultOf => 'query',
+            name     => 'Email/query',
+            path     => '/ids',
+          },
+          properties => [ qw(textBody keywords bodyValues receivedAt) ],
+          fetchTextBodyValues => JSON::true,
+        },
+      ],
+    ],
+  });
+
+  jcmp_deeply(
+    $verify_res->sentence(0)->arguments->{ids},
+    [ $id ],
+    'Our message was imported to the correct mailbox'
+  );
+
+  my $email = $verify_res->sentence_named('Email/get')->arguments->{list}[0];
+  my $text_id = $email->{textBody}[0]{partId};
+
+  jcmp_deeply(
+    $email,
+    superhashof({
+      bodyValues => superhashof({
+        $text_id => superhashof({
+          value => "This one worked ($$)",
+        }),
+      }),
+      receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+    }),
+    'email looks good',
+  );
 };
 
 test "invalidEmail" => sub {

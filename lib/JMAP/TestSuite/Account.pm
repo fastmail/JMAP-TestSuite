@@ -48,7 +48,7 @@ package JMAP::TestSuite::AccountContext {
                         // Email::MessageID->new->in_brackets,
         ( $arg->{headers} ? @{ $arg->{headers} } : () ),
       ],
-      body => "This is a very simple message.",
+      body => $arg->{body} // "This is a very simple message.",
     );
 
     return $self->tester->upload('message/rfc822', \$email->as_string);
