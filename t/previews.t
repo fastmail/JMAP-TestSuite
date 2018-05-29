@@ -51,7 +51,7 @@ test "previews" => sub {
         [
           'Email/get' => {
             ids => [ $batch->result_for('msg')->id ],
-            properties => [ qw(preview bodyValues) ],
+            properties => [ qw(preview bodyValues textBody) ],
             fetchTextBodyValues => JSON::true,
           },
         ],
@@ -60,7 +60,8 @@ test "previews" => sub {
 
     my $email = $res->single_sentence->arguments->{list}[0];
 
-    my $text_body = $email->{bodyValues}{1}{value};
+    my $text_id = $email->{textBody}[0]{partId};
+    my $text_body = $email->{bodyValues}{$text_id}{value};
 
     is(
       $text_body,
@@ -94,7 +95,7 @@ test "previews" => sub {
               name     => 'Email/query',
               path     => '/ids',
             },
-            properties => [ qw(preview bodyValues) ],
+            properties => [ qw(preview bodyValues textBody) ],
             fetchTextBodyValues => JSON::true,
           },
         ],
@@ -103,7 +104,8 @@ test "previews" => sub {
 
     my $email = $res->sentence(1)->arguments->{list}[0];
 
-    my $text_body = $email->{bodyValues}{1}{value};
+    my $text_id = $email->{textBody}[0]{partId};
+    my $text_body = $email->{bodyValues}{$text_id}{value};
 
     is(
       $text_body,
