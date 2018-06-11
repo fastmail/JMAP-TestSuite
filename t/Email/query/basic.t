@@ -50,7 +50,9 @@ sub ids_for {
   my %hash = @_;
 
   return [
-    map {; $_->id, } values %hash
+    map  {; $_->id }
+    sort { $a->subject cmp $b->subject }
+    values %hash,
   ];
 }
 
@@ -73,7 +75,15 @@ pristine_test "filtering" => sub {
   );
 
   my %in_aaa = (
-    aaa_1 => $mailboxes{aaa}->add_message({ subject => 'aaa_1', }),
+    aaa_1      => $mailboxes{aaa}->add_message({ subject => 'aaa_1', }),
+    aaa_old    => $mailboxes{aaa}->add_message({
+      subject    => 'aaa_old',
+      receivedAt => '2017-08-08T05:04:03Z',
+    }),
+    aaa_future => $mailboxes{aaa}->add_message({
+      subject    => 'aaa_future',
+      receivedAt => '2040-08-08T05:04:03Z',
+    }),
   );
 
   my %in_bbb = (
@@ -96,10 +106,62 @@ pristine_test "filtering" => sub {
 
   # inMailbox
   $self->test_query("Email/query",
-    { filter => { inMailbox => $mailboxes{aaa}->id }, },
+    {
+      filter => { inMailbox => $mailboxes{aaa}->id },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
     { ids => ids_for(%in_aaa), },
     $describer_sub,
     "inMailbox filter",
+  );
+
+  # inMailboxOtherThan
+  $self->test_query("Email/query",
+    {
+      filter => { inMailboxOtherThan => [ $mailboxes{aaa}->id ] },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    { ids => ids_for(%in_bbb, %in_ccc, %in_ddd), },
+    $describer_sub,
+    "inMailboxOtherThan filter excluded in_aaa",
+  );
+
+  $self->test_query("Email/query",
+    {
+      filter => {
+        inMailboxOtherThan => [ $mailboxes{aaa}->id, $mailboxes{bbb}->id ]
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    { ids => ids_for(%in_ccc, %in_ddd), },
+    $describer_sub,
+    "inMailboxOtherThan filter excluded in_aaa and in_bbb",
+  );
+
+  # before
+  $self->test_query("Email/query",
+    {
+      filter => {
+        before => '2017-10-10T05:05:05Z',
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    { ids => [ $emails{aaa_old}->id, ], },
+    $describer_sub,
+    "before filter",
+  );
+
+  # after
+  $self->test_query("Email/query",
+    {
+      filter => {
+        after => '2040-02-02T05:04:03Z',
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    { ids => [ $emails{aaa_future}->id, ], },
+    $describer_sub,
+    "after filter",
   );
 };
 
@@ -113,7 +175,6 @@ sub make_describer_sub {
            || $emails_by_id->{$id}->subject;
   }
 }
-
 
 run_me;
 done_testing;

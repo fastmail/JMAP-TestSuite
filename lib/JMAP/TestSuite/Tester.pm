@@ -99,6 +99,9 @@ sub test_query {
     ok($res->is_success, "$call")
       or diag explain $res->http_response->as_string;
 
+    is($res->sentence(0)->name, $call, "Got $call response")
+      or diag explain $res->as_stripped_triples;
+
     jcmp_deeply(
       $res->single_sentence("$call")->arguments,
       superhashof({
