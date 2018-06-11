@@ -51,10 +51,10 @@ test "Thread/get with a few messages" => sub {
           emailIds => [ jstr($message1->id), jstr($message2->id) ],
         },
       ],
-      notFound => undef,
+      notFound => [],
     },
     "Thread/get only returns messages in that thread, sorted properly",
-  );
+  ) or diag explain $get_res->as_stripped_triples;
 };
 
 pristine_test "Unknown ids gives fills in notFound" => sub {
@@ -106,7 +106,7 @@ test "empty list" => sub {
       accountId => jstr($self->context->accountId),
       state => jstr(),
       list => [],
-      notFound => undef,
+      notFound => [],
     },
     "Thread/get with empty ids list returns good response",
   );
