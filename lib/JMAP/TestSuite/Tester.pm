@@ -6,6 +6,8 @@ use Test::Routine 0.025;
 use JMAP::TestSuite;
 use JMAP::TestSuite::Util;
 use Test::More;
+use Test::Deep ':v1';
+use Test::Deep::JType;
 
 has server => (
   is      => 'ro',
@@ -74,5 +76,59 @@ around run_test => sub {
 
   $self->$orig($test, @rest);
 };
+
+sub test_query {
+  my ($self, $call, $args, $expect, $describer_sub, $test) = @_;
+
+  my $tester = $self->tester;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  # sort/limit tests don't want to know about server-provided folders
+  unless ($args->{filter}) {
+    $args->{filter}{hasRole} = JSON::false;
+  }
+
+  subtest "$test" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "$call" => $args,
+      ]],
+    });
+    ok($res->is_success, "$call")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("$call")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        total     => jnum,
+        position  => jnum(0),
+        canCalculateChanges => jbool(),
+        %$expect, # can override position
+      }),
+      "sorted as expected",
+    ) or $self->explain_test_query_failure(
+      $res,
+      $call,
+      $expect->{ids},
+      $describer_sub,
+    );
+  };
+}
+
+sub explain_test_query_failure {
+  my ($self, $res, $call, $expect, $describer_sub) = @_;
+
+  my $got = $res->single_sentence("$call")->arguments->{ids};
+
+  my @got_names = map {; $describer_sub->($self, $_) } @$got;
+  my @exp_names = map {; $describer_sub->($self, $_) } @$expect;
+
+  note("Got:    @got_names");
+  note("Wanted: @exp_names");
+}
 
 1;
