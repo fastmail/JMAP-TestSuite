@@ -38,9 +38,11 @@ for my $f (qw(
 }
 
 sub add_message {
-  my ($self) = @_;
+  my ($self, $arg) = @_;
 
-  $self->context->add_message_to_mailboxes($self->id);
+  $arg ||= {};
+
+  $self->context->add_message_to_mailboxes($arg, $self->id);
 }
 
 no Moose;

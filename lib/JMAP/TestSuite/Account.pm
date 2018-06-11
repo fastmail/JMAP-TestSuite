@@ -43,7 +43,7 @@ package JMAP::TestSuite::AccountContext {
       header_str => [
         From => 'example@example.com',
         To   => 'example@example.biz',
-        Subject => 'This is a test',
+        Subject => $arg->{subject} || 'This is a test',
         'Message-Id' =>    $arg->{message_id}
                         // Email::MessageID->new->in_brackets,
         ( $arg->{headers} ? @{ $arg->{headers} } : () ),
