@@ -46,13 +46,15 @@ pristine_test "Email/query with no existing entities" => sub {
   };
 };
 
+# Allows ids_for(%hash) and ids_for(@list)
 sub ids_for {
-  my %hash = @_;
+  my @list = @_;
 
   return [
     map  {; $_->id }
     sort { $a->subject cmp $b->subject }
-    values %hash,
+    grep {; ref($_) }
+    values @list,
   ];
 }
 
@@ -84,7 +86,42 @@ pristine_test "filtering" => sub {
       subject    => 'aaa_future',
       receivedAt => '2040-08-08T05:04:03Z',
     }),
+    aaa_large  => $mailboxes{aaa}->add_message({
+      subject    => 'aaa_large',
+      body       => 'x' x (1000 * 500), # .5mb, roughly
+    }),
+    aaa_keyword_some => $mailboxes{aaa}->add_message({
+      subject  => 'aaa_keyword_some',
+      keywords => { some => jtrue() },
+    }),
+    aaa_keyword_all => $mailboxes{aaa}->add_message({
+      subject  => 'aaa_keyword_all',
+      keywords => { all => jtrue() },
+    }),
+    aaa_with_attachment => $mailboxes{aaa}->add_message({
+      subject    => 'aaa_with_attachment',
+      email_type => 'with_attachment',
+    }),
   );
+
+  $in_aaa{aaa_keyword_some_reply_1} = $in_aaa{aaa_keyword_some}->reply({
+    subject => 'aaa_keyword_some_reply_1',
+  });
+
+  $in_aaa{aaa_keyword_some_reply_2} = $in_aaa{aaa_keyword_some_reply_1}->reply({
+    subject => 'aaa_keyword_some_reply_2',
+    keywords => { some => jtrue() },
+  });
+
+  $in_aaa{aaa_keyword_all_reply_1} = $in_aaa{aaa_keyword_all}->reply({
+    subject => 'aaa_keyword_all_reply_1',
+    keywords => { all => jtrue() },
+  });
+
+  $in_aaa{aaa_keyword_all_reply_2} = $in_aaa{aaa_keyword_all_reply_1}->reply({
+    subject => 'aaa_keyword_all_reply_2',
+    keywords => { all => jtrue() },
+  });
 
   my %in_bbb = (
     bbb_1 => $mailboxes{bbb}->add_message({ subject => 'bbb_1', }),
@@ -163,6 +200,225 @@ pristine_test "filtering" => sub {
     $describer_sub,
     "after filter",
   );
+
+  # minSize
+  $self->test_query("Email/query",
+    {
+      filter => {
+        minSize => 1000 * 450, # < .5mb
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    { ids => [ $emails{aaa_large}->id, ], },
+    $describer_sub,
+    "minSize filter",
+  );
+
+  # maxSize
+  $self->test_query("Email/query",
+    {
+      filter => {
+        maxSize => 1000 * 450, # < .5mb
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [
+        grep {; $_ ne $emails{aaa_large}->id } @{ ids_for(%emails) },
+      ],
+    },
+    $describer_sub,
+    "maxSize filter",
+  );
+
+  # allInThreadHaveKeyword
+  SKIP: {
+    skip "No support for allInThreadHaveKeyword", 2
+      if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+    $self->test_query("Email/query",
+      {
+        filter => {
+          allInThreadHaveKeyword => 'some',
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => [], # Only some have this keyword
+      },
+      $describer_sub,
+      "allInThreadHaveKeyword filter, none match that all have",
+    );
+
+    $self->test_query("Email/query",
+      {
+        filter => {
+          allInThreadHaveKeyword => 'all',
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => ids_for(
+          grep {; $_->subject =~ /^aaa_keyword_all/ } values %emails,
+        ),
+      },
+      $describer_sub,
+      "allInThreadHaveKeyword filter, one matches that all have",
+    );
+  }
+
+  # someInThreadHaveKeyword
+  SKIP: {
+    skip "No support for someInThreadHaveKeyword", 2
+      if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+    $self->test_query("Email/query",
+      {
+        filter => {
+          someInThreadHaveKeyword => 'nope',
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => [],
+      },
+      $describer_sub,
+      "someInThreadHaveKeyword filter, no match",
+    );
+
+    $self->test_query("Email/query",
+      {
+        filter => {
+          someInThreadHaveKeyword => 'some',
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => ids_for(
+          grep {; $_->subject =~ /^aaa_keyword_some/ } values %emails,
+        ),
+      },
+      $describer_sub,
+      "someInThreadHaveKeyword filter, match",
+    );
+  }
+
+  # noneInThreadHaveKeyword
+  SKIP: {
+    skip "No support for noneInThreadHaveKeyword", 2
+      if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+    $self->test_query("Email/query",
+      {
+        filter => {
+          noneInThreadHaveKeyword => 'nope',
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => ids_for(%emails),
+      },
+      $describer_sub,
+      "noneInThreadHaveKeyword filter, no match, get all back",
+    );
+
+    $self->test_query("Email/query",
+      {
+        filter => {
+          noneInThreadHaveKeyword => 'some',
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => ids_for(
+          grep {; $_->subject !~ /^aaa_keyword_some/ } values %emails,
+        )
+      },
+      $describer_sub,
+      "noneInThreadHaveKeyword filter, match, don't get some back",
+    );
+  }
+
+  # hasKeyword
+  $self->test_query("Email/query",
+    {
+      filter => {
+        hasKeyword => 'some',
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [
+	$emails{aaa_keyword_some}->id,
+        $emails{aaa_keyword_some_reply_2}->id,
+      ],
+    },
+    $describer_sub,
+    "hasKeyword filter, match",
+  );
+
+  # notKeyword
+  $self->test_query("Email/query",
+    {
+      filter => {
+        notKeyword => 'some',
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => ids_for(
+        grep {;
+             $_->subject ne 'aaa_keyword_some'
+          && $_->subject ne 'aaa_keyword_some_reply_2'
+        } values %emails,
+      ),
+    },
+    $describer_sub,
+    "notKeyword filter, match",
+  );
+
+  # hasAttachment
+  $self->test_query("Email/query",
+    {
+      filter => {
+        hasAttachment => jfalse(),
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [
+        grep {; $_ ne $emails{aaa_with_attachment}->id } @{ ids_for(%emails) },
+      ],
+    },
+    $describer_sub,
+    "hasAttachment false, matches all but 1",
+  );
+
+  $self->test_query("Email/query",
+    {
+      filter => {
+        hasAttachment => jtrue(),
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_with_attachment}->id ],
+    },
+    $describer_sub,
+    "hasAttachment true, matches only 1",
+  );
+
+  # XXX - Search is broken for me, cannot test atm. -- alh, 2018-06-12
+  #  text
+  #  from
+  #  to
+  #  cc
+  #  bcc
+  #  subject
+  #  body
+  #  attachments
+  #  header
+
 };
 
 sub make_describer_sub {

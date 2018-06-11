@@ -84,7 +84,9 @@ sub add_message_to_mailboxes {
     $arg = shift @mailboxes;
   }
 
-  my $email = $context->email_blob(generic => $arg);
+  my $email = $context->email_blob(
+    ($arg->{email_type} || 'generic') => $arg
+  );
 
   my $batch = $pkg->import_messages(
     {
@@ -93,6 +95,10 @@ sub add_message_to_mailboxes {
         mailboxIds => { map { $_ => \1 } @mailboxes },
         ( $arg->{receivedAt}
             ? ( receivedAt => $arg->{receivedAt} )
+            : ( )
+        ),
+        ( $arg->{keywords}
+            ? ( keywords => $arg->{keywords} )
             : ( )
         ),
       },

@@ -32,24 +32,60 @@ package JMAP::TestSuite::AccountContext {
     default => sub { $_[0]->account->authenticated_tester },
   );
 
+  my %types = (
+    generic => sub {
+      my ($self, $arg) = @_;
+
+      require Email::MIME;
+      return Email::MIME->create(
+        header_str => [
+          From => 'example@example.com',
+          To   => 'example@example.biz',
+          Subject => $arg->{subject} || 'This is a test',
+          'Message-Id' =>    $arg->{message_id}
+                          // Email::MessageID->new->in_brackets,
+          ( $arg->{headers} ? @{ $arg->{headers} } : () ),
+        ],
+        body => $arg->{body} // "This is a very simple message.",
+      );
+    },
+    with_attachment => sub {
+      my ($self, $arg) = @_;
+
+      require Email::MIME;
+      return Email::MIME->create(
+        header_str => [
+          From => 'example@example.com',
+          To   => 'example@example.biz',
+          Subject => $arg->{subject} || 'This is a test',
+          'Message-Id' =>    $arg->{message_id}
+                          // Email::MessageID->new->in_brackets,
+          ( $arg->{headers} ? @{ $arg->{headers} } : () ),
+        ],
+        parts => [
+          Email::MIME->create(
+            attributes => {
+              content_type => "text/plain",
+              disposition  => "attachment",
+              charset      => "US-ASCII",
+              encoding     => "quoted-printable",
+              filename     => "attached.txt",
+              name         => "attached.txt",
+            },
+            body_str => "Hello there!",
+          ),
+        ],
+      );
+    },
+  );
+
   sub email_blob {
     my ($self, $which, $arg) = @_;
 
     Carp::confess("don't know how to generate test message named $which")
-      unless $which && $which eq 'generic';
+      unless my $gen = $types{$which};
 
-    require Email::MIME;
-    my $email = Email::MIME->create(
-      header_str => [
-        From => 'example@example.com',
-        To   => 'example@example.biz',
-        Subject => $arg->{subject} || 'This is a test',
-        'Message-Id' =>    $arg->{message_id}
-                        // Email::MessageID->new->in_brackets,
-        ( $arg->{headers} ? @{ $arg->{headers} } : () ),
-      ],
-      body => $arg->{body} // "This is a very simple message.",
-    );
+    my $email = $gen->($self, $arg);
 
     return $self->tester->upload('message/rfc822', \$email->as_string);
   }
