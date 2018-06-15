@@ -319,8 +319,8 @@ test "fetchTextBodyValues" => sub {
       {
         $part_id => {
           value             => $body,
-          isTruncated       => jbool(),
-          isEncodingProblem => jbool(),
+          isTruncated       => jfalse(),
+          isEncodingProblem => jfalse(),
         },
       },
       "bodyValues looks right"
@@ -424,8 +424,8 @@ test "fetchHTMLBodyValues" => sub {
       {
         $part_id => {
           value             => $body,
-          isTruncated       => jbool(),
-          isEncodingProblem => jbool(),
+          isTruncated       => jfalse(),
+          isEncodingProblem => jfalse(),
         },
       },
       "bodyValues looks right"
@@ -525,8 +525,8 @@ test "fetchAllBodyValues" => sub {
       {
         $part_id => {
           value             => $body,
-          isTruncated       => jbool(),
-          isEncodingProblem => jbool(),
+          isTruncated       => jfalse(),
+          isEncodingProblem => jfalse(),
         },
       },
       "bodyValues looks right"
@@ -599,9 +599,12 @@ test "maxBodyValueBytes" => sub {
     ok(defined $part_id, 'we have a part id');
 
     jcmp_deeply(
-      $arg->{list}[0]{bodyValues}{$part_id}{value},
-      $body,
-      'body value truncated correctly',
+      $arg->{list}[0]{bodyValues}{$part_id},
+      superhashof({
+        value => $body,
+        isTruncated => jfalse(),
+      }),
+      'body value not truncated',
     ) or diag explain $res->as_stripped_triples;
   };
 
@@ -626,8 +629,11 @@ test "maxBodyValueBytes" => sub {
     ok(defined $part_id, 'we have a part id');
 
     jcmp_deeply(
-      $arg->{list}[0]{bodyValues}{$part_id}{value},
-      '123',
+      $arg->{list}[0]{bodyValues}{$part_id},
+      superhashof({
+        value => '123',
+        isTruncated => jtrue(),
+      }),
       'body value truncated correctly',
     ) or diag explain $res->as_stripped_triples;
   };
@@ -657,8 +663,11 @@ test "maxBodyValueBytes" => sub {
       # bytes 5 and 6, and 7, the server MUST NOT EXCEED our request and so
       # must return everything before the snowman but not include it.
       jcmp_deeply(
-        $arg->{list}[0]{bodyValues}{$part_id}{value},
-        '1234',
+        $arg->{list}[0]{bodyValues}{$part_id},
+        superhashof({
+          value => '1234',
+          isTruncated => jtrue(),
+        }),
         'body value truncated correctly',
       ) or diag explain $res->as_stripped_triples;
     }
@@ -685,8 +694,11 @@ test "maxBodyValueBytes" => sub {
     ok(defined $part_id, 'we have a part id');
 
     jcmp_deeply(
-      $arg->{list}[0]{bodyValues}{$part_id}{value},
-      $body,
+      $arg->{list}[0]{bodyValues}{$part_id},
+      superhashof({
+        value => $body,
+        isTruncated => jfalse(),
+      }),
       'body value not truncated with exact match length of bytes',
     ) or diag explain $res->as_stripped_triples;
   };
