@@ -692,5 +692,223 @@ test "maxBodyValueBytes" => sub {
   };
 };
 
+test "properties" => sub {
+  my ($self) = @_;
+
+  my $tester = $self->tester;
+
+  my $mbox = $self->context->create_mailbox;
+
+  my $from    = "test$$\@example.net";
+  my $to      = "recip$$\@example.net";
+  my $subject = "A subject for $$";
+
+  my $message = $mbox->add_message({
+    from    => $from,
+    to      => $to,
+    subject => $subject,
+  });
+
+  my $empty = any([], undef);
+
+  subtest "no properties specified, defaults returned" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id            => $message->id,
+          blobId        => jstr(),
+          threadId      => jstr(),
+          mailboxIds    => {
+            $mbox->id . "" => jtrue(),
+          },
+          keywords      => superhashof({}),
+          size          => jnum(),
+          receivedAt    => jstr(),
+          messageId     => [ jstr() ],
+          inReplyTo     => $empty,
+          references    => $empty,
+          sender        => $empty,
+          from          => [{ name => undef, email => $from }],
+          to            => [{ name => undef, email => $to }],
+          cc            => $empty,
+          bcc           => $empty,
+          replyTo       => $empty,
+          subject       => $subject,
+          sentAt        => jstr(),
+          hasAttachment => jtrue(), # XXX FALSE (cyrus...)
+          preview       => jstr(),
+          bodyValues    => {},
+          textBody => [
+            superhashof({ partId => jstr() }),
+          ],
+          htmlBody => [
+            superhashof({ partId => jstr() }),
+          ],
+#          attachments  => $empty, # XXX, attachments is the new norm!
+          attachedEmails => [],
+          attachedFiles => [],
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "limit to no properties" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id => $message->id,
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "limit to all properties" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [qw(
+            id blobId threadId mailboxIds keywords size
+            receivedAt messageId inReplyTo references sender from
+            to cc bcc replyTo subject sentAt hasAttachment
+            preview bodyValues textBody htmlBody attachments
+            headers bodyStructure
+          )],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id            => $message->id,
+          blobId        => jstr(),
+          threadId      => jstr(),
+          mailboxIds    => {
+            $mbox->id . "" => jtrue(),
+          },
+          keywords      => superhashof({}),
+          size          => jnum(),
+          receivedAt    => jstr(),
+          messageId     => [ jstr() ],
+          inReplyTo     => $empty,
+          references    => $empty,
+          sender        => $empty,
+          from          => [{ name => undef, email => $from }],
+          to            => [{ name => undef, email => $to }],
+          cc            => $empty,
+          bcc           => $empty,
+          replyTo       => $empty,
+          subject       => $subject,
+          sentAt        => jstr(),
+          hasAttachment => jtrue(), # XXX FALSE (cyrus...)
+          preview       => jstr(),
+          bodyValues    => {},
+          textBody => [
+            superhashof({ partId => jstr() }),
+          ],
+          htmlBody => [
+            superhashof({ partId => jstr() }),
+          ],
+#          attachments  => $empty, # XXX, attachments is the new norm!
+          headers => [
+            {
+              name  => 'From',
+              value => re(qr/\Q$from\E/),
+            }, {
+              name  => 'To',
+              value => re(qr/\Q$to\E/),
+            }, {
+              name  => 'Subject',
+              value => re(qr/\Q$subject\E/),
+            }, {
+              name  => 'Message-Id',
+              value => re(qr/<.*>/),
+            }, {
+              name  => 'Date',
+              value => re(qr/\w/),
+            }, {
+              name  => 'MIME-Version',
+              value => re(qr/1\.0/),
+            },
+          ],
+          bodyStructure => superhashof({
+            partId => jstr(),
+          }),
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "limit to some properties" => sub {
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [qw(
+            threadId size preview
+          )],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id       => $message->id,
+          threadId => jstr(),
+          size     => jnum(),
+          preview  => jstr(),
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+};
+
 run_me;
 done_testing;
