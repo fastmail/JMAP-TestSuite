@@ -703,11 +703,21 @@ test "properties" => sub {
   my $to      = "recip$$\@example.net";
   my $subject = "A subject for $$";
 
-  my $message = $mbox->add_message({
+  my $message = $mbox->add_message;
+  my $reply = $message->reply({
     from    => $from,
     to      => $to,
     subject => $subject,
+    headers => [
+      Sender     => "sender$from",
+      CC         => "cc$from",
+      BCC        => "bcc$from",
+      'Reply-To' => "rt$from",
+    ],
   });
+
+  my $em_msg_id = $message->messageId->[0];
+  my $reply_msg_id = $reply->messageId->[0];
 
   my $empty = any([], undef);
 
@@ -716,7 +726,7 @@ test "properties" => sub {
       using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
-          ids        => [ $message->id ],
+          ids        => [ $reply->id ],
         },
       ]],
     });
@@ -729,7 +739,7 @@ test "properties" => sub {
         accountId => jstr($self->context->accountId),
         state     => jstr(),
         list      => [{
-          id            => $message->id,
+          id            => $reply->id,
           blobId        => jstr(),
           threadId      => jstr(),
           mailboxIds    => {
@@ -737,18 +747,18 @@ test "properties" => sub {
           },
           keywords      => superhashof({}),
           size          => jnum(),
-          receivedAt    => jstr(),
-          messageId     => [ jstr() ],
-          inReplyTo     => $empty,
-          references    => $empty,
-          sender        => $empty,
+          receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
+          messageId     => [ $reply_msg_id ],
+          inReplyTo     => [ $em_msg_id ],
+          references    => [ $em_msg_id ],
+          sender        => [{ name => undef, email => "sender$from" }],
           from          => [{ name => undef, email => $from }],
           to            => [{ name => undef, email => $to }],
-          cc            => $empty,
-          bcc           => $empty,
-          replyTo       => $empty,
+          cc            => [{ name => undef, email => "cc$from" }],
+          bcc           => [{ name => undef, email => "bcc$from" }],
+          replyTo       => [{ name => undef, email => "rt$from" }],
           subject       => $subject,
-          sentAt        => jstr(),
+          sentAt        => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
           hasAttachment => jtrue(), # XXX FALSE (cyrus...)
           preview       => jstr(),
           bodyValues    => {},
@@ -772,7 +782,7 @@ test "properties" => sub {
       using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
-          ids        => [ $message->id ],
+          ids        => [ $reply->id ],
           properties => [],
         },
       ]],
@@ -786,7 +796,7 @@ test "properties" => sub {
         accountId => jstr($self->context->accountId),
         state     => jstr(),
         list      => [{
-          id => $message->id,
+          id => $reply->id,
         }],
       }),
       "Response looks good",
@@ -798,7 +808,7 @@ test "properties" => sub {
       using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
-          ids        => [ $message->id ],
+          ids        => [ $reply->id ],
           properties => [qw(
             id blobId threadId mailboxIds keywords size
             receivedAt messageId inReplyTo references sender from
@@ -818,7 +828,7 @@ test "properties" => sub {
         accountId => jstr($self->context->accountId),
         state     => jstr(),
         list      => [{
-          id            => $message->id,
+          id            => $reply->id,
           blobId        => jstr(),
           threadId      => jstr(),
           mailboxIds    => {
@@ -826,18 +836,18 @@ test "properties" => sub {
           },
           keywords      => superhashof({}),
           size          => jnum(),
-          receivedAt    => jstr(),
-          messageId     => [ jstr() ],
-          inReplyTo     => $empty,
-          references    => $empty,
-          sender        => $empty,
+          receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
+          messageId     => [ $reply_msg_id ],
+          inReplyTo     => [ $em_msg_id ],
+          references    => [ $em_msg_id ],
+          sender        => [{ name => undef, email => "sender$from" }],
           from          => [{ name => undef, email => $from }],
           to            => [{ name => undef, email => $to }],
-          cc            => $empty,
-          bcc           => $empty,
-          replyTo       => $empty,
+          cc            => [{ name => undef, email => "cc$from" }],
+          bcc           => [{ name => undef, email => "bcc$from" }],
+          replyTo       => [{ name => undef, email => "rt$from" }],
           subject       => $subject,
-          sentAt        => jstr(),
+          sentAt        => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
           hasAttachment => jtrue(), # XXX FALSE (cyrus...)
           preview       => jstr(),
           bodyValues    => {},
@@ -862,6 +872,24 @@ test "properties" => sub {
               name  => 'Message-Id',
               value => re(qr/<.*>/),
             }, {
+              name  => 'Sender',
+              value => re(qr/\w/),
+            }, {
+              name  => 'CC',
+              value => re(qr/\w/),
+            }, {
+              name  => 'BCC',
+              value => re(qr/\w/),
+            }, {
+              name  => 'Reply-To',
+              value => re(qr/\w/),
+            }, {
+              name  => 'In-Reply-To',
+              value => re(qr/\w/),
+            }, {
+              name  => 'References',
+              value => re(qr/\w/),
+            }, {
               name  => 'Date',
               value => re(qr/\w/),
             }, {
@@ -883,7 +911,7 @@ test "properties" => sub {
       using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
-          ids        => [ $message->id ],
+          ids        => [ $reply->id ],
           properties => [qw(
             threadId size preview
           )],
@@ -899,7 +927,7 @@ test "properties" => sub {
         accountId => jstr($self->context->accountId),
         state     => jstr(),
         list      => [{
-          id       => $message->id,
+          id       => $reply->id,
           threadId => jstr(),
           size     => jnum(),
           preview  => jstr(),
