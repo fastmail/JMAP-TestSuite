@@ -39,9 +39,9 @@ package JMAP::TestSuite::AccountContext {
       require Email::MIME;
       return Email::MIME->create(
         header_str => [
-          From => 'example@example.com',
-          To   => 'example@example.biz',
-          Subject => $arg->{subject} || 'This is a test',
+          From => $arg->{from} // 'example@example.com',
+          To   => $arg->{to} // 'example@example.biz',
+          Subject => $arg->{subject} // 'This is a test',
           'Message-Id' =>    $arg->{message_id}
                           // Email::MessageID->new->in_brackets,
           ( $arg->{headers} ? @{ $arg->{headers} } : () ),
@@ -55,9 +55,9 @@ package JMAP::TestSuite::AccountContext {
       require Email::MIME;
       return Email::MIME->create(
         header_str => [
-          From => 'example@example.com',
-          To   => 'example@example.biz',
-          Subject => $arg->{subject} || 'This is a test',
+          From => $arg->{from} // 'example@example.com',
+          To   => $arg->{to} // 'example@example.biz',
+          Subject => $arg->{subject} // 'This is a test',
           'Message-Id' =>    $arg->{message_id}
                           // Email::MessageID->new->in_brackets,
           ( $arg->{headers} ? @{ $arg->{headers} } : () ),
