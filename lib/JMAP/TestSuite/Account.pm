@@ -46,7 +46,12 @@ package JMAP::TestSuite::AccountContext {
                           // Email::MessageID->new->in_brackets,
           ( $arg->{headers} ? @{ $arg->{headers} } : () ),
         ],
-        body => $arg->{body} // "This is a very simple message.",
+        (
+          $arg->{body_str} ? ( body_str => $arg->{body_str} ) :
+          $arg->{body}     ? ( body     => $arg->{body}     ) :
+                             ( body => "This is a very simple message." )
+        ),
+        attributes => $arg->{attributes} // {},
       );
     },
     with_attachment => sub {
@@ -54,6 +59,7 @@ package JMAP::TestSuite::AccountContext {
 
       require Email::MIME;
       return Email::MIME->create(
+        attributes => $arg->{attributes} // {},
         header_str => [
           From => $arg->{from} // 'example@example.com',
           To   => $arg->{to} // 'example@example.biz',
