@@ -987,10 +987,10 @@ test "header:{header-field-name}" => sub {
         "Email/get" => {
           ids        => [ $message->id ],
           properties => [qw(
-            header:Date
+            header:DAte
             header:Message-Id
-            header:From
-            header:Subject
+            header:FROm
+            header:SuBject
             header:List-Subscribe
             header:None
             header:Multiple
@@ -1008,10 +1008,10 @@ test "header:{header-field-name}" => sub {
         state     => jstr(),
         list      => [{
           id                      => $message->id,
-          'header:Date'           => " $date",
+          'header:DAte'           => " $date",
           'header:Message-Id'     => re(qr/^\s<[^>]+>$/),
-          'header:From' =>        => " $from",
-          'header:Subject'        => " $subject",
+          'header:FROm' =>        => " $from",
+          'header:SuBject'        => " $subject",
           'header:List-Subscribe' => " $ls",
           'header:None'           => undef,
           'header:Multiple'       => ' 3rd value',
@@ -1029,7 +1029,7 @@ test "header:{header-field-name}" => sub {
         "Email/get" => {
           ids        => [ $message->id ],
           properties => [qw(
-            header:Single:all
+            header:SinglE:all
             header:Multiple:all
             header:None:all
           )],
@@ -1046,7 +1046,7 @@ test "header:{header-field-name}" => sub {
         state     => jstr(),
         list      => [{
           id                      => $message->id,
-          'header:Single:all'   => [ ' A single value' ],
+          'header:SinglE:all'   => [ ' A single value' ],
           'header:Multiple:all' => [
             ' 1st value',
             ' 2nd value',
