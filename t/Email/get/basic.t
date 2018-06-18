@@ -993,6 +993,7 @@ test "header:{header-field-name}" => sub {
             header:Subject
             header:List-Subscribe
             header:None
+            header:Multiple
           )],
         },
       ]],
@@ -1013,6 +1014,7 @@ test "header:{header-field-name}" => sub {
           'header:Subject'        => " $subject",
           'header:List-Subscribe' => " $ls",
           'header:None'           => undef,
+          'header:Multiple'       => ' 3rd value',
         }],
       }),
       "Response looks good",
