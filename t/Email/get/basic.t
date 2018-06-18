@@ -950,5 +950,69 @@ test "properties" => sub {
   };
 };
 
+test "header:{header-field-name}" => sub {
+  my ($self) = @_;
+
+  my $tester = $self->tester;
+
+  my $mbox = $self->context->create_mailbox;
+
+  my $from    = "test$$\@example.net";
+  my $to      = "recip$$\@example.net";
+  my $subject = "A subject for $$";
+  my $date    = 'Mon, 18 Jun 2018 16:51:28 -0400';
+  my $ls      = 'https://example.net';
+
+  my $message = $mbox->add_message({
+    from    => $from,
+    to      => $to,
+    subject => $subject,
+    headers => [
+      'List-Subscribe' => $ls,
+      Date             => $date,
+    ],
+  });
+
+  my $em_msg_id = $message->messageId->[0];
+
+  subtest "No as: prefix - default header-form Raw" => sub {
+    # Let's test a few that have different parsed forms
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [qw(
+            header:Date
+            header:Message-Id
+            header:From
+            header:Subject
+            header:List-Subscribe
+          )],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id                      => $message->id,
+          'header:Date'           => " $date",
+          'header:Message-Id'     => re(qr/^\s<[^>]+>$/),
+          'header:From' =>        => " $from",
+          'header:Subject'        => " $subject",
+          'header:List-Subscribe' => " $ls",
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+};
+
 run_me;
 done_testing;
