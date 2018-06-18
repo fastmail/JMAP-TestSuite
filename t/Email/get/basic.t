@@ -1058,6 +1058,31 @@ test "header:{header-field-name}" => sub {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "suffix order must be :as{foo}:all" => sub {
+    # Let's test a few that have different parsed forms
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [qw(
+            header:None:all:asRaw
+          )],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("error")->arguments,
+      superhashof({
+        type => 'invalidArguments',
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;
