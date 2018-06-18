@@ -970,6 +970,10 @@ test "header:{header-field-name}" => sub {
     headers => [
       'List-Subscribe' => $ls,
       Date             => $date,
+      Single           => 'A single value',
+      Multiple         => '1st value',
+      Multiple         => '2nd value',
+      Multiple         => '3rd value',
     ],
   });
 
@@ -988,6 +992,7 @@ test "header:{header-field-name}" => sub {
             header:From
             header:Subject
             header:List-Subscribe
+            header:None
           )],
         },
       ]],
@@ -1007,6 +1012,45 @@ test "header:{header-field-name}" => sub {
           'header:From' =>        => " $from",
           'header:Subject'        => " $subject",
           'header:List-Subscribe' => " $ls",
+          'header:None'           => undef,
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest ":all prefix, single, multi, and none" => sub {
+    # Let's test a few that have different parsed forms
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [qw(
+            header:Single:all
+            header:Multiple:all
+            header:None:all
+          )],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id                      => $message->id,
+          'header:Single:all'   => [ ' A single value' ],
+          'header:Multiple:all' => [
+            ' 1st value',
+            ' 2nd value',
+            ' 3rd value',
+          ],
+          'header:None:all'     => [],
         }],
       }),
       "Response looks good",
