@@ -1083,6 +1083,58 @@ test "header:{header-field-name}" => sub {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "asText" => sub {
+    my $message = $mbox->add_message({
+      headers => [
+        subject   => "☃",
+        comment   => "☃☃",
+        'list-id' => "☃☃☃",
+        'X-Foo'   => "☃☃☃☃",
+      ],
+    });
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [qw(
+            header:subject:asRaw
+            header:comment:asRaw
+            header:list-id:asRaw
+            header:x-foo:asRaw
+            header:subject:asText
+            header:comment:asText
+            header:list-id:asText
+            header:x-foo:asText
+          )],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id                      => $message->id,
+          'header:subject:asRaw'  => " =?UTF-8?B?4piD?=",
+          'header:comment:asRaw'  => " =?UTF-8?B?4piD4piD?=",
+          'header:list-id:asRaw'  => " =?UTF-8?B?4piD4piD4piD?=",
+          'header:x-foo:asRaw'    => " =?UTF-8?B?4piD4piD4piD4piD?=",
+          'header:subject:asText' => "☃",
+          'header:comment:asText' => "☃☃",
+          'header:list-id:asText' => "☃☃☃",
+          'header:x-foo:asText'   => "☃☃☃☃",
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;
