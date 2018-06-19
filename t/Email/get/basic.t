@@ -1087,10 +1087,15 @@ test "header:{header-field-name}" => sub {
   subtest "asText" => sub {
     my $message = $mbox->add_message({
       headers => [
+        # Make sure these all asText properly
         subject   => "☃",
         comment   => "☃☃",
         'list-id' => "☃☃☃",
         'X-Foo'   => "☃☃☃☃",
+
+        # NFC check on utf8. ANGSTROM SIGN NFCd should become
+        # LATIN CAPITAL LETTER A WITH RING ABOVE
+        'X-NFC'   => "\N{ANGSTROM SIGN}",
       ],
     });
 
@@ -1104,10 +1109,12 @@ test "header:{header-field-name}" => sub {
             header:comment:asRaw
             header:list-id:asRaw
             header:x-foo:asRaw
+            header:x-nfc:asRaw
             header:subject:asText
             header:comment:asText
             header:list-id:asText
             header:x-foo:asText
+            header:x-nfc:asText
           )],
         },
       ]],
@@ -1126,10 +1133,12 @@ test "header:{header-field-name}" => sub {
           'header:comment:asRaw'  => " =?UTF-8?B?4piD4piD?=",
           'header:list-id:asRaw'  => " =?UTF-8?B?4piD4piD4piD?=",
           'header:x-foo:asRaw'    => " =?UTF-8?B?4piD4piD4piD4piD?=",
+          'header:x-nfc:asRaw'    => " =?UTF-8?B?4oSr?=",
           'header:subject:asText' => "☃",
           'header:comment:asText' => "☃☃",
           'header:list-id:asText' => "☃☃☃",
           'header:x-foo:asText'   => "☃☃☃☃",
+          'header:x-nfc:asText'   => "\N{LATIN CAPITAL LETTER A WITH RING ABOVE}",
         }],
       }),
       "Response looks good",
