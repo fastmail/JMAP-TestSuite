@@ -38,6 +38,7 @@ package JMAP::TestSuite::AccountContext {
 
       require Email::MIME;
       return Email::MIME->create(
+        ( $arg->{raw_headers} ? ( header => $arg->{raw_headers} ) : () ),
         header_str => [
           From => $arg->{from} // 'example@example.com',
           To   => $arg->{to} // 'example@example.biz',
@@ -60,6 +61,7 @@ package JMAP::TestSuite::AccountContext {
       require Email::MIME;
       return Email::MIME->create(
         attributes => $arg->{attributes} // {},
+        ( $arg->{raw_headers} ? ( header => $arg->{raw_headers} ) : () ),
         header_str => [
           From => $arg->{from} // 'example@example.com',
           To   => $arg->{to} // 'example@example.biz',

@@ -1097,6 +1097,9 @@ test "header:{header-field-name}" => sub {
         # LATIN CAPITAL LETTER A WITH RING ABOVE
         'X-NFC'   => "\N{ANGSTROM SIGN}",
       ],
+      raw_headers => [
+        'X-Fold'  => " " . ("a" x 50) . " " . ("b" x 50),
+      ]
     });
 
     my $res = $tester->request({
@@ -1110,11 +1113,13 @@ test "header:{header-field-name}" => sub {
             header:list-id:asRaw
             header:x-foo:asRaw
             header:x-nfc:asRaw
+            header:x-fold:asRaw
             header:subject:asText
             header:comment:asText
             header:list-id:asText
             header:x-foo:asText
             header:x-nfc:asText
+            header:x-fold:asText
           )],
         },
       ]],
@@ -1134,11 +1139,13 @@ test "header:{header-field-name}" => sub {
           'header:list-id:asRaw'  => " =?UTF-8?B?4piD4piD4piD?=",
           'header:x-foo:asRaw'    => " =?UTF-8?B?4piD4piD4piD4piD?=",
           'header:x-nfc:asRaw'    => " =?UTF-8?B?4oSr?=",
+          'header:x-fold:asRaw'   => "  " . ("a" x 50) . "\r\n " . ("b" x 50),
           'header:subject:asText' => "☃",
           'header:comment:asText' => "☃☃",
           'header:list-id:asText' => "☃☃☃",
           'header:x-foo:asText'   => "☃☃☃☃",
           'header:x-nfc:asText'   => "\N{LATIN CAPITAL LETTER A WITH RING ABOVE}",
+          'header:x-fold:asText'  => ("a" x 50) . " " . ("b" x 50),
         }],
       }),
       "Response looks good",
