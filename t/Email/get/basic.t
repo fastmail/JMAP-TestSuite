@@ -1377,6 +1377,67 @@ test "header:{header-field-name}" => sub {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "asURLs" => sub {
+    my @hlist = qw(
+      List-Help
+      List-Unsubscribe
+      List-Subscribe
+      List-Post
+      List-Owner
+      List-Archive
+    );
+
+    my $url1 = "http://example.net";
+    my $url2 = "http://example.org/" . ("a" x 35);
+
+    my $value = "<$url1> <$url2>";
+
+    my $message = $mbox->add_message({
+      raw_headers => [
+        ( map {;
+          $_ => $value,
+        } @hlist, ),
+      ],
+    });
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [
+            ( map {;
+              "header:$_:asRaw",
+            } @hlist, ),
+            ( map {;
+              "header:$_:asURLs",
+            } @hlist, ),
+          ],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id => $message->id,
+          ( map {;
+            "header:$_:asRaw" => " <$url1>\r\n <$url2>",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asURLs" => [ $url1, $url2 ],
+          } @hlist, ),
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;
