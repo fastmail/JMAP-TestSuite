@@ -1176,6 +1176,7 @@ test "header:{header-field-name}" => sub {
       Resent-Reply-To
       Resent-To
       Resent-Cc
+      X-Foo
     );
 
     my $long_name = "a" x 58;
@@ -1266,6 +1267,7 @@ test "header:{header-field-name}" => sub {
       Message-ID
       In-Reply-To
       Resent-Message-ID
+      X-Foo
     );
 
     my $mid1 = 'foo@example.com';
@@ -1339,6 +1341,7 @@ test "header:{header-field-name}" => sub {
       headers => [
         Date          => $value,
         'Resent-Date' => $value,
+        'X-Foo'       => $value,
       ],
     });
 
@@ -1353,6 +1356,8 @@ test "header:{header-field-name}" => sub {
               header:Date:asDate
               header:Resent-Date:asRaw
               header:Resent-Date:asDate
+              header:X-Foo:asRaw
+              header:X-Foo:asDate
             ),
           ],
         },
@@ -1372,6 +1377,8 @@ test "header:{header-field-name}" => sub {
           'header:Date:asDate'        => "$expect",
           'header:Resent-Date:asRaw'  => " $value",
           'header:Resent-Date:asDate' => "$expect",
+          'header:X-Foo:asRaw'        => " $value",
+          'header:X-Foo:asDate'       => "$expect",
         }],
       }),
       "Response looks good",
@@ -1386,6 +1393,7 @@ test "header:{header-field-name}" => sub {
       List-Post
       List-Owner
       List-Archive
+      X-Foo
     );
 
     my $url1 = "http://example.net";
