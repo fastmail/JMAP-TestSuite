@@ -1328,6 +1328,55 @@ test "header:{header-field-name}" => sub {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "asDate" => sub {
+    my $value = "Thu, 13 Feb 1969 23:32 -0330 (Newfoundland Time)";
+
+    # 13th at 23:32 + 3.5h...
+    my $expect = "1969-02-14T03:02:00Z";
+
+    my $message = $mbox->add_message({
+      headers => [
+        Date          => $value,
+        'Resent-Date' => $value,
+      ],
+    });
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [
+            qw(
+              header:Date:asRaw
+              header:Date:asDate
+              header:Resent-Date:asRaw
+              header:Resent-Date:asDate
+            ),
+          ],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id                          => $message->id,
+          'header:Date:asRaw'         => " $value",
+          'header:Date:asDate'        => "$expect",
+          'header:Resent-Date:asRaw'  => " $value",
+          'header:Resent-Date:asDate' => "$expect",
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;
