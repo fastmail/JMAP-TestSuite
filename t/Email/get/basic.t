@@ -1188,6 +1188,8 @@ test "header:{header-field-name}" => sub {
 
     my $long_value = qq{"$long_name" <$long_email>};
 
+    my $group_value = 'A group: foo <foo@example.org>,"bar d" <bar@example.org>;';
+
     my $message = $mbox->add_message({
       raw_headers => [
         ( map {;
@@ -1197,8 +1199,9 @@ test "header:{header-field-name}" => sub {
       ],
       # raw_headers doesn't override these sadly. XXX - To fix
       headers => [
-        From => $from_value,
-        To   => $value,
+        From      => $from_value,
+        To        => $value,
+        'X-Group' => $group_value,
       ],
     });
 
@@ -1221,6 +1224,8 @@ test "header:{header-field-name}" => sub {
               header:To:asAddresses
               header:Resent-Bcc:asRaw
               header:Resent-Bcc:asAddresses
+              header:X-Group:asRaw
+              header:X-Group:asAddresses
             ),
           ],
         },
@@ -1260,6 +1265,22 @@ test "header:{header-field-name}" => sub {
             name  => $long_name,
             email => $long_email,
           }],
+          'header:X-Group:asRaw' => " $group_value",
+          'header:X-Group:asAddresses' => [
+            {
+              name  => 'A group',
+              email => undef,
+            }, {
+              name  => 'foo',
+              email => 'foo@example.org',
+            }, {
+              name  => 'bar d',
+              email => 'bar@example.org',
+            }, { # XXX - Cyrus adding this in? Why? -- alh, 2018-06-20
+              name => undef,
+              email => undef,
+            },
+          ],
         }],
       }),
       "Response looks good",
