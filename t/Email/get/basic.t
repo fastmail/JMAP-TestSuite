@@ -1176,14 +1176,19 @@ test "header:{header-field-name}" => sub {
       Resent-Reply-To
       Resent-To
       Resent-Cc
-      Resent-Bcc
     );
+
+    my $long_name = "a" x 58;
+    my $long_email = 'foo@example.net';
+
+    my $long_value = qq{"$long_name" <$long_email>};
 
     my $message = $mbox->add_message({
       raw_headers => [
-        map {;
+        ( map {;
           $_ => $value,
-        } @hlist,
+        } @hlist, ),
+        'Resent-Bcc' => $long_value,
       ],
       # raw_headers doesn't override these sadly. XXX - To fix
       headers => [
@@ -1209,6 +1214,8 @@ test "header:{header-field-name}" => sub {
               header:From:asAddresses
               header:To:asRaw
               header:To:asAddresses
+              header:Resent-Bcc:asRaw
+              header:Resent-Bcc:asAddresses
             ),
           ],
         },
@@ -1242,6 +1249,11 @@ test "header:{header-field-name}" => sub {
           'header:To:asAddresses' => [{
             name => $expect_name,
             email => $email,
+          }],
+          'header:Resent-Bcc:asRaw' => qq{ "$long_name"\r\n <$long_email>},
+          'header:Resent-Bcc:asAddresses' => [{
+            name  => $long_name,
+            email => $long_email,
           }],
         }],
       }),
