@@ -1151,6 +1151,76 @@ test "header:{header-field-name}" => sub {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "asAddresses" => sub {
+    my $name = "Foo S";
+    my $email = "foos$$\@example.net";
+
+    my $value = qq{"$name" <$email>};
+
+    my @hlist = qw(
+      From
+      Sender
+      Reply-To
+      To
+      Cc
+      Bcc
+      Resent-From
+      Resent-Sender
+      Resent-Reply-To
+      Resent-To
+      Resent-Cc
+      Resent-Bcc
+    );
+
+    my $message = $mbox->add_message({
+      headers => [
+        map {;
+          $_ => $value,
+        } @hlist,
+      ],
+    });
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [
+            ( map {;
+              "header:$_:asRaw",
+            } @hlist, ),
+            ( map {;
+              "header:$_:asAddresses",
+            } @hlist, ),
+          ],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id                      => $message->id,
+          ( map {;
+            "header:$_:asRaw" => " $value",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asAddresses" => [{
+              name  => $name,
+              email => $email,
+            }],
+          } @hlist, ),
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;
