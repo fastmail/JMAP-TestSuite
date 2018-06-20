@@ -1153,16 +1153,22 @@ test "header:{header-field-name}" => sub {
   };
 
   subtest "asAddresses" => sub {
-    my $name = "Foo S";
+    my $name = "Foo \\S";
     my $email = "foos$$\@example.net";
 
     my $value = qq{"$name" <$email>};
 
+    my $expect_name = $name;
+
+    # \S -> S (quoted-pair)
+    $expect_name =~ s/\\//g;
+
+    # XXX - Need to get these in raw_headers but can't easily atm
+    my $to_from_value = qq{"$expect_name" <$email>};
+
     my @hlist = qw(
-      From
       Sender
       Reply-To
-      To
       Cc
       Bcc
       Resent-From
@@ -1174,10 +1180,15 @@ test "header:{header-field-name}" => sub {
     );
 
     my $message = $mbox->add_message({
-      headers => [
+      raw_headers => [
         map {;
           $_ => $value,
         } @hlist,
+      ],
+      # raw_headers doesn't override these sadly. XXX - To fix
+      headers => [
+        From => $value,
+        To   => $value,
       ],
     });
 
@@ -1193,6 +1204,12 @@ test "header:{header-field-name}" => sub {
             ( map {;
               "header:$_:asAddresses",
             } @hlist, ),
+            qw(
+              header:From:asRaw
+              header:From:asAddresses
+              header:To:asRaw
+              header:To:asAddresses
+            ),
           ],
         },
       ]],
@@ -1212,10 +1229,20 @@ test "header:{header-field-name}" => sub {
           } @hlist, ),
           ( map {;
             "header:$_:asAddresses" => [{
-              name  => $name,
+              name  => $expect_name,
               email => $email,
             }],
           } @hlist, ),
+          'header:From:asRaw' => " $to_from_value",
+          'header:To:asRaw'   => " $to_from_value",
+          'header:From:asAddresses' => [{
+            name => $expect_name,
+            email => $email,
+          }],
+          'header:To:asAddresses' => [{
+            name => $expect_name,
+            email => $email,
+          }],
         }],
       }),
       "Response looks good",
