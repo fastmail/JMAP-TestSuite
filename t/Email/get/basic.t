@@ -1260,6 +1260,74 @@ test "header:{header-field-name}" => sub {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "asMessageIds" => sub {
+    my @hlist = qw(
+      Message-ID
+      In-Reply-To
+      Resent-Message-ID
+    );
+
+    my $mid1 = 'foo@example.com';
+    my $value = "<$mid1>";
+
+    my $mid2 = ('f' x 45) . '@example.com';
+    my $mid3 = 'bar@example.com';
+
+    my $long_value = "<$mid2> <$mid3>";
+
+    my $message = $mbox->add_message({
+      headers => [
+        ( map {;
+          $_ => $value,
+        } @hlist, ),
+        References => $long_value,
+      ],
+    });
+
+    my $res = $tester->request({
+      using => [ "ietf:jmapmail" ],
+      methodCalls => [[
+        "Email/get" => {
+          ids        => [ $message->id ],
+          properties => [
+            ( map {;
+              "header:$_:asRaw",
+            } @hlist, ),
+            ( map {;
+              "header:$_:asMessageIds",
+            } @hlist, ),
+            qw(
+              header:References:asRaw
+              header:References:asMessageIds
+            ),
+          ],
+        },
+      ]],
+    });
+    ok($res->is_success, "Email/get")
+      or diag explain $res->http_response->as_string;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [{
+          id                      => $message->id,
+          ( map {;
+            "header:$_:asRaw" => " $value",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asMessageIds" => [ $mid1 ],
+          } @hlist, ),
+          'header:References:asRaw' => " <$mid2>\r\n <$mid3>",
+          'header:References:asMessageIds' => [ $mid2, $mid3 ],
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;
