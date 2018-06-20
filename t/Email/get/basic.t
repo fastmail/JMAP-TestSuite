@@ -1163,8 +1163,12 @@ test "header:{header-field-name}" => sub {
     # \S -> S (quoted-pair)
     $expect_name =~ s/\\//g;
 
-    # XXX - Need to get these in raw_headers but can't easily atm
-    my $to_from_value = qq{"$expect_name" <$email>};
+    # XXX - Really this should be in headers_raw but can't because it won't
+    # override defaults headers To... -- alh, 2018-06-20
+    my $to_value = qq{"$expect_name" <$email>};
+
+    # No name
+    my $from_value = 'foo@example.net';
 
     my @hlist = qw(
       Sender
@@ -1193,7 +1197,7 @@ test "header:{header-field-name}" => sub {
       ],
       # raw_headers doesn't override these sadly. XXX - To fix
       headers => [
-        From => $value,
+        From => $from_value,
         To   => $value,
       ],
     });
@@ -1241,11 +1245,11 @@ test "header:{header-field-name}" => sub {
               email => $email,
             }],
           } @hlist, ),
-          'header:From:asRaw' => " $to_from_value",
-          'header:To:asRaw'   => " $to_from_value",
+          'header:From:asRaw' => " $from_value",
+          'header:To:asRaw'   => " $to_value",
           'header:From:asAddresses' => [{
-            name => $expect_name,
-            email => $email,
+            name => undef,
+            email => $from_value,
           }],
           'header:To:asAddresses' => [{
             name => $expect_name,
