@@ -1373,6 +1373,7 @@ test "header:{header-field-name}" => sub {
         ( map {;
           $_ => $value,
         } @hlist, ),
+        'X-Broken' => 'not a date',
       ],
     });
 
@@ -1388,6 +1389,10 @@ test "header:{header-field-name}" => sub {
             ( map {;
               "header:$_:asDate",
             } @hlist, ),
+            qw(
+              header:X-Broken:asRaw
+              header:X-Broken:asDate
+            ),
           ],
         },
       ]],
@@ -1408,6 +1413,8 @@ test "header:{header-field-name}" => sub {
           ( map {;
             "header:$_:asDate" => "$expect",
           } @hlist, ),
+          'header:X-Broken:asRaw' => " not a date",
+          'header:X-Broken:asDate' => undef,
         }],
       }),
       "Response looks good",
@@ -1435,6 +1442,7 @@ test "header:{header-field-name}" => sub {
         ( map {;
           $_ => $value,
         } @hlist, ),
+        'X-Broken' => 'not a url',
       ],
     });
 
@@ -1450,6 +1458,10 @@ test "header:{header-field-name}" => sub {
             ( map {;
               "header:$_:asURLs",
             } @hlist, ),
+            qw(
+              header:X-Broken:asRaw
+              header:X-Broken:asURLs
+            ),
           ],
         },
       ]],
@@ -1470,6 +1482,8 @@ test "header:{header-field-name}" => sub {
           ( map {;
             "header:$_:asURLs" => [ $url1, $url2 ],
           } @hlist, ),
+          'header:X-Broken:asRaw' => " not a url",
+          'header:X-Broken:asURLs' => undef,
         }],
       }),
       "Response looks good",
