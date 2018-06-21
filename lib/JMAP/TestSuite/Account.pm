@@ -19,6 +19,7 @@ package JMAP::TestSuite::AccountContext {
   use JMAP::TestSuite::Util qw(batch_ok);
   use Test::More;
   use Email::MessageID;
+  use Scalar::Util qw(blessed);
 
   has account => (
     is => 'ro',
@@ -85,6 +86,15 @@ package JMAP::TestSuite::AccountContext {
         ],
       );
     },
+    provided => sub {
+      my ($self, $arg) = @_;
+
+      unless ($arg->{email}) {
+        Carp::confese("'provided' email_type requires an 'email' argument!");
+      }
+
+      return $arg->{email};
+    },
   );
 
   sub email_blob {
@@ -95,7 +105,9 @@ package JMAP::TestSuite::AccountContext {
 
     my $email = $gen->($self, $arg);
 
-    return $self->tester->upload('message/rfc822', \$email->as_string);
+    return $self->tester->upload('message/rfc822',
+      blessed($email) ? \$email->as_string : \$email,
+    );
   }
 
   for my $method (qw(create create_list create_batch retrieve retrieve_batch)) {
