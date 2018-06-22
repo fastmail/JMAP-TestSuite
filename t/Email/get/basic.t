@@ -1526,45 +1526,116 @@ pristine_test "textBody" => sub {
 
   is(@$text_body, 5, 'got 5 parts');
 
-  # Ensure we got text parts A, B, image part C, and
-  # text parts D, K, in that order
+  subtest "order of parts is correct and includes expected parts" => sub {
+    # Ensure we got text parts A, B, image part C, and
+    # text parts D, K, in that order
 
-  # XXX For now, our image doesn't have a partId.
-  # but maybe this is just the spec needing updating?
-  # https://github.com/cyrusimap/cyrus-imapd/issues/2402
-  # -- alh, 2018-06-21
-  my @got;
+    # XXX For now, our image doesn't have a partId.
+    # but maybe this is just the spec needing updating?
+    # https://github.com/cyrusimap/cyrus-imapd/issues/2402
+    # -- alh, 2018-06-21
+    my @got;
 
-  for my $part (@$text_body) {
-    if ($part->{type} eq 'text/plain') {
-      push @got, $body_values->{$part->{partId}}->{value};
-    } elsif ($part->{type} eq 'image/jpeg') {
-      my $download_res = $tester->download({
-        blobId    => $part->{blobId},
-        accountId => $self->context->accountId,
-        name      => "image.jpg"
-      });
+    for my $part (@$text_body) {
+      if ($part->{type} eq 'text/plain') {
+        push @got, $body_values->{$part->{partId}}->{value};
+      } elsif ($part->{type} eq 'image/jpeg') {
+        my $download_res = $tester->download({
+          blobId    => $part->{blobId},
+          accountId => $self->context->accountId,
+          name      => "image.jpg"
+        });
 
-      ok($download_res->is_success, 'downloaded image blob');
+        ok($download_res->is_success, 'downloaded image blob');
 
-      push @got, md5_hex($download_res->bytes_ref);
-    } else {
-      fail("Unknown type?! $part->{type}");
+        push @got, md5_hex($download_res->bytes_ref);
+      } else {
+        fail("Unknown type?! $part->{type}");
+      }
     }
-  }
 
-  jcmp_deeply(
-    \@got,
-    [
-      "This is text part A\n",
-      "This is text part B\n",
-      # md5sum of c.jpg
-      "63d6f41df41023f615ceaabc4ed0db69",
-      "This is text part D\n",
-      "This is text part K\n",
-    ],
-    "textBody gives us correct parts in order"
-  ) or diag explain $res->as_stripped_triples;
+    jcmp_deeply(
+      \@got,
+      [
+        "This is text part A\n",
+        "This is text part B\n",
+        # md5sum of c.jpg
+        "63d6f41df41023f615ceaabc4ed0db69",
+        "This is text part D\n",
+        "This is text part K\n",
+      ],
+      "textBody gives us correct parts in order"
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "textBody attributes are as expected" => sub {
+    jcmp_deeply(
+      $text_body,
+      [
+        {
+          blobId      => jstr(),
+          charset     => 'us-ascii', # No CT, so default charset
+          cid         => undef,      # not provided
+          disposition => undef,      # not provided
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => undef,      # not provided
+          partId      => jstr(),
+          size        => 21,         # Size if downloaded, includes CR
+          type        => 'text/plain', # No CT so default type
+        },
+        {
+          blobId      => jstr(),
+          charset     => 'us-ascii', # not provided, so default us-ascii
+          cid         => 'foo4*foo1@bar.net',
+          disposition => 'inline',
+          language    => set(qw(en de)),
+          location    => 'foo/bar',
+          name        => 'b.txt',    # Content-Disposition filename
+          partId      => jstr(),
+          size        => 21,         # Size if downloaded, includes CR
+          type        => 'text/plain', # not provided, so default text/plain
+        },
+        {
+          blobId      => jstr(),
+          charset     => undef,
+          cid         => undef,      # not provided
+          disposition => 'inline',
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => 'c.jpg',    # Content-Type name
+          partId      => undef,
+          size        => jnum(),
+          type        => 'image/jpeg',
+        },
+        {
+          blobId      => jstr(),
+          charset     => 'iso-8859-1', # Content-Type provided
+          cid         => undef,      # not provided
+          disposition => 'inline',
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => undef,      # not provided
+          partId      => jstr(),
+          size        => 21,         # Size if downloaded, includes CR
+          type        => 'text/plain',
+        },
+        {
+          blobId      => jstr(),
+          charset     => 'us-ascii', # CT present but no charset
+          cid         => undef,      # not provided
+          disposition => 'inline',
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => undef,      # not provided
+          partId      => jstr(),
+          size        => 21,         # Size if downloaded, includes CR
+          type        => 'text/plain',
+        },
+      ],
+      "textBody parts look right"
+    ) or diag explain $res->as_stripped_triples;
+  };
 };
 
 run_me;

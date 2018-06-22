@@ -32,9 +32,11 @@ Content-Transfer-Encoding: 7bit
 --MIXED2
 Date: Thu, 21 Jun 2018 11:00:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Content-Disposition: inline
+Content-Disposition: inline; filename="b.txt"
 Content-Transfer-Encoding: 7bit
+Content-ID: <foo4*foo1@bar.net>
+Content-Language: en, de
+Content-Location: foo/bar
 
 This is text part B
 
@@ -60,7 +62,7 @@ H//EABkQAAMBAQEAAAAAAAAAAAAAAAERIRAxUf/aAAgBAQABPxAPkHue6gKiJRjodwWeh5//2Q==
 --MIXED2
 Date: Thu, 21 Jun 2018 11:00:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 7bit
 
