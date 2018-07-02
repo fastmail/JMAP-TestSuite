@@ -23,7 +23,6 @@ pristine_test "Mailbox/set create with defaults omitted" => sub {
   my $new_name = guid_string();
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/set" => {
         create => {
@@ -66,7 +65,6 @@ pristine_test "Mailbox/set create with defaults omitted" => sub {
 
   subtest "Confirm our name/defaults good" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {
           ids => [ $id ],
@@ -127,7 +125,6 @@ pristine_test "Mailbox/set create with all settable fields provided" => sub {
   # XXX - Create with role test -- alh, 2018-02-22
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/set" => {
         create => {
@@ -172,7 +169,6 @@ pristine_test "Mailbox/set create with all settable fields provided" => sub {
 
   subtest "Confirm our name is good" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {
           ids => [ $id ],
@@ -235,7 +231,6 @@ test "Setting with immutable fields" => sub {
   }
 
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/get" => { ids => [ $mailbox1->id ] },
     ]],
@@ -250,7 +245,6 @@ test "Setting with immutable fields" => sub {
     $mb->{name} .= " a change";
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           create => {
@@ -286,7 +280,6 @@ test "Setting with immutable fields" => sub {
     );
 
     my $set_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           create => {

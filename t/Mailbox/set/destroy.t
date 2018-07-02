@@ -24,7 +24,6 @@ test "Mailbox/set good destroy, no messages" => sub {
   my $mailbox1 = $self->context->create_mailbox;
 
   my $set_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/set" => {
         destroy => [ $mailbox1->id ],
@@ -39,7 +38,6 @@ test "Mailbox/set good destroy, no messages" => sub {
   );
 
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/get" => { ids => [ $mailbox1->id ] },
     ]],
@@ -79,7 +77,6 @@ test "mailboxHasEmail error" => sub {
       my $message = $mailbox1->add_message;
 
       my $set_res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/set" => {
             destroy => [ $mailbox1->id ],
@@ -99,7 +96,6 @@ test "mailboxHasEmail error" => sub {
       );
 
       my $get_res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/get" => { ids => [ $mailbox1->id ] },
         ]],
@@ -114,7 +110,6 @@ test "mailboxHasEmail error" => sub {
       );
 
       my $email_res = $tester->request({
-        using => ["ietf:jmapmail"],
         methodCalls => [[
           "Email/get" => { ids => [ $message->id ], },
         ]],
@@ -140,7 +135,6 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
   my $message = $mailbox1->add_message;
 
   my $set_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/set" => {
         destroy => [ $mailbox1->id ],
@@ -156,7 +150,6 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
   );
 
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/get" => { ids => [ $mailbox1->id ] },
     ]],
@@ -169,7 +162,6 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
   );
 
   my $email_res = $tester->request({
-    using => ["ietf:jmapmail"],
     methodCalls => [[
       "Email/get" => { ids => [ $message->id ], },
     ]],
@@ -201,7 +193,6 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
   );
 
   my $set_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/set" => {
         destroy => [ $mailbox1->id ],
@@ -217,7 +208,6 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
   );
 
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/get" => { ids => [ $mailbox1->id ] },
     ]],
@@ -230,7 +220,6 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
   );
 
   my $email_res = $tester->request({
-    using => ["ietf:jmapmail"],
     methodCalls => [[
       "Email/get" => { ids => [ $message->id ], },
     ]],
@@ -259,7 +248,6 @@ test "mailboxHasChild error" => sub {
 
   subtest "has child" => sub {
     my $set_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           destroy => [ $mailbox1->id ],
@@ -283,7 +271,6 @@ test "mailboxHasChild error" => sub {
     $mailbox2->destroy;
 
     my $set_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           destroy => [ $mailbox1->id ],
@@ -299,7 +286,6 @@ test "mailboxHasChild error" => sub {
     );
 
     my $get_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => { ids => [ $mailbox1->id ] },
       ]],

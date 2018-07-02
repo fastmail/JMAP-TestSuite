@@ -152,7 +152,7 @@ package JMAP::TestSuite::Account::Cyrus {
   use Moose;
   with 'JMAP::TestSuite::Account';
 
-  use JMAP::Tester;
+  use JMAP::TestSuite::JMAP::Tester::Wrapper;
   use MIME::Base64 ();
 
   has credentials => (is => 'ro', required => 1);
@@ -162,7 +162,7 @@ package JMAP::TestSuite::Account::Cyrus {
 
     my $base = $self->server->base_uri =~ s{/\z}{}r;
 
-    my $tester = JMAP::Tester->new({
+    my $tester = JMAP::TestSuite::JMAP::Tester::Wrapper->new({
       api_uri    => "$base/jmap/",
       upload_uri => "$base/jmap/upload/" . $self->credentials->{username} . "/",
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",

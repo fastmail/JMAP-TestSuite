@@ -23,7 +23,6 @@ test "Email/import with bad values" => sub {
   subtest "emails -> wrong form" => sub {
     for my $bad (undef, "none", ["foo"]) {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => $bad,
@@ -44,7 +43,6 @@ test "Email/import with bad values" => sub {
 
   subtest "emails -> required" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/import" => {},
       ]],
@@ -66,7 +64,6 @@ test "Email/import with bad values" => sub {
   subtest "blobId" => sub {
     subtest "wrong form" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -93,7 +90,6 @@ test "Email/import with bad values" => sub {
 
     subtest "bad blobId / not found" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -122,7 +118,6 @@ test "Email/import with bad values" => sub {
   subtest "receivedAt" => sub {
     subtest "wrong form" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -150,7 +145,6 @@ test "Email/import with bad values" => sub {
 
     subtest "bad receivedAt" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -180,7 +174,6 @@ test "Email/import with bad values" => sub {
   subtest "mailboxIds" => sub {
     subtest "wrong form" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -207,7 +200,6 @@ test "Email/import with bad values" => sub {
 
     subtest "bad mailboxIds" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -236,7 +228,6 @@ test "Email/import with bad values" => sub {
   subtest "keywords" => sub {
     subtest "wrong form" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -264,7 +255,6 @@ test "Email/import with bad values" => sub {
 
     subtest "bad keywords" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/import" => {
             emails => {
@@ -293,7 +283,6 @@ test "Email/import with bad values" => sub {
 
   subtest "EmailImport object -> required fields" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/import" => {
           emails => {
@@ -330,7 +319,6 @@ test "good imports" => sub {
     my $mailbox = $context->create_mailbox;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/import" => {
           emails => {
@@ -368,8 +356,6 @@ test "good imports" => sub {
 
     # Verify mailbox, and message data
     my $verify_res = $tester->request({
-      using => ["ietf:jmapmail"],
-
       methodCalls => [
         [
           'Email/query' => {
@@ -422,7 +408,6 @@ test "good imports" => sub {
     my $mailbox = $context->create_mailbox;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/import" => {
           emails => {
@@ -458,8 +443,6 @@ test "good imports" => sub {
 
     # Verify mailbox, and message data
     my $verify_res = $tester->request({
-      using => ["ietf:jmapmail"],
-
       methodCalls => [
         [
           'Email/query' => {
@@ -512,7 +495,6 @@ test "good imports" => sub {
     my $mailbox2 = $context->create_mailbox;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/import" => {
           emails => {
@@ -552,8 +534,6 @@ test "good imports" => sub {
     for my $mailbox_id ($mailbox->id, $mailbox2->id) {
       # Verify mailbox, and message data
       my $verify_res = $tester->request({
-        using => ["ietf:jmapmail"],
-
         methodCalls => [
           [
             'Email/query' => {
@@ -615,7 +595,6 @@ test "one import fails, another succeeds" => sub {
   });
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Email/import" => {
         emails => {
@@ -660,8 +639,6 @@ test "one import fails, another succeeds" => sub {
 
   # Verify mailbox, and message data
   my $verify_res = $tester->request({
-    using => ["ietf:jmapmail"],
-
     methodCalls => [
       [
         'Email/query' => {
@@ -715,7 +692,6 @@ test "invalidEmail" => sub {
   my $blob = $tester->upload('text/plain', \"some data");
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Email/import" => {
         emails => {

@@ -29,6 +29,7 @@ package JMAP::TestSuite::AccountContext {
 
   has tester  => (
     is   => 'ro',
+    isa  => 'JMAP::TestSuite::JMAP::Tester::Wrapper',
     lazy => 1,
     default => sub { $_[0]->account->authenticated_tester },
   );

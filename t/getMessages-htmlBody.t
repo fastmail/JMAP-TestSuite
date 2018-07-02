@@ -44,8 +44,6 @@ test "getMessages-htmlBody" => sub {
   ok($batch->is_entirely_successful, "we uploaded and imported messages");
 
   my $res = $tester->request({
-    using => ["ietf:jmapmail"],
-
     methodCalls => [
       [
         'Email/get' => {

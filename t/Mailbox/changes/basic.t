@@ -24,7 +24,6 @@ pristine_test "Mailbox/changes with no changes" => sub {
   my $state = $self->context->get_state('mailbox');
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/changes" => { sinceState => $state, },
     ]],
@@ -66,7 +65,6 @@ pristine_test "Mailbox/changes with changes" => sub {
     my $mailbox = $self->context->create_mailbox;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => { sinceState => $state, },
       ]],
@@ -96,7 +94,6 @@ pristine_test "Mailbox/changes with changes" => sub {
 
     subtest "update the mailbox" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/set" => {
             update => {
@@ -110,7 +107,6 @@ pristine_test "Mailbox/changes with changes" => sub {
     };
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => { sinceState => $state, },
       ]],
@@ -140,7 +136,6 @@ pristine_test "Mailbox/changes with changes" => sub {
 
     subtest "destroy the mailbox" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/set" => {
             destroy => [ $mailbox->id ],
@@ -152,7 +147,6 @@ pristine_test "Mailbox/changes with changes" => sub {
     };
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => { sinceState => $state, },
       ]],
@@ -200,7 +194,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
   subtest "changes from start state" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => {
           sinceState => $start_state,
@@ -232,7 +225,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
   subtest "changes from middle state to final state" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => {
           sinceState => $middle_state,
@@ -260,7 +252,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
   subtest "final state says no changes" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => {
           sinceState => $end_state,
@@ -303,7 +294,6 @@ pristine_test "changedProperties" => sub {
     $self->context->add_message_to_mailboxes($mailbox->id);
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => { sinceState => $state, },
       ]],
@@ -344,7 +334,6 @@ pristine_test "changedProperties" => sub {
     my $mailbox2 = $self->context->create_mailbox;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/changes" => { sinceState => $state, },
       ]],

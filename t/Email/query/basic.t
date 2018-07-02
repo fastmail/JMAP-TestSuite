@@ -23,7 +23,6 @@ pristine_test "Email/query with no existing entities" => sub {
 
   subtest "No arguments" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/query" => {},
       ]],

@@ -24,7 +24,6 @@ test "Email/get with no ids" => sub {
   my $tester = $self->tester;
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Email/get" => { ids => [] },
     ]],
@@ -62,7 +61,6 @@ test "bodyProperties" => sub {
 
   subtest "no bodyProperties specified, defaults returned" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -100,7 +98,6 @@ test "bodyProperties" => sub {
 
   subtest "limit to no body properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -128,7 +125,6 @@ test "bodyProperties" => sub {
 
   subtest "limit to all body properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -192,7 +188,6 @@ test "bodyProperties" => sub {
 
   subtest "limit to some body properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -238,7 +233,6 @@ test "fetchTextBodyValues" => sub {
 
   subtest "no fetchTextBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -268,7 +262,6 @@ test "fetchTextBodyValues" => sub {
 
   subtest "explicit false fetchTextBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -299,7 +292,6 @@ test "fetchTextBodyValues" => sub {
 
   subtest "explicit true fetchTextBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -343,7 +335,6 @@ test "fetchHTMLBodyValues" => sub {
 
   subtest "no fetchHTMLBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -373,7 +364,6 @@ test "fetchHTMLBodyValues" => sub {
 
   subtest "explicit false fetchHTMLBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -404,7 +394,6 @@ test "fetchHTMLBodyValues" => sub {
 
   subtest "explicit true fetchHTMLBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -448,7 +437,6 @@ test "fetchAllBodyValues" => sub {
 
   subtest "no fetchAllBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -476,7 +464,6 @@ test "fetchAllBodyValues" => sub {
 
   subtest "explicit false fetchAllBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -505,7 +492,6 @@ test "fetchAllBodyValues" => sub {
 
   subtest "explicit true fetchAllBodyValues supplied" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -557,7 +543,6 @@ test "maxBodyValueBytes" => sub {
   subtest "invalid values" => sub {
     for my $invalid (-5, 0, "cat", "1", {}, [], jtrue, undef) {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/get" => {
             ids               => [ $message->id ],
@@ -582,7 +567,6 @@ test "maxBodyValueBytes" => sub {
 
   subtest "truncate is higher than actual number of bytes" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids                => [ $message->id ],
@@ -612,7 +596,6 @@ test "maxBodyValueBytes" => sub {
 
   subtest "truncate between single-byte characters" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids                => [ $message->id ],
@@ -643,7 +626,6 @@ test "maxBodyValueBytes" => sub {
   subtest "truncate does not break UTF-8" => sub {
     for my $mid_snowman (5, 6) {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Email/get" => {
             ids                => [ $message->id ],
@@ -677,7 +659,6 @@ test "maxBodyValueBytes" => sub {
 
   subtest "request at boundary of email/utf8 gives us all data" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids                => [ $message->id ],
@@ -737,7 +718,6 @@ test "properties" => sub {
 
   subtest "no properties specified, defaults returned" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $reply->id ],
@@ -793,7 +773,6 @@ test "properties" => sub {
 
   subtest "limit to no properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $reply->id ],
@@ -819,7 +798,6 @@ test "properties" => sub {
 
   subtest "limit to all properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $reply->id ],
@@ -922,7 +900,6 @@ test "properties" => sub {
 
   subtest "limit to some properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $reply->id ],
@@ -984,7 +961,6 @@ test "header:{header-field-name}" => sub {
   subtest "No as: prefix - default header-form Raw" => sub {
     # Let's test a few that have different parsed forms
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1026,7 +1002,6 @@ test "header:{header-field-name}" => sub {
   subtest ":all prefix, single, multi, and none" => sub {
     # Let's test a few that have different parsed forms
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1064,7 +1039,6 @@ test "header:{header-field-name}" => sub {
   subtest "suffix order must be :as{foo}:all" => sub {
     # Let's test a few that have different parsed forms
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1105,7 +1079,6 @@ test "header:{header-field-name}" => sub {
     });
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1208,7 +1181,6 @@ test "header:{header-field-name}" => sub {
     });
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1315,7 +1287,6 @@ test "header:{header-field-name}" => sub {
     });
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1380,7 +1351,6 @@ test "header:{header-field-name}" => sub {
     });
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1449,7 +1419,6 @@ test "header:{header-field-name}" => sub {
     });
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/get" => {
           ids        => [ $message->id ],
@@ -1506,7 +1475,6 @@ pristine_test "textBody" => sub {
   });
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Email/get" => {
         ids        => [ $message->id ],

@@ -27,7 +27,6 @@ test "Mailbox/set update" => sub {
 
   subtest "change mutable fields" => sub {
     my $set_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           update => {
@@ -48,7 +47,6 @@ test "Mailbox/set update" => sub {
     );
 
     my $get_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => { ids => [ $mailbox2->id ] },
       ]],
@@ -67,7 +65,6 @@ test "Mailbox/set update" => sub {
 
   subtest "can hand in immutable fields if they are same" => sub {
     my $get_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => { ids => [ $mailbox2->id ] },
       ]],
@@ -79,7 +76,6 @@ test "Mailbox/set update" => sub {
     $mb->{name} = "A Newer Name";
 
     my $set_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           update => {
@@ -96,7 +92,6 @@ test "Mailbox/set update" => sub {
     );
 
     my $re_get_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => { ids => [ $mailbox2->id ] },
       ]],
@@ -120,7 +115,6 @@ test "Mailbox/set update" => sub {
     } keys %{ $mailbox2->myRights };
 
     my $set_res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/set" => {
           update => {

@@ -20,8 +20,6 @@ test "getMesageUpdates-sinceState" => sub {
   # string sinceState like the spec requires) and get back a sensible JSON
   # blob telling us what we did wrong.
   my $res = $context->tester->request({
-    using => ["ietf:jmapmail"],
-
     methodCalls => [
       [
         'Email/queryChanges' => {

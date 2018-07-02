@@ -24,7 +24,6 @@ pristine_test "Email/changes with no changes" => sub {
   my $state = $self->context->get_state('email');
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Email/changes" => { sinceState => $state, },
     ]],
@@ -59,7 +58,6 @@ pristine_test "Email/changes with changes" => sub {
     my $message = $self->context->create_mailbox->add_message;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/changes" => { sinceState => $state, },
       ]],
@@ -89,7 +87,6 @@ pristine_test "Email/changes with changes" => sub {
     $message->update({ keywords => { foo => JSON::true } });
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/changes" => { sinceState => $state, },
       ]],
@@ -119,7 +116,6 @@ pristine_test "Email/changes with changes" => sub {
     $message->destroy;
 
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/changes" => { sinceState => $state, },
       ]],
@@ -166,7 +162,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
   subtest "changes from start state" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/changes" => {
           sinceState => $start_state,
@@ -197,7 +192,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
   subtest "changes from middle state to final state" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/changes" => {
           sinceState => $middle_state,
@@ -224,7 +218,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
   subtest "final state says no changes" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Email/changes" => {
           sinceState => $end_state,

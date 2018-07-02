@@ -96,7 +96,6 @@ package JMAP::TestSuite::EntityRole::Common {
     };
 
     my $set_res = $context->tester->request({
-      using => ["ietf:jmapmail"],
       methodCalls => [
         [ $set_method => { create => $to_create } ],
       ],
@@ -126,7 +125,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_expect = $pkg->get_result;
 
     my $get_res = $context->tester->request({
-      using => ["ietf:jmapmail"],
       methodCalls => [
         [ $get_method => { ids => [ $set_sentence->created_ids ] }, ],
       ],
@@ -179,7 +177,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_expect = $pkg->get_result;
 
     my $get_res = $context->tester->request({
-      using => ["ietf:jmapmail"],
       methodCalls => [
         [ $get_method => { ids => [ @$ids ] }, ],
       ],
@@ -223,7 +220,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_expect = $pkg->get_result;
 
     my $get_res = $context->tester->request({
-      using => ["ietf:jmapmail"],
       methodCalls => [
         [ $get_method => { ids => [], }, ],
       ],
@@ -246,7 +242,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my $set_expect = $self->set_result;
 
     my $set_res = $self->tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         $set_method => {
           destroy => [ $self->id ],
@@ -276,7 +271,6 @@ package JMAP::TestSuite::EntityRole::Common {
     my $set_expect = $self->set_result;
 
     my $set_res = $self->tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         $set_method => {
           update => {

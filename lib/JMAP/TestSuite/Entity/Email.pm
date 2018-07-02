@@ -171,7 +171,6 @@ sub _import_batch {
   };
 
   my $set_res = $context->tester->request({
-    using => ["ietf:jmapmail"],
     methodCalls => [
       [ "Email/import" => { emails => $to_create }, ],
     ],
@@ -203,7 +202,6 @@ sub _import_batch {
   my $get_expect = $pkg->get_result;
 
   my $get_res = $context->tester->request({
-    using => ["ietf:jmapmail"],
     methodCalls => [
       [
         $get_method => { ids => [ $set_sentence->created_ids ] },

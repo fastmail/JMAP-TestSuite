@@ -34,7 +34,6 @@ test "Thread/get with a few messages" => sub {
   isnt($other->threadId, $message1->threadId, 'other message not in thread');
 
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Thread/get" => { ids => [ $message1->threadId ] },
     ]],
@@ -70,7 +69,6 @@ pristine_test "Unknown ids gives fills in notFound" => sub {
   # Thread is in another account so we shouldn't see it, therefore
   # notFound!
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Thread/get" => { ids => [ $other_message->threadId ] },
     ]],
@@ -94,7 +92,6 @@ test "empty list" => sub {
   my $tester = $self->tester;
 
   my $get_res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Thread/get" => { ids => [ ] },
     ]],

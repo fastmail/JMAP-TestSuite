@@ -45,8 +45,6 @@ test "previews" => sub {
 
   subtest "getMessages" => sub {
     my $res = $tester->request({
-      using => ["ietf:jmapmail"],
-
       methodCalls => [
         [
           'Email/get' => {
@@ -80,8 +78,6 @@ test "previews" => sub {
 
   subtest "getMessageList" => sub {
     my $res = $tester->request({
-      using => ["ietf:jmapmail"],
-
       methodCalls => [
         [
           'Email/query' => {

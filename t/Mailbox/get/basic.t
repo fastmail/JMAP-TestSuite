@@ -24,7 +24,6 @@ pristine_test "Mailbox/get with no existing entities" => sub {
 
   subtest "No arguments" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {},
       ]],
@@ -64,7 +63,6 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
     subtest "$name" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/get" => $args,
         ]],
@@ -123,7 +121,6 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
   subtest "Limit by id" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => { ids => [ $mailbox1->id ], },
       ]],
@@ -179,7 +176,6 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
   subtest "Limit to no ids" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => { ids => [ ], },
       ]],
@@ -209,7 +205,6 @@ test "Mailbox/get with limiting properties in resposne" => sub {
 
   subtest "properties => null gives us all properties" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {
           ids        => [ $mailbox1->id ],
@@ -268,7 +263,6 @@ test "Mailbox/get with limiting properties in resposne" => sub {
 
   subtest "Limiting to a few properties works and includes id" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {
           ids        => [ $mailbox1->id ],

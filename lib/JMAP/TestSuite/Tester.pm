@@ -91,7 +91,6 @@ sub test_query {
 
   subtest "$test" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "$call" => $args,
       ]],

@@ -26,7 +26,6 @@ pristine_test "Mailbox/query with no existing entities" => sub {
 
   subtest "No arguments" => sub {
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/query" => {},
       ]],
@@ -66,7 +65,6 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
     subtest "does not have a parentId" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/query" => {
             filter => {
@@ -86,7 +84,6 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
     subtest "has a parentId" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/query" => {
             filter => {
@@ -107,7 +104,6 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
   subtest "hasRole" => sub {
     # Find some mailboxes with roles
     my $res = $tester->request({
-      using => [ "ietf:jmapmail" ],
       methodCalls => [[
         "Mailbox/get" => {},
       ]],
@@ -124,7 +120,6 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
     subtest "false" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/query" => {
             filter => {
@@ -153,7 +148,6 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
     subtest "true" => sub {
       my $res = $tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/query" => {
             filter => {
@@ -371,7 +365,6 @@ pristine_test "sorting and limiting" => sub {
   subtest "limits" => sub {
     subtest "Negative limit" => sub {
       my $res = $self->tester->request({
-        using => [ "ietf:jmapmail" ],
         methodCalls => [[
           "Mailbox/query" => { limit => -5 },
         ]],

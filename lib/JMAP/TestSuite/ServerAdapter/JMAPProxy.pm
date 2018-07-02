@@ -35,14 +35,14 @@ package JMAP::TestSuite::Account::JMAPProxy {
   use Moose;
   with 'JMAP::TestSuite::Account';
 
-  use JMAP::Tester;
+  use JMAP::TestSuite::JMAP::Tester::Wrapper;
 
   has api_uri      => (is => 'ro');
   has download_uri => (is => 'ro');
   has upload_uri   => (is => 'ro');
 
   sub authenticated_tester {
-    my $tester = JMAP::Tester->new({
+    my $tester = JMAP::TestSuite::JMAP::Tester::Wrapper->new({
       api_uri     => $_[0]->api_uri,
       upload_uri  => $_[0]->upload_uri,
     });
