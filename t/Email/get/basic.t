@@ -18,6 +18,8 @@ use Digest::MD5 qw(md5_hex);
 
 use utf8;
 
+my %PART = _get_parts();
+
 test "Email/get with no ids" => sub {
   my ($self) = @_;
 
@@ -1475,68 +1477,7 @@ pristine_test "textBody" => sub {
   subtest "textBody attributes are as expected" => sub {
     jcmp_deeply(
       $text_body,
-      [
-        {
-          blobId      => jstr(),
-          charset     => 'us-ascii', # No CT, so default charset
-          cid         => undef,      # not provided
-          disposition => undef,      # not provided
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => undef,      # not provided
-          partId      => jstr(),
-          size        => 21,         # Size if downloaded, includes CR
-          type        => 'text/plain', # No CT so default type
-        },
-        {
-          blobId      => jstr(),
-          charset     => 'us-ascii', # not provided, so default us-ascii
-          cid         => 'foo4*foo1@bar.net',
-          disposition => 'inline',
-          language    => set(qw(en de)),
-          location    => 'foo/bar',
-          name        => 'b.txt',    # Content-Disposition filename
-          partId      => jstr(),
-          size        => 21,         # Size if downloaded, includes CR
-          type        => 'text/plain', # not provided, so default text/plain
-        },
-        {
-          blobId      => jstr(),
-          charset     => undef,
-          cid         => undef,      # not provided
-          disposition => 'inline',
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => 'c.jpg',    # Content-Type name
-          partId      => jstr(),
-          size        => jnum(),
-          type        => 'image/jpeg',
-        },
-        {
-          blobId      => jstr(),
-          charset     => 'iso-8859-1', # Content-Type provided
-          cid         => undef,      # not provided
-          disposition => 'inline',
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => undef,      # not provided
-          partId      => jstr(),
-          size        => 21,         # Size if downloaded, includes CR
-          type        => 'text/plain',
-        },
-        {
-          blobId      => jstr(),
-          charset     => 'us-ascii', # CT present but no charset
-          cid         => undef,      # not provided
-          disposition => 'inline',
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => undef,      # not provided
-          partId      => jstr(),
-          size        => 21,         # Size if downloaded, includes CR
-          type        => 'text/plain',
-        },
-      ],
+      [ @PART{ qw(A B C D K) } ],
       "textBody parts look right"
     ) or diag explain $res->as_stripped_triples;
   };
@@ -1598,44 +1539,7 @@ pristine_test "htmlBody" => sub {
   subtest "htmlBody attributes are as expected" => sub {
     jcmp_deeply(
       $html_body,
-      [
-        {
-          blobId      => jstr(),
-          charset     => 'us-ascii', # No CT, so default charset
-          cid         => undef,      # not provided
-          disposition => undef,      # not provided
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => undef,      # not provided
-          partId      => jstr(),
-          size        => 21,         # Size if downloaded, includes CR
-          type        => 'text/plain', # No CT so default type
-        },
-        {
-          blobId      => jstr(),
-          charset     => 'us-ascii', # CT present but no charset
-          cid         => undef,      # not provided
-          disposition => undef,
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => undef,      # not provided
-          partId      => jstr(),
-          size        => 49,         # Size if downloaded, includes CR
-          type        => 'text/html',
-        },
-        {
-          blobId      => jstr(),
-          charset     => 'us-ascii', # CT present but no charset
-          cid         => undef,      # not provided
-          disposition => 'inline',
-          language    => [],         # not provided
-          location    => undef,      # not provided
-          name        => undef,      # not provided
-          partId      => jstr(),
-          size        => 21,         # Size if downloaded, includes CR
-          type        => 'text/plain',
-        },
-      ],
+      [ @PART{ qw(A E K) } ],
       "htmlBody parts look right"
     ) or diag explain $res->as_stripped_triples;
   };
@@ -1729,172 +1633,189 @@ EOF
     ) or diag explain $res->as_stripped_triples;
   };
 
-  sub multipart {
-    my ($type, $subparts) = @_;
-
-    return {
-      blobId      => undef,
-      charset     => undef,
-      cid         => undef,
-      disposition => undef,
-      language    => [],
-      location    => undef,
-      name        => undef,
-      partId      => undef,
-      size        => 0,
-      type        => "multipart/$type",
-      subParts    => $subparts,
-    }
-  }
-
   subtest "bodyStructure attributes are as expected" => sub {
     jcmp_deeply(
       $body_structure,
       multipart('mixed',
         [
-          # Part A
-          {
-            blobId      => jstr(),
-            charset     => 'us-ascii', # No CT, so default charset
-            cid         => undef,      # not provided
-            disposition => undef,      # not provided
-            language    => [],         # not provided
-            location    => undef,      # not provided
-            name        => undef,      # not provided
-            partId      => jstr(),
-            size        => 21,         # Size if downloaded, includes CR
-            type        => 'text/plain', # No CT so default type
-          },
+          $PART{A},
           multipart('mixed',
             [
               multipart('alternative',
                 [
                   multipart('mixed',
-                    [
-                      {
-                        blobId      => jstr(),
-                        charset     => 'us-ascii', # not provided, so default us-ascii
-                        cid         => 'foo4*foo1@bar.net',
-                        disposition => 'inline',
-                        language    => set(qw(en de)),
-                        location    => 'foo/bar',
-                        name        => 'b.txt',    # Content-Disposition filename
-                        partId      => jstr(),
-                        size        => 21,         # Size if downloaded, includes CR
-                        type        => 'text/plain', # not provided, so default text/plain
-                      },
-                      {
-                        blobId      => jstr(),
-                        charset     => undef,
-                        cid         => undef,      # not provided
-                        disposition => 'inline',
-                        language    => [],         # not provided
-                        location    => undef,      # not provided
-                        name        => 'c.jpg',    # Content-Type name
-                        partId      => jstr(),
-                        size        => jnum(),
-                        type        => 'image/jpeg',
-                      },
-                      {
-                        blobId      => jstr(),
-                        charset     => 'iso-8859-1', # Content-Type provided
-                        cid         => undef,      # not provided
-                        disposition => 'inline',
-                        language    => [],         # not provided
-                        location    => undef,      # not provided
-                        name        => undef,      # not provided
-                        partId      => jstr(),
-                        size        => 21,         # Size if downloaded, includes CR
-                        type        => 'text/plain',
-                      },
-                    ],
+                    [ @PART{ qw(B C D) } ],
                   ),
                   multipart('related',
-                    [
-                      {
-                        blobId      => jstr(),
-                        charset     => 'us-ascii', # CT present but no charset
-                        cid         => undef,      # not provided
-                        disposition => undef,
-                        language    => [],         # not provided
-                        location    => undef,      # not provided
-                        name        => undef,      # not provided
-                        partId      => jstr(),
-                        size        => 49,         # Size if downloaded, includes CR
-                        type        => 'text/html',
-                      },
-                      {
-                        blobId      => jstr(),
-                        charset     => undef,
-                        cid         => undef,      # not provided
-                        disposition => 'inline',
-                        language    => [],         # not provided
-                        location    => undef,      # not provided
-                        name        => 'f.jpg',    # Content-Type name
-                        partId      => jstr(),
-                        size        => jnum(),
-                        type        => 'image/jpeg',
-                      },
-                    ],
+                    [ @PART{ qw(E F) } ],
                   ),
                 ],
               ),
-              {
-                blobId      => jstr(),
-                charset     => undef,
-                cid         => undef,      # not provided
-                disposition => 'attachment',
-                language    => [],         # not provided
-                location    => undef,      # not provided
-                name        => 'g.jpg',    # Content-Type name
-                partId      => jstr(),
-                size        => jnum(),
-                type        => 'image/jpeg',
-              },
-              {
-                blobId      => jstr(),
-                charset     => undef,
-                cid         => undef,      # not provided
-                disposition => undef,
-                language    => [],         # not provided
-                location    => undef,      # not provided
-                name        => undef,
-                partId      => jstr(),
-                size        => jnum(),
-                type        => 'application/x-excel',
-              },
-              {
-                blobId      => jstr(),
-                charset     => undef,
-                cid         => undef,      # not provided
-                disposition => undef,
-                language    => [],         # not provided
-                location    => undef,      # not provided
-                name        => undef,
-                partId      => jstr(),
-                size        => jnum(),
-                type        => 'message/rfc822',
-              },
+              @PART{ qw(G H J) },
             ],
           ),
-          {
-            blobId      => jstr(),
-            charset     => 'us-ascii', # CT present but no charset
-            cid         => undef,      # not provided
-            disposition => 'inline',
-            language    => [],         # not provided
-            location    => undef,      # not provided
-            name        => undef,      # not provided
-            partId      => jstr(),
-            size        => 21,         # Size if downloaded, includes CR
-            type        => 'text/plain',
-          },
+          $PART{K},
         ],
       ),
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
   };
 };
+
+# Some common parts used in this test. Taken from the example message
+# structure just above this:
+# https://github.com/jmapio/jmap/blob/master/spec/mail/message.mdown#emailget
+sub _get_parts {
+  return (
+    A => {
+      blobId      => jstr(),
+      charset     => 'us-ascii', # No CT, so default charset
+      cid         => undef,      # not provided
+      disposition => undef,      # not provided
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => undef,      # not provided
+      partId      => jstr(),
+      size        => 21,         # Size if downloaded, includes CR
+      type        => 'text/plain', # No CT so default type
+    },
+
+    B => {
+      blobId      => jstr(),
+      charset     => 'us-ascii', # not provided, so default us-ascii
+      cid         => 'foo4*foo1@bar.net',
+      disposition => 'inline',
+      language    => set(qw(en de)),
+      location    => 'foo/bar',
+      name        => 'b.txt',    # Content-Disposition filename
+      partId      => jstr(),
+      size        => 21,         # Size if downloaded, includes CR
+      type        => 'text/plain', # not provided, so default text/plain
+    },
+
+    C => {
+      blobId      => jstr(),
+      charset     => undef,
+      cid         => undef,      # not provided
+      disposition => 'inline',
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => 'c.jpg',    # Content-Type name
+      partId      => jstr(),
+      size        => jnum(),
+      type        => 'image/jpeg',
+    },
+
+    D => {
+      blobId      => jstr(),
+      charset     => 'iso-8859-1', # Content-Type provided
+      cid         => undef,      # not provided
+      disposition => 'inline',
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => undef,      # not provided
+      partId      => jstr(),
+      size        => 21,         # Size if downloaded, includes CR
+      type        => 'text/plain',
+    },
+
+    E => {
+      blobId      => jstr(),
+      charset     => 'us-ascii', # CT present but no charset
+      cid         => undef,      # not provided
+      disposition => undef,
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => undef,      # not provided
+      partId      => jstr(),
+      size        => 49,         # Size if downloaded, includes CR
+      type        => 'text/html',
+    },
+
+    F => {
+      blobId      => jstr(),
+      charset     => undef,
+      cid         => undef,      # not provided
+      disposition => 'inline',
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => 'f.jpg',    # Content-Type name
+      partId      => jstr(),
+      size        => jnum(),
+      type        => 'image/jpeg',
+    },
+
+    G => {
+      blobId      => jstr(),
+      charset     => undef,
+      cid         => undef,      # not provided
+      disposition => 'attachment',
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => 'g.jpg',    # Content-Type name
+      partId      => jstr(),
+      size        => jnum(),
+      type        => 'image/jpeg',
+    },
+
+    H => {
+      blobId      => jstr(),
+      charset     => undef,
+      cid         => undef,      # not provided
+      disposition => undef,
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => undef,
+      partId      => jstr(),
+      size        => jnum(),
+      type        => 'application/x-excel',
+    },
+
+    J => {
+      blobId      => jstr(),
+      charset     => undef,
+      cid         => undef,      # not provided
+      disposition => undef,
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => undef,
+      partId      => jstr(),
+      size        => jnum(),
+      type        => 'message/rfc822',
+    },
+
+    K => {
+      blobId      => jstr(),
+      charset     => 'us-ascii', # CT present but no charset
+      cid         => undef,      # not provided
+      disposition => 'inline',
+      language    => [],         # not provided
+      location    => undef,      # not provided
+      name        => undef,      # not provided
+      partId      => jstr(),
+      size        => 21,         # Size if downloaded, includes CR
+      type        => 'text/plain',
+    },
+  );
+}
+
+sub multipart {
+  my ($type, $subparts) = @_;
+
+  return {
+    blobId      => undef,
+    charset     => undef,
+    cid         => undef,
+    disposition => undef,
+    language    => [],
+    location    => undef,
+    name        => undef,
+    partId      => undef,
+    size        => 0,
+    type        => "multipart/$type",
+    subParts    => $subparts,
+  };
+}
 
 run_me;
 done_testing;
