@@ -90,11 +90,9 @@ sub test_query {
   }
 
   subtest "$test" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "$call" => $args,
-      ]],
-    });
+    my $res = $tester->request([[
+      "$call" => $args,
+    ]]);
     ok($res->is_success, "$call")
       or diag explain $res->http_response->as_string;
 

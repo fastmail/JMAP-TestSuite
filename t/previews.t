@@ -44,17 +44,13 @@ test "previews" => sub {
   ok($batch->is_entirely_successful, "we uploaded and imported messages");
 
   subtest "getMessages" => sub {
-    my $res = $tester->request({
-      methodCalls => [
-        [
-          'Email/get' => {
-            ids => [ $batch->result_for('msg')->id ],
-            properties => [ qw(preview bodyValues textBody) ],
-            fetchTextBodyValues => JSON::true,
-          },
-        ],
-      ],
-    });
+    my $res = $tester->request([[
+      'Email/get' => {
+        ids => [ $batch->result_for('msg')->id ],
+        properties => [ qw(preview bodyValues textBody) ],
+        fetchTextBodyValues => JSON::true,
+      },
+    ]]);
 
     my $email = $res->single_sentence->arguments->{list}[0];
 
@@ -77,26 +73,24 @@ test "previews" => sub {
   };
 
   subtest "getMessageList" => sub {
-    my $res = $tester->request({
-      methodCalls => [
-        [
-          'Email/query' => {
-            filter => { inMailbox => $x->id },
-          }, 'query',
-        ],
-        [
-          'Email/get' => {
-            '#ids' => {
-              resultOf => 'query',
-              name     => 'Email/query',
-              path     => '/ids',
-            },
-            properties => [ qw(preview bodyValues textBody) ],
-            fetchTextBodyValues => JSON::true,
-          },
-        ],
+    my $res = $tester->request([
+      [
+        'Email/query' => {
+          filter => { inMailbox => $x->id },
+        }, 'query',
       ],
-    });
+      [
+        'Email/get' => {
+          '#ids' => {
+            resultOf => 'query',
+            name     => 'Email/query',
+            path     => '/ids',
+          },
+          properties => [ qw(preview bodyValues textBody) ],
+          fetchTextBodyValues => JSON::true,
+        },
+      ],
+    ]);
 
     my $email = $res->sentence(1)->arguments->{list}[0];
 

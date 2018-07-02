@@ -33,11 +33,9 @@ test "Thread/get with a few messages" => sub {
   is($message1->threadId, $message2->threadId, 'threadIds match');
   isnt($other->threadId, $message1->threadId, 'other message not in thread');
 
-  my $get_res = $tester->request({
-    methodCalls => [[
-      "Thread/get" => { ids => [ $message1->threadId ] },
-    ]],
-  });
+  my $get_res = $tester->request([[
+    "Thread/get" => { ids => [ $message1->threadId ] },
+  ]]);
 
   jcmp_deeply(
     $get_res->sentence_named('Thread/get')->arguments,
@@ -68,11 +66,9 @@ pristine_test "Unknown ids gives fills in notFound" => sub {
 
   # Thread is in another account so we shouldn't see it, therefore
   # notFound!
-  my $get_res = $tester->request({
-    methodCalls => [[
-      "Thread/get" => { ids => [ $other_message->threadId ] },
-    ]],
-  });
+  my $get_res = $tester->request([[
+    "Thread/get" => { ids => [ $other_message->threadId ] },
+  ]]);
 
   jcmp_deeply(
     $get_res->sentence_named('Thread/get')->arguments,
@@ -91,11 +87,9 @@ test "empty list" => sub {
 
   my $tester = $self->tester;
 
-  my $get_res = $tester->request({
-    methodCalls => [[
-      "Thread/get" => { ids => [ ] },
-    ]],
-  });
+  my $get_res = $tester->request([[
+    "Thread/get" => { ids => [ ] },
+  ]]);
 
   jcmp_deeply(
     $get_res->sentence_named('Thread/get')->arguments,

@@ -25,11 +25,9 @@ pristine_test "Mailbox/query with no existing entities" => sub {
   my $tester = $self->tester;
 
   subtest "No arguments" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/query" => {},
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/query" => {},
+    ]]);
     ok($res->is_success, "Mailbox/query")
       or diag explain $res->http_response->as_string;
 
@@ -64,15 +62,13 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
   subtest "parentId" => sub {
 
     subtest "does not have a parentId" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Mailbox/query" => {
-            filter => {
-              parentId => undef,
-            },
+      my $res = $tester->request([[
+        "Mailbox/query" => {
+          filter => {
+            parentId => undef,
           },
-        ]],
-      });
+        },
+      ]]);
       ok($res->is_success, "Mailbox/query")
         or diag explain $res->http_response->as_string;
 
@@ -83,15 +79,13 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
     };
 
     subtest "has a parentId" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Mailbox/query" => {
-            filter => {
-              parentId => $mailbox1->id,
-            },
+      my $res = $tester->request([[
+        "Mailbox/query" => {
+          filter => {
+            parentId => $mailbox1->id,
           },
-        ]],
-      });
+        },
+      ]]);
       ok($res->is_success, "Mailbox/query")
         or diag explain $res->http_response->as_string;
 
@@ -103,11 +97,9 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
   subtest "hasRole" => sub {
     # Find some mailboxes with roles
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => {},
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/get" => {},
+    ]]);
 
     my @with_roles = map {;
       $_->{id}
@@ -119,15 +111,13 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
       unless @with_roles;
 
     subtest "false" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Mailbox/query" => {
-            filter => {
-              hasRole => JSON::false,
-            },
+      my $res = $tester->request([[
+        "Mailbox/query" => {
+          filter => {
+            hasRole => JSON::false,
           },
-        ]],
-      });
+        },
+      ]]);
       ok($res->is_success, "Mailbox/query")
         or diag explain $res->http_response->as_string;
 
@@ -147,15 +137,13 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
     };
 
     subtest "true" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Mailbox/query" => {
-            filter => {
-              hasRole => JSON::true,
-            },
+      my $res = $tester->request([[
+        "Mailbox/query" => {
+          filter => {
+            hasRole => JSON::true,
           },
-        ]],
-      });
+        },
+      ]]);
       ok($res->is_success, "Mailbox/query")
         or diag explain $res->http_response->as_string;
 
@@ -364,11 +352,9 @@ pristine_test "sorting and limiting" => sub {
 
   subtest "limits" => sub {
     subtest "Negative limit" => sub {
-      my $res = $self->tester->request({
-        methodCalls => [[
-          "Mailbox/query" => { limit => -5 },
-        ]],
-      });
+      my $res = $self->tester->request([[
+        "Mailbox/query" => { limit => -5 },
+      ]]);
 
       ok($res->is_success, "Mailbox/query")
         or diag explain $res->http_response->as_string;

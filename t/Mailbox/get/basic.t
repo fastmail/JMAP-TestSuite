@@ -23,11 +23,9 @@ pristine_test "Mailbox/get with no existing entities" => sub {
   my $tester = $self->tester;
 
   subtest "No arguments" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => {},
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/get" => {},
+    ]]);
     ok($res->is_success, "Mailbox/get")
       or diag explain $res->http_response->as_string;
 
@@ -62,11 +60,9 @@ pristine_test "Mailbox/get when some entities exist" => sub {
     my ($name, $args) = @$test;
 
     subtest "$name" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Mailbox/get" => $args,
-        ]],
-      });
+      my $res = $tester->request([[
+        "Mailbox/get" => $args,
+      ]]);
       ok($res->is_success, "Mailbox/get")
         or diag explain $res->http_response->as_string;
 
@@ -120,11 +116,9 @@ pristine_test "Mailbox/get when some entities exist" => sub {
   }
 
   subtest "Limit by id" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => { ids => [ $mailbox1->id ], },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/get" => { ids => [ $mailbox1->id ], },
+    ]]);
     ok($res->is_success, "Mailbox/get")
       or diag explain $res->http_response->as_string;
 
@@ -175,11 +169,9 @@ pristine_test "Mailbox/get when some entities exist" => sub {
   };
 
   subtest "Limit to no ids" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => { ids => [ ], },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/get" => { ids => [ ], },
+    ]]);
     ok($res->is_success, "Mailbox/get")
       or diag explain $res->http_response->as_string;
 
@@ -204,14 +196,12 @@ test "Mailbox/get with limiting properties in resposne" => sub {
   my $mailbox1 = $self->context->create_mailbox;
 
   subtest "properties => null gives us all properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => {
-          ids        => [ $mailbox1->id ],
-          properties => undef,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/get" => {
+        ids        => [ $mailbox1->id ],
+        properties => undef,
+      },
+    ]]);
     ok($res->is_success, "Mailbox/get")
       or diag explain $res->http_response->as_string;
 
@@ -262,14 +252,12 @@ test "Mailbox/get with limiting properties in resposne" => sub {
   };
 
   subtest "Limiting to a few properties works and includes id" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => {
-          ids        => [ $mailbox1->id ],
-          properties => [ 'name', 'sortOrder' ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Mailbox/get" => {
+        ids        => [ $mailbox1->id ],
+        properties => [ 'name', 'sortOrder' ],
+      },
+    ]]);
     ok($res->is_success, "Mailbox/get")
       or diag explain $res->http_response->as_string;
 

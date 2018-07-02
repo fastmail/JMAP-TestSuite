@@ -22,11 +22,9 @@ pristine_test "Email/query with no existing entities" => sub {
   my $tester = $self->tester;
 
   subtest "No arguments" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/query" => {},
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/query" => {},
+    ]]);
     ok($res->is_success, "Email/query")
       or diag explain $res->http_response->as_string;
 

@@ -23,13 +23,11 @@ test "Mailbox/set good destroy, no messages" => sub {
 
   my $mailbox1 = $self->context->create_mailbox;
 
-  my $set_res = $tester->request({
-    methodCalls => [[
-      "Mailbox/set" => {
-        destroy => [ $mailbox1->id ],
-      },
-    ]],
-  });
+  my $set_res = $tester->request([[
+    "Mailbox/set" => {
+      destroy => [ $mailbox1->id ],
+    },
+  ]]);
 
   jcmp_deeply(
     $set_res->single_sentence('Mailbox/set')->arguments->{destroyed},
@@ -37,11 +35,9 @@ test "Mailbox/set good destroy, no messages" => sub {
     'mailbox destroyed'
   );
 
-  my $get_res = $tester->request({
-    methodCalls => [[
-      "Mailbox/get" => { ids => [ $mailbox1->id ] },
-    ]],
-  });
+  my $get_res = $tester->request([[
+    "Mailbox/get" => { ids => [ $mailbox1->id ] },
+  ]]);
 
   jcmp_deeply(
     $get_res->single_sentence('Mailbox/get')->arguments->{list},
@@ -76,14 +72,12 @@ test "mailboxHasEmail error" => sub {
 
       my $message = $mailbox1->add_message;
 
-      my $set_res = $tester->request({
-        methodCalls => [[
-          "Mailbox/set" => {
-            destroy => [ $mailbox1->id ],
-            %$arg,
-          },
-        ]],
-      });
+      my $set_res = $tester->request([[
+        "Mailbox/set" => {
+          destroy => [ $mailbox1->id ],
+          %$arg,
+        },
+      ]]);
 
       jcmp_deeply(
         $set_res->single_sentence('Mailbox/set')->arguments->{notDestroyed},
@@ -95,11 +89,9 @@ test "mailboxHasEmail error" => sub {
         'got mailboxHasEmail error'
       );
 
-      my $get_res = $tester->request({
-        methodCalls => [[
-          "Mailbox/get" => { ids => [ $mailbox1->id ] },
-        ]],
-      });
+      my $get_res = $tester->request([[
+        "Mailbox/get" => { ids => [ $mailbox1->id ] },
+      ]]);
 
       jcmp_deeply(
         $get_res->single_sentence('Mailbox/get')->arguments->{list},
@@ -109,11 +101,9 @@ test "mailboxHasEmail error" => sub {
         'mailbox still exists'
       );
 
-      my $email_res = $tester->request({
-        methodCalls => [[
-          "Email/get" => { ids => [ $message->id ], },
-        ]],
-      });
+      my $email_res = $tester->request([[
+        "Email/get" => { ids => [ $message->id ], },
+      ]]);
 
       my $email = $email_res->single_sentence->arguments->{list}[0];
       ok($email, 'our message still exists');
@@ -134,14 +124,12 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
 
   my $message = $mailbox1->add_message;
 
-  my $set_res = $tester->request({
-    methodCalls => [[
-      "Mailbox/set" => {
-        destroy => [ $mailbox1->id ],
-        onDestroyRemoveMessages => JSON::true,
-      },
-    ]],
-  });
+  my $set_res = $tester->request([[
+    "Mailbox/set" => {
+      destroy => [ $mailbox1->id ],
+      onDestroyRemoveMessages => JSON::true,
+    },
+  ]]);
 
   jcmp_deeply(
     $set_res->single_sentence('Mailbox/set')->arguments->{destroyed},
@@ -149,11 +137,9 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
     'mailbox destroyed'
   );
 
-  my $get_res = $tester->request({
-    methodCalls => [[
-      "Mailbox/get" => { ids => [ $mailbox1->id ] },
-    ]],
-  });
+  my $get_res = $tester->request([[
+    "Mailbox/get" => { ids => [ $mailbox1->id ] },
+  ]]);
 
   jcmp_deeply(
     $get_res->single_sentence('Mailbox/get')->arguments->{notFound},
@@ -161,11 +147,9 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
     'our destroyed mailbox not found'
   );
 
-  my $email_res = $tester->request({
-    methodCalls => [[
-      "Email/get" => { ids => [ $message->id ], },
-    ]],
-  });
+  my $email_res = $tester->request([[
+    "Email/get" => { ids => [ $message->id ], },
+  ]]);
 
   jcmp_deeply(
     $email_res->single_sentence('Email/get')->arguments->{notFound},
@@ -192,14 +176,12 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
     $mailbox1->id, $mailbox2->id,
   );
 
-  my $set_res = $tester->request({
-    methodCalls => [[
-      "Mailbox/set" => {
-        destroy => [ $mailbox1->id ],
-        onDestroyRemoveMessages => JSON::true,
-      },
-    ]],
-  });
+  my $set_res = $tester->request([[
+    "Mailbox/set" => {
+      destroy => [ $mailbox1->id ],
+      onDestroyRemoveMessages => JSON::true,
+    },
+  ]]);
 
   jcmp_deeply(
     $set_res->single_sentence('Mailbox/set')->arguments->{destroyed},
@@ -207,11 +189,9 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
     'mailbox destroyed'
   );
 
-  my $get_res = $tester->request({
-    methodCalls => [[
-      "Mailbox/get" => { ids => [ $mailbox1->id ] },
-    ]],
-  });
+  my $get_res = $tester->request([[
+    "Mailbox/get" => { ids => [ $mailbox1->id ] },
+  ]]);
 
   jcmp_deeply(
     $get_res->single_sentence('Mailbox/get')->arguments->{notFound},
@@ -219,11 +199,9 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
     'our destroyed mailbox not found'
   );
 
-  my $email_res = $tester->request({
-    methodCalls => [[
-      "Email/get" => { ids => [ $message->id ], },
-    ]],
-  });
+  my $email_res = $tester->request([[
+    "Email/get" => { ids => [ $message->id ], },
+  ]]);
 
   my $email = $email_res->single_sentence->arguments->{list}[0];
   ok($email, 'our message still exists');
@@ -247,14 +225,12 @@ test "mailboxHasChild error" => sub {
   });
 
   subtest "has child" => sub {
-    my $set_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/set" => {
-          destroy => [ $mailbox1->id ],
-          onDestroyRemoveMessages => JSON::true,
-        },
-      ]],
-    });
+    my $set_res = $tester->request([[
+      "Mailbox/set" => {
+        destroy => [ $mailbox1->id ],
+        onDestroyRemoveMessages => JSON::true,
+      },
+    ]]);
 
     jcmp_deeply(
       $set_res->single_sentence('Mailbox/set')->arguments->{notDestroyed},
@@ -270,14 +246,12 @@ test "mailboxHasChild error" => sub {
   subtest "no longer has child" => sub {
     $mailbox2->destroy;
 
-    my $set_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/set" => {
-          destroy => [ $mailbox1->id ],
-          onDestroyRemoveMessages => JSON::true,
-        },
-      ]],
-    });
+    my $set_res = $tester->request([[
+      "Mailbox/set" => {
+        destroy => [ $mailbox1->id ],
+        onDestroyRemoveMessages => JSON::true,
+      },
+    ]]);
 
     jcmp_deeply(
       $set_res->single_sentence('Mailbox/set')->arguments->{destroyed},
@@ -285,11 +259,9 @@ test "mailboxHasChild error" => sub {
       'mailbox destroyed'
     );
 
-    my $get_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => { ids => [ $mailbox1->id ] },
-      ]],
-    });
+    my $get_res = $tester->request([[
+      "Mailbox/get" => { ids => [ $mailbox1->id ] },
+    ]]);
 
     jcmp_deeply(
       $get_res->single_sentence('Mailbox/get')->arguments->{list},

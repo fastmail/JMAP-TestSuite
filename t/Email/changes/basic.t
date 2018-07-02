@@ -23,11 +23,9 @@ pristine_test "Email/changes with no changes" => sub {
 
   my $state = $self->context->get_state('email');
 
-  my $res = $tester->request({
-    methodCalls => [[
-      "Email/changes" => { sinceState => $state, },
-    ]],
-  });
+  my $res = $tester->request([[
+    "Email/changes" => { sinceState => $state, },
+  ]]);
   ok($res->is_success, "Email/changes")
     or diag explain $res->http_response->as_string;
 
@@ -57,11 +55,9 @@ pristine_test "Email/changes with changes" => sub {
 
     my $message = $self->context->create_mailbox->add_message;
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/changes" => { sinceState => $state, },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/changes" => { sinceState => $state, },
+    ]]);
     ok($res->is_success, "Email/changes")
       or diag explain $res->http_response->as_string;
 
@@ -86,11 +82,9 @@ pristine_test "Email/changes with changes" => sub {
 
     $message->update({ keywords => { foo => JSON::true } });
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/changes" => { sinceState => $state, },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/changes" => { sinceState => $state, },
+    ]]);
     ok($res->is_success, "Email/changes")
       or diag explain $res->http_response->as_string;
 
@@ -115,11 +109,9 @@ pristine_test "Email/changes with changes" => sub {
 
     $message->destroy;
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/changes" => { sinceState => $state, },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/changes" => { sinceState => $state, },
+    ]]);
     ok($res->is_success, "Email/changes")
       or diag explain $res->http_response->as_string;
 
@@ -161,14 +153,12 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
   my $middle_state;
 
   subtest "changes from start state" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/changes" => {
-          sinceState => $start_state,
-          maxChanges => 1,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/changes" => {
+        sinceState => $start_state,
+        maxChanges => 1,
+      },
+    ]]);
     ok($res->is_success, "Email/changes")
       or diag explain $res->http_response->as_string;
 
@@ -191,14 +181,12 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
 
 
   subtest "changes from middle state to final state" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/changes" => {
-          sinceState => $middle_state,
-          maxChanges => 1,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/changes" => {
+        sinceState => $middle_state,
+        maxChanges => 1,
+      },
+    ]]);
     ok($res->is_success, "Email/changes")
       or diag explain $res->http_response->as_string;
 
@@ -217,14 +205,12 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
   };
 
   subtest "final state says no changes" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/changes" => {
-          sinceState => $end_state,
-          maxChanges => 1,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/changes" => {
+        sinceState => $end_state,
+        maxChanges => 1,
+      },
+    ]]);
     ok($res->is_success, "Email/changes")
       or diag explain $res->http_response->as_string;
 

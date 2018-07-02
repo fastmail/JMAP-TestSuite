@@ -43,17 +43,13 @@ test "getMessages-htmlBody" => sub {
 
   ok($batch->is_entirely_successful, "we uploaded and imported messages");
 
-  my $res = $tester->request({
-    methodCalls => [
-      [
-        'Email/get' => {
-          ids => [ $batch->result_for('msg')->id ],
-          properties => [ qw(bodyValues htmlBody textBody) ],
-          fetchAllBodyValues => JSON::true,
-        }
-      ],
-    ],
-  });
+  my $res = $tester->request([[
+    'Email/get' => {
+      ids => [ $batch->result_for('msg')->id ],
+      properties => [ qw(bodyValues htmlBody textBody) ],
+      fetchAllBodyValues => JSON::true,
+    },
+  ]]);
 
   my $email = $res->single_sentence->arguments->{list}[0];
 

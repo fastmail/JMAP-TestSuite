@@ -23,11 +23,9 @@ test "Email/get with no ids" => sub {
 
   my $tester = $self->tester;
 
-  my $res = $tester->request({
-    methodCalls => [[
-      "Email/get" => { ids => [] },
-    ]],
-  });
+  my $res = $tester->request([[
+    "Email/get" => { ids => [] },
+  ]]);
   ok($res->is_success, "Email/get")
     or diag explain $res->http_response->as_string;
 
@@ -60,14 +58,12 @@ test "bodyProperties" => sub {
   });
 
   subtest "no bodyProperties specified, defaults returned" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'textBody' ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'textBody' ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -97,15 +93,13 @@ test "bodyProperties" => sub {
   };
 
   subtest "limit to no body properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'textBody' ],
-          bodyProperties => [],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'textBody' ],
+        bodyProperties => [],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -124,18 +118,16 @@ test "bodyProperties" => sub {
   };
 
   subtest "limit to all body properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'textBody' ],
-          bodyProperties => [qw(
-            partId blobId size headers name type charset disposition
-            cid language location subParts
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'textBody' ],
+        bodyProperties => [qw(
+          partId blobId size headers name type charset disposition
+          cid language location subParts
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -187,17 +179,15 @@ test "bodyProperties" => sub {
   };
 
   subtest "limit to some body properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'textBody' ],
-          bodyProperties => [qw(
-            size name type
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'textBody' ],
+        bodyProperties => [qw(
+          size name type
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -232,14 +222,12 @@ test "fetchTextBodyValues" => sub {
   my $message = $mbox->add_message({ body => $body });
 
   subtest "no fetchTextBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'textBody', 'bodyValues' ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'textBody', 'bodyValues' ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -261,15 +249,13 @@ test "fetchTextBodyValues" => sub {
   };
 
   subtest "explicit false fetchTextBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'textBody', 'bodyValues' ],
-          fetchTextBodyValues => jfalse(),
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'textBody', 'bodyValues' ],
+        fetchTextBodyValues => jfalse(),
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -291,15 +277,13 @@ test "fetchTextBodyValues" => sub {
   };
 
   subtest "explicit true fetchTextBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'bodyValues', 'textBody' ],
-          fetchTextBodyValues => jtrue(),
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'bodyValues', 'textBody' ],
+        fetchTextBodyValues => jtrue(),
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -334,14 +318,12 @@ test "fetchHTMLBodyValues" => sub {
   my $message = $mbox->add_message({ body => $body });
 
   subtest "no fetchHTMLBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'htmlBody', 'bodyValues' ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'htmlBody', 'bodyValues' ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -363,15 +345,13 @@ test "fetchHTMLBodyValues" => sub {
   };
 
   subtest "explicit false fetchHTMLBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'htmlBody', 'bodyValues' ],
-          fetchHTMLBodyValues => jfalse(),
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'htmlBody', 'bodyValues' ],
+        fetchHTMLBodyValues => jfalse(),
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -393,15 +373,13 @@ test "fetchHTMLBodyValues" => sub {
   };
 
   subtest "explicit true fetchHTMLBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'bodyValues', 'htmlBody' ],
-          fetchHTMLBodyValues => jtrue(),
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'bodyValues', 'htmlBody' ],
+        fetchHTMLBodyValues => jtrue(),
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -436,14 +414,12 @@ test "fetchAllBodyValues" => sub {
   my $message = $mbox->add_message({ body => $body });
 
   subtest "no fetchAllBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'bodyStructure', 'bodyValues' ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'bodyStructure', 'bodyValues' ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -463,15 +439,13 @@ test "fetchAllBodyValues" => sub {
   };
 
   subtest "explicit false fetchAllBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'bodyStructure', 'bodyValues' ],
-          fetchAllBodyValues => jfalse(),
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'bodyStructure', 'bodyValues' ],
+        fetchAllBodyValues => jfalse(),
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -491,15 +465,13 @@ test "fetchAllBodyValues" => sub {
   };
 
   subtest "explicit true fetchAllBodyValues supplied" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [ 'bodyStructure', 'bodyValues' ],
-          fetchAllBodyValues => jtrue(),
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ 'bodyStructure', 'bodyValues' ],
+        fetchAllBodyValues => jtrue(),
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -542,15 +514,13 @@ test "maxBodyValueBytes" => sub {
 
   subtest "invalid values" => sub {
     for my $invalid (-5, 0, "cat", "1", {}, [], jtrue, undef) {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/get" => {
-            ids               => [ $message->id ],
-            properties        => [ 'bodyStructure', 'bodyValues' ],
-            maxBodyValueBytes => $invalid,
-          },
-        ]],
-      });
+      my $res = $tester->request([[
+        "Email/get" => {
+          ids               => [ $message->id ],
+          properties        => [ 'bodyStructure', 'bodyValues' ],
+          maxBodyValueBytes => $invalid,
+        },
+      ]]);
       ok($res->is_success, "Email/get")
         or diag explain $res->http_response->as_string;
 
@@ -566,16 +536,14 @@ test "maxBodyValueBytes" => sub {
   };
 
   subtest "truncate is higher than actual number of bytes" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids                => [ $message->id ],
-          properties         => [ 'bodyStructure', 'bodyValues' ],
-          fetchAllBodyValues => jtrue(),
-          maxBodyValueBytes  => 500,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids                => [ $message->id ],
+        properties         => [ 'bodyStructure', 'bodyValues' ],
+        fetchAllBodyValues => jtrue(),
+        maxBodyValueBytes  => 500,
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -595,16 +563,14 @@ test "maxBodyValueBytes" => sub {
   };
 
   subtest "truncate between single-byte characters" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids                => [ $message->id ],
-          properties         => [ 'bodyStructure', 'bodyValues' ],
-          fetchAllBodyValues => jtrue(),
-          maxBodyValueBytes  => 3,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids                => [ $message->id ],
+        properties         => [ 'bodyStructure', 'bodyValues' ],
+        fetchAllBodyValues => jtrue(),
+        maxBodyValueBytes  => 3,
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -625,16 +591,14 @@ test "maxBodyValueBytes" => sub {
 
   subtest "truncate does not break UTF-8" => sub {
     for my $mid_snowman (5, 6) {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/get" => {
-            ids                => [ $message->id ],
-            properties         => [ 'bodyStructure', 'bodyValues' ],
-            fetchAllBodyValues => jtrue(),
-            maxBodyValueBytes  => $mid_snowman,
-          },
-        ]],
-      });
+      my $res = $tester->request([[
+        "Email/get" => {
+          ids                => [ $message->id ],
+          properties         => [ 'bodyStructure', 'bodyValues' ],
+          fetchAllBodyValues => jtrue(),
+          maxBodyValueBytes  => $mid_snowman,
+        },
+      ]]);
       ok($res->is_success, "Email/get")
         or diag explain $res->http_response->as_string;
 
@@ -658,16 +622,14 @@ test "maxBodyValueBytes" => sub {
   };
 
   subtest "request at boundary of email/utf8 gives us all data" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids                => [ $message->id ],
-          properties         => [ 'bodyStructure', 'bodyValues' ],
-          fetchAllBodyValues => jtrue(),
-          maxBodyValueBytes  => 7,
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids                => [ $message->id ],
+        properties         => [ 'bodyStructure', 'bodyValues' ],
+        fetchAllBodyValues => jtrue(),
+        maxBodyValueBytes  => 7,
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -717,13 +679,11 @@ test "properties" => sub {
   my $empty = any([], undef);
 
   subtest "no properties specified, defaults returned" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $reply->id ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $reply->id ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -772,14 +732,12 @@ test "properties" => sub {
   };
 
   subtest "limit to no properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $reply->id ],
-          properties => [],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $reply->id ],
+        properties => [],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -797,20 +755,18 @@ test "properties" => sub {
   };
 
   subtest "limit to all properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $reply->id ],
-          properties => [qw(
-            id blobId threadId mailboxIds keywords size
-            receivedAt messageId inReplyTo references sender from
-            to cc bcc replyTo subject sentAt hasAttachment
-            preview bodyValues textBody htmlBody attachments
-            headers bodyStructure
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $reply->id ],
+        properties => [qw(
+          id blobId threadId mailboxIds keywords size
+          receivedAt messageId inReplyTo references sender from
+          to cc bcc replyTo subject sentAt hasAttachment
+          preview bodyValues textBody htmlBody attachments
+          headers bodyStructure
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -899,16 +855,14 @@ test "properties" => sub {
   };
 
   subtest "limit to some properties" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $reply->id ],
-          properties => [qw(
-            threadId size preview
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $reply->id ],
+        properties => [qw(
+          threadId size preview
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -960,22 +914,20 @@ test "header:{header-field-name}" => sub {
 
   subtest "No as: prefix - default header-form Raw" => sub {
     # Let's test a few that have different parsed forms
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [qw(
-            header:DAte
-            header:Message-Id
-            header:FROm
-            header:SuBject
-            header:List-Subscribe
-            header:None
-            header:Multiple
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [qw(
+          header:DAte
+          header:Message-Id
+          header:FROm
+          header:SuBject
+          header:List-Subscribe
+          header:None
+          header:Multiple
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1001,18 +953,16 @@ test "header:{header-field-name}" => sub {
 
   subtest ":all prefix, single, multi, and none" => sub {
     # Let's test a few that have different parsed forms
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [qw(
-            header:SinglE:all
-            header:Multiple:all
-            header:None:all
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [qw(
+          header:SinglE:all
+          header:Multiple:all
+          header:None:all
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1038,16 +988,14 @@ test "header:{header-field-name}" => sub {
 
   subtest "suffix order must be :as{foo}:all" => sub {
     # Let's test a few that have different parsed forms
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [qw(
-            header:None:all:asRaw
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [qw(
+          header:None:all:asRaw
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1078,27 +1026,25 @@ test "header:{header-field-name}" => sub {
       ]
     });
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [qw(
-            header:subject:asRaw
-            header:comment:asRaw
-            header:list-id:asRaw
-            header:x-foo:asRaw
-            header:x-nfc:asRaw
-            header:x-fold:asRaw
-            header:subject:asText
-            header:comment:asText
-            header:list-id:asText
-            header:x-foo:asText
-            header:x-nfc:asText
-            header:x-fold:asText
-          )],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [qw(
+          header:subject:asRaw
+          header:comment:asRaw
+          header:list-id:asRaw
+          header:x-foo:asRaw
+          header:x-nfc:asRaw
+          header:x-fold:asRaw
+          header:subject:asText
+          header:comment:asText
+          header:list-id:asText
+          header:x-foo:asText
+          header:x-nfc:asText
+          header:x-fold:asText
+        )],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1180,31 +1126,29 @@ test "header:{header-field-name}" => sub {
       ],
     });
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [
-            ( map {;
-              "header:$_:asRaw",
-            } @hlist, ),
-            ( map {;
-              "header:$_:asAddresses",
-            } @hlist, ),
-            qw(
-              header:From:asRaw
-              header:From:asAddresses
-              header:To:asRaw
-              header:To:asAddresses
-              header:Resent-Bcc:asRaw
-              header:Resent-Bcc:asAddresses
-              header:X-Group:asRaw
-              header:X-Group:asAddresses
-            ),
-          ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [
+          ( map {;
+            "header:$_:asRaw",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asAddresses",
+          } @hlist, ),
+          qw(
+            header:From:asRaw
+            header:From:asAddresses
+            header:To:asRaw
+            header:To:asAddresses
+            header:Resent-Bcc:asRaw
+            header:Resent-Bcc:asAddresses
+            header:X-Group:asRaw
+            header:X-Group:asAddresses
+          ),
+        ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1286,25 +1230,23 @@ test "header:{header-field-name}" => sub {
       ],
     });
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [
-            ( map {;
-              "header:$_:asRaw",
-            } @hlist, ),
-            ( map {;
-              "header:$_:asMessageIds",
-            } @hlist, ),
-            qw(
-              header:References:asRaw
-              header:References:asMessageIds
-            ),
-          ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [
+          ( map {;
+            "header:$_:asRaw",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asMessageIds",
+          } @hlist, ),
+          qw(
+            header:References:asRaw
+            header:References:asMessageIds
+          ),
+        ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1350,25 +1292,23 @@ test "header:{header-field-name}" => sub {
       ],
     });
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [
-            ( map {;
-              "header:$_:asRaw",
-            } @hlist, ),
-            ( map {;
-              "header:$_:asDate",
-            } @hlist, ),
-            qw(
-              header:X-Broken:asRaw
-              header:X-Broken:asDate
-            ),
-          ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [
+          ( map {;
+            "header:$_:asRaw",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asDate",
+          } @hlist, ),
+          qw(
+            header:X-Broken:asRaw
+            header:X-Broken:asDate
+          ),
+        ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1418,25 +1358,23 @@ test "header:{header-field-name}" => sub {
       ],
     });
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/get" => {
-          ids        => [ $message->id ],
-          properties => [
-            ( map {;
-              "header:$_:asRaw",
-            } @hlist, ),
-            ( map {;
-              "header:$_:asURLs",
-            } @hlist, ),
-            qw(
-              header:X-Broken:asRaw
-              header:X-Broken:asURLs
-            ),
-          ],
-        },
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [
+          ( map {;
+            "header:$_:asRaw",
+          } @hlist, ),
+          ( map {;
+            "header:$_:asURLs",
+          } @hlist, ),
+          qw(
+            header:X-Broken:asRaw
+            header:X-Broken:asURLs
+          ),
+        ],
+      },
+    ]]);
     ok($res->is_success, "Email/get")
       or diag explain $res->http_response->as_string;
 
@@ -1474,15 +1412,13 @@ pristine_test "textBody" => sub {
     email      => path("t/corpus/emails/structured.eml")->slurp,
   });
 
-  my $res = $tester->request({
-    methodCalls => [[
-      "Email/get" => {
-        ids        => [ $message->id ],
-        properties => [ 'textBody', 'bodyValues', ],
-        fetchTextBodyValues => jtrue(),
-      },
-    ]],
-  });
+  my $res = $tester->request([[
+    "Email/get" => {
+      ids        => [ $message->id ],
+      properties => [ 'textBody', 'bodyValues', ],
+      fetchTextBodyValues => jtrue(),
+    },
+  ]]);
   ok($res->is_success, "Email/get")
     or diag explain $res->http_response->as_string;
 

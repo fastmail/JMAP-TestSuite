@@ -22,17 +22,15 @@ pristine_test "Mailbox/set create with defaults omitted" => sub {
 
   my $new_name = guid_string();
 
-  my $res = $tester->request({
-    methodCalls => [[
-      "Mailbox/set" => {
-        create => {
-          new => {
-            name => $new_name, # only one without a default
-          },
+  my $res = $tester->request([[
+    "Mailbox/set" => {
+      create => {
+        new => {
+          name => $new_name, # only one without a default
         },
       },
-    ]],
-  });
+    },
+  ]]);
   ok($res->is_success, "Mailbox/set create")
     or diag explain $res->http_response->as_string;
 

@@ -95,11 +95,9 @@ package JMAP::TestSuite::EntityRole::Common {
       map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
     };
 
-    my $set_res = $context->tester->request({
-      methodCalls => [
-        [ $set_method => { create => $to_create } ],
-      ],
-    });
+    my $set_res = $context->tester->request([[
+      $set_method => { create => $to_create },
+    ]]);
 
     my $set_sentence = $set_res->single_sentence($set_expect)->as_set;
 
@@ -124,11 +122,9 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request({
-      methodCalls => [
-        [ $get_method => { ids => [ $set_sentence->created_ids ] }, ],
-      ],
-    });
+    my $get_res = $context->tester->request([[
+      $get_method => { ids => [ $set_sentence->created_ids ] },
+    ]]);
 
     my $get_res_arg = $get_res->single_sentence($get_expect)
                               ->as_stripped_pair->[1];
@@ -176,11 +172,9 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request({
-      methodCalls => [
-        [ $get_method => { ids => [ @$ids ] }, ],
-      ],
-    });
+    my $get_res = $context->tester->request([[
+      $get_method => { ids => [ @$ids ] },
+    ]]);
 
     my $get_res_arg = $get_res->single_sentence($get_expect)
                               ->as_stripped_pair->[1];
@@ -219,11 +213,9 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request({
-      methodCalls => [
-        [ $get_method => { ids => [], }, ],
-      ],
-    });
+    my $get_res = $context->tester->request([[
+      $get_method => { ids => [], },
+    ]]);
 
     my $get_res_arg = $get_res->single_sentence($get_expect)
                               ->as_stripped_pair->[1];
@@ -241,13 +233,11 @@ package JMAP::TestSuite::EntityRole::Common {
     my $set_method = $self->set_method;
     my $set_expect = $self->set_result;
 
-    my $set_res = $self->tester->request({
-      methodCalls => [[
-        $set_method => {
-          destroy => [ $self->id ],
-        },
-      ]],
-    });
+    my $set_res = $self->tester->request([[
+      $set_method => {
+        destroy => [ $self->id ],
+      },
+    ]]);
 
     my $set_res_arg = $set_res->single_sentence($set_expect)->arguments;
     unless (
@@ -270,15 +260,13 @@ package JMAP::TestSuite::EntityRole::Common {
     my $set_method = $self->set_method;
     my $set_expect = $self->set_result;
 
-    my $set_res = $self->tester->request({
-      methodCalls => [[
-        $set_method => {
-          update => {
-            $self->id => $updates,
-          },
+    my $set_res = $self->tester->request([[
+      $set_method => {
+        update => {
+          $self->id => $updates,
         },
-      ]],
-    });
+      },
+    ]]);
 
     my $set_res_arg = $set_res->single_sentence($set_expect)->arguments;
     unless (

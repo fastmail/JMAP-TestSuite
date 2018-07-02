@@ -26,19 +26,17 @@ test "Mailbox/set update" => sub {
   my $mailbox2 = $self->context->create_mailbox;
 
   subtest "change mutable fields" => sub {
-    my $set_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/set" => {
-          update => {
-            $mailbox2->id => {
-              name      => "New Name",
-              parentId  => $mailbox1->id,
-              sortOrder => 53,
-            },
+    my $set_res = $tester->request([[
+      "Mailbox/set" => {
+        update => {
+          $mailbox2->id => {
+            name      => "New Name",
+            parentId  => $mailbox1->id,
+            sortOrder => 53,
           },
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $set_res->single_sentence('Mailbox/set')->arguments->{updated},
@@ -46,11 +44,9 @@ test "Mailbox/set update" => sub {
       'mailbox updated'
     );
 
-    my $get_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => { ids => [ $mailbox2->id ] },
-      ]],
-    });
+    my $get_res = $tester->request([[
+      "Mailbox/get" => { ids => [ $mailbox2->id ] },
+    ]]);
 
     jcmp_deeply(
       $get_res->single_sentence('Mailbox/get')->arguments->{list},
@@ -64,26 +60,22 @@ test "Mailbox/set update" => sub {
   };
 
   subtest "can hand in immutable fields if they are same" => sub {
-    my $get_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => { ids => [ $mailbox2->id ] },
-      ]],
-    });
+    my $get_res = $tester->request([[
+      "Mailbox/get" => { ids => [ $mailbox2->id ] },
+    ]]);
 
     my $mb = $get_res->single_sentence('Mailbox/get')->arguments->{list}[0];
     ok($mb, 'got our mailbox');
 
     $mb->{name} = "A Newer Name";
 
-    my $set_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/set" => {
-          update => {
-            $mailbox2->id => $mb,
-          },
+    my $set_res = $tester->request([[
+      "Mailbox/set" => {
+        update => {
+          $mailbox2->id => $mb,
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $set_res->single_sentence('Mailbox/set')->arguments->{updated},
@@ -91,11 +83,9 @@ test "Mailbox/set update" => sub {
       'mailbox updated'
     );
 
-    my $re_get_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/get" => { ids => [ $mailbox2->id ] },
-      ]],
-    });
+    my $re_get_res = $tester->request([[
+      "Mailbox/get" => { ids => [ $mailbox2->id ] },
+    ]]);
 
     jcmp_deeply(
       $re_get_res->single_sentence('Mailbox/get')->arguments->{list},
@@ -114,22 +104,20 @@ test "Mailbox/set update" => sub {
       $_ => $mailbox2->$_ ? JSON::false : JSON::true
     } keys %{ $mailbox2->myRights };
 
-    my $set_res = $tester->request({
-      methodCalls => [[
-        "Mailbox/set" => {
-          update => {
-            $mailbox2->id => {
-              id            => $mailbox2->id . "a",
-              totalEmails   => 52,
-              unreadEmails  => 52,
-              totalThreads  => 52,
-              unreadThreads => 52,
-              myRights => \%rights,
-            },
+    my $set_res = $tester->request([[
+      "Mailbox/set" => {
+        update => {
+          $mailbox2->id => {
+            id            => $mailbox2->id . "a",
+            totalEmails   => 52,
+            unreadEmails  => 52,
+            totalThreads  => 52,
+            unreadThreads => 52,
+            myRights => \%rights,
           },
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $set_res->single_sentence('Mailbox/set')->arguments->{notUpdated},

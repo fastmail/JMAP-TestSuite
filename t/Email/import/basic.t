@@ -22,13 +22,11 @@ test "Email/import with bad values" => sub {
 
   subtest "emails -> wrong form" => sub {
     for my $bad (undef, "none", ["foo"]) {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => $bad,
-          },
-        ]],
-      });
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => $bad,
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('error')->arguments,
@@ -42,11 +40,9 @@ test "Email/import with bad values" => sub {
   };
 
   subtest "emails -> required" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/import" => {},
-      ]],
-    });
+    my $res = $tester->request([[
+      "Email/import" => {},
+    ]]);
 
     jcmp_deeply(
       $res->single_sentence('error')->arguments,
@@ -63,18 +59,16 @@ test "Email/import with bad values" => sub {
 
   subtest "blobId" => sub {
     subtest "wrong form" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                blobId => ['foo'],
-                mailboxIds => { $mailbox->id => JSON::true },
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              blobId => ['foo'],
+              mailboxIds => { $mailbox->id => JSON::true },
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -89,18 +83,16 @@ test "Email/import with bad values" => sub {
     };
 
     subtest "bad blobId / not found" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                blobId => "foo",
-                mailboxIds => { $mailbox->id => JSON::true },
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              blobId => "foo",
+              mailboxIds => { $mailbox->id => JSON::true },
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -117,19 +109,17 @@ test "Email/import with bad values" => sub {
 
   subtest "receivedAt" => sub {
     subtest "wrong form" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                receivedAt => ['foo'],
-                blobId     => $blob->blobId,
-                mailboxIds => { $mailbox->id => JSON::true },
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              receivedAt => ['foo'],
+              blobId     => $blob->blobId,
+              mailboxIds => { $mailbox->id => JSON::true },
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -144,19 +134,17 @@ test "Email/import with bad values" => sub {
     };
 
     subtest "bad receivedAt" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                receivedAt => "foo",
-                blobId     => $blob->blobId,
-                mailboxIds => { $mailbox->id => JSON::true },
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              receivedAt => "foo",
+              blobId     => $blob->blobId,
+              mailboxIds => { $mailbox->id => JSON::true },
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -173,18 +161,16 @@ test "Email/import with bad values" => sub {
 
   subtest "mailboxIds" => sub {
     subtest "wrong form" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                mailboxIds => ['foo'],
-                blobId     => $blob->blobId,
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              mailboxIds => ['foo'],
+              blobId     => $blob->blobId,
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -199,18 +185,16 @@ test "Email/import with bad values" => sub {
     };
 
     subtest "bad mailboxIds" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                mailboxIds => "foo",
-                blobId     => $blob->blobId,
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              mailboxIds => "foo",
+              blobId     => $blob->blobId,
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -227,19 +211,17 @@ test "Email/import with bad values" => sub {
 
   subtest "keywords" => sub {
     subtest "wrong form" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                keywords => ['foo'],
-                blobId     => $blob->blobId,
-                mailboxIds => { $mailbox->id => JSON::true },
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              keywords => ['foo'],
+              blobId     => $blob->blobId,
+              mailboxIds => { $mailbox->id => JSON::true },
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -254,19 +236,17 @@ test "Email/import with bad values" => sub {
     };
 
     subtest "bad keywords" => sub {
-      my $res = $tester->request({
-        methodCalls => [[
-          "Email/import" => {
-            emails => {
-              new => {
-                keywords => "foo",
-                blobId     => $blob->blobId,
-                mailboxIds => { $mailbox->id => JSON::true },
-              },
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              keywords => "foo",
+              blobId     => $blob->blobId,
+              mailboxIds => { $mailbox->id => JSON::true },
             },
           },
-        ]],
-      });
+        },
+      ]]);
 
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -282,15 +262,13 @@ test "Email/import with bad values" => sub {
   };
 
   subtest "EmailImport object -> required fields" => sub {
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/import" => {
-          emails => {
-            new => {},
-          },
+    my $res = $tester->request([[
+      "Email/import" => {
+        emails => {
+          new => {},
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments->{notCreated},
@@ -318,20 +296,18 @@ test "good imports" => sub {
 
     my $mailbox = $context->create_mailbox;
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/import" => {
-          emails => {
-            new => {
-              blobId => $blob->blobId,
-              mailboxIds => { $mailbox->id => JSON::true },
-              keywords   => { 'Foo' => JSON::true },
-              receivedAt => '2017-08-08T05:04:03Z',
-            },
+    my $res = $tester->request([[
+      "Email/import" => {
+        emails => {
+          new => {
+            blobId => $blob->blobId,
+            mailboxIds => { $mailbox->id => JSON::true },
+            keywords   => { 'Foo' => JSON::true },
+            receivedAt => '2017-08-08T05:04:03Z',
           },
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments,
@@ -355,26 +331,24 @@ test "good imports" => sub {
     );
 
     # Verify mailbox, and message data
-    my $verify_res = $tester->request({
-      methodCalls => [
-        [
-          'Email/query' => {
-            filter => { inMailbox => $mailbox->id },
-          }, 'query',
-        ],
-        [
-          'Email/get' => {
-            '#ids' => {
-              resultOf => 'query',
-              name     => 'Email/query',
-              path     => '/ids',
-            },
-            properties => [ qw(textBody keywords bodyValues receivedAt) ],
-            fetchTextBodyValues => JSON::true,
-          },
-        ],
+    my $verify_res = $tester->request([
+      [
+        'Email/query' => {
+          filter => { inMailbox => $mailbox->id },
+        }, 'query',
       ],
-    });
+      [
+        'Email/get' => {
+          '#ids' => {
+            resultOf => 'query',
+            name     => 'Email/query',
+            path     => '/ids',
+          },
+          properties => [ qw(textBody keywords bodyValues receivedAt) ],
+          fetchTextBodyValues => JSON::true,
+        },
+      ],
+    ]);
 
     jcmp_deeply(
       $verify_res->sentence(0)->arguments->{ids},
@@ -407,18 +381,16 @@ test "good imports" => sub {
 
     my $mailbox = $context->create_mailbox;
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/import" => {
-          emails => {
-            new => {
-              blobId => $blob->blobId,
-              mailboxIds => { $mailbox->id => JSON::true },
-            },
+    my $res = $tester->request([[
+      "Email/import" => {
+        emails => {
+          new => {
+            blobId => $blob->blobId,
+            mailboxIds => { $mailbox->id => JSON::true },
           },
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments,
@@ -442,26 +414,24 @@ test "good imports" => sub {
     );
 
     # Verify mailbox, and message data
-    my $verify_res = $tester->request({
-      methodCalls => [
-        [
-          'Email/query' => {
-            filter => { inMailbox => $mailbox->id },
-          }, 'query',
-        ],
-        [
-          'Email/get' => {
-            '#ids' => {
-              resultOf => 'query',
-              name     => 'Email/query',
-              path     => '/ids',
-            },
-            properties => [ qw(textBody keywords bodyValues receivedAt) ],
-            fetchTextBodyValues => JSON::true,
-          },
-        ],
+    my $verify_res = $tester->request([
+      [
+        'Email/query' => {
+          filter => { inMailbox => $mailbox->id },
+        }, 'query',
       ],
-    });
+      [
+        'Email/get' => {
+          '#ids' => {
+            resultOf => 'query',
+            name     => 'Email/query',
+            path     => '/ids',
+          },
+          properties => [ qw(textBody keywords bodyValues receivedAt) ],
+          fetchTextBodyValues => JSON::true,
+        },
+      ],
+    ]);
 
     jcmp_deeply(
       $verify_res->sentence(0)->arguments->{ids},
@@ -494,21 +464,19 @@ test "good imports" => sub {
     my $mailbox = $context->create_mailbox;
     my $mailbox2 = $context->create_mailbox;
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Email/import" => {
-          emails => {
-            new => {
-              blobId => $blob->blobId,
-              mailboxIds => {
-                $mailbox->id  => JSON::true,
-                $mailbox2->id => JSON::true,
-              },
+    my $res = $tester->request([[
+      "Email/import" => {
+        emails => {
+          new => {
+            blobId => $blob->blobId,
+            mailboxIds => {
+              $mailbox->id  => JSON::true,
+              $mailbox2->id => JSON::true,
             },
           },
         },
-      ]],
-    });
+      },
+    ]]);
 
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments,
@@ -533,26 +501,24 @@ test "good imports" => sub {
 
     for my $mailbox_id ($mailbox->id, $mailbox2->id) {
       # Verify mailbox, and message data
-      my $verify_res = $tester->request({
-        methodCalls => [
-          [
-            'Email/query' => {
-              filter => { inMailbox => $mailbox_id },
-            }, 'query',
-          ],
-          [
-            'Email/get' => {
-              '#ids' => {
-                resultOf => 'query',
-                name     => 'Email/query',
-                path     => '/ids',
-              },
-              properties => [ qw(textBody keywords bodyValues receivedAt) ],
-              fetchTextBodyValues => JSON::true,
-            },
-          ],
+      my $verify_res = $tester->request([
+        [
+          'Email/query' => {
+            filter => { inMailbox => $mailbox_id },
+          }, 'query',
         ],
-      });
+        [
+          'Email/get' => {
+            '#ids' => {
+              resultOf => 'query',
+              name     => 'Email/query',
+              path     => '/ids',
+            },
+            properties => [ qw(textBody keywords bodyValues receivedAt) ],
+            fetchTextBodyValues => JSON::true,
+          },
+        ],
+      ]);
 
       jcmp_deeply(
         $verify_res->sentence(0)->arguments->{ids},
@@ -594,22 +560,20 @@ test "one import fails, another succeeds" => sub {
     body => "This one didn't work ($$)",
   });
 
-  my $res = $tester->request({
-    methodCalls => [[
-      "Email/import" => {
-        emails => {
-          new => {
-            blobId => $blob->blobId,
-            mailboxIds => { $mailbox->id => JSON::true },
-          },
-          new2 => {
-            blobId => $blob2->blobId,
-            mailboxIds => { "junk" => JSON::true },
-          },
+  my $res = $tester->request([[
+    "Email/import" => {
+      emails => {
+        new => {
+          blobId => $blob->blobId,
+          mailboxIds => { $mailbox->id => JSON::true },
+        },
+        new2 => {
+          blobId => $blob2->blobId,
+          mailboxIds => { "junk" => JSON::true },
         },
       },
-    ]],
-  });
+    },
+  ]]);
 
   jcmp_deeply(
     $res->single_sentence('Email/import')->arguments,
@@ -638,26 +602,24 @@ test "one import fails, another succeeds" => sub {
   );
 
   # Verify mailbox, and message data
-  my $verify_res = $tester->request({
-    methodCalls => [
-      [
-        'Email/query' => {
-          filter => { inMailbox => $mailbox->id },
-        }, 'query',
-      ],
-      [
-        'Email/get' => {
-          '#ids' => {
-            resultOf => 'query',
-            name     => 'Email/query',
-            path     => '/ids',
-          },
-          properties => [ qw(textBody keywords bodyValues receivedAt) ],
-          fetchTextBodyValues => JSON::true,
-        },
-      ],
+  my $verify_res = $tester->request([
+    [
+      'Email/query' => {
+        filter => { inMailbox => $mailbox->id },
+      }, 'query',
     ],
-  });
+    [
+      'Email/get' => {
+        '#ids' => {
+          resultOf => 'query',
+          name     => 'Email/query',
+          path     => '/ids',
+        },
+        properties => [ qw(textBody keywords bodyValues receivedAt) ],
+        fetchTextBodyValues => JSON::true,
+      },
+    ],
+  ]);
 
   jcmp_deeply(
     $verify_res->sentence(0)->arguments->{ids},
@@ -691,18 +653,16 @@ test "invalidEmail" => sub {
   my $mailbox = $context->create_mailbox;
   my $blob = $tester->upload('text/plain', \"some data");
 
-  my $res = $tester->request({
-    methodCalls => [[
-      "Email/import" => {
-        emails => {
-          new => {
-            blobId     => $blob->blobId,
-            mailboxIds => { $mailbox->id => JSON::true },
-          },
+  my $res = $tester->request([[
+    "Email/import" => {
+      emails => {
+        new => {
+          blobId     => $blob->blobId,
+          mailboxIds => { $mailbox->id => JSON::true },
         },
       },
-    ]],
-  });
+    },
+  ]]);
 
   TODO: {
     todo_skip "Need to figure out what to do here", 1;

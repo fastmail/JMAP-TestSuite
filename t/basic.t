@@ -17,7 +17,7 @@ test "basic" => sub {
   my $context = $self->context;
 
   my $tester = $context->tester;
-  my $res = $tester->request({ methodCalls => [[ "Mailbox/get" => {} ]]});
+  my $res = $tester->request([[ "Mailbox/get" => {} ]]);
   my $pairs = $res->as_triples;
 
   is(@$pairs, 1, "one sentence of response to getMailboxes");

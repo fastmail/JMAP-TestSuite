@@ -170,11 +170,9 @@ sub _import_batch {
     map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
   };
 
-  my $set_res = $context->tester->request({
-    methodCalls => [
-      [ "Email/import" => { emails => $to_create }, ],
-    ],
-  });
+  my $set_res = $context->tester->request([[
+    "Email/import" => { emails => $to_create },
+  ]]);
 
   unless ($set_res->sentence(0)->name eq 'Email/import') {
     die(
@@ -201,13 +199,9 @@ sub _import_batch {
   my $get_method = $pkg->get_method;
   my $get_expect = $pkg->get_result;
 
-  my $get_res = $context->tester->request({
-    methodCalls => [
-      [
-        $get_method => { ids => [ $set_sentence->created_ids ] },
-      ],
-    ],
-  });
+  my $get_res = $context->tester->request([[
+    $get_method => { ids => [ $set_sentence->created_ids ] },
+  ]]);
 
   my $get_res_arg = $get_res->single_sentence($get_expect)
                             ->as_stripped_pair->[1];
