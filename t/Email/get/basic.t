@@ -1604,7 +1604,7 @@ pristine_test "textBody" => sub {
           language    => [],         # not provided
           location    => undef,      # not provided
           name        => 'c.jpg',    # Content-Type name
-          partId      => undef,
+          partId      => jstr(),
           size        => jnum(),
           type        => 'image/jpeg',
         },

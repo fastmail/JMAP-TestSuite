@@ -34,11 +34,11 @@ pristine_test "Email/query with no existing entities" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/query")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
-        state     => jstr(),
-        position  => jnum(0),
-        total     => jnum(0),
-        ids       => [],
+        accountId  => jstr($self->context->accountId),
+        queryState => jstr(),
+        position   => jnum(0),
+        total      => jnum(0),
+        ids        => [],
         canCalculateChanges => jbool(),
       }),
       "No Emailes looks good",

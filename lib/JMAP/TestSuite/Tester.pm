@@ -105,10 +105,10 @@ sub test_query {
     jcmp_deeply(
       $res->single_sentence("$call")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
-        state     => jstr(),
-        total     => jnum,
-        position  => jnum(0),
+        accountId  => jstr($self->context->accountId),
+        queryState => jstr(),
+        total      => jnum,
+        position   => jnum(0),
         canCalculateChanges => jbool(),
         %$expect, # can override position
       }),
