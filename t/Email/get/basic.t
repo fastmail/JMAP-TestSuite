@@ -1542,5 +1542,104 @@ pristine_test "textBody" => sub {
   };
 };
 
+pristine_test "htmlBody" => sub {
+  my ($self) = @_;
+
+  my $tester = $self->tester;
+
+  my $mbox = $self->context->create_mailbox;
+
+  my $message = $mbox->add_message({
+    email_type => 'provided',
+    email      => path("t/corpus/emails/structured.eml")->slurp,
+  });
+
+  my $res = $tester->request([[
+    "Email/get" => {
+      ids        => [ $message->id ],
+      properties => [ 'htmlBody', 'bodyValues', ],
+      fetchHTMLBodyValues => jtrue(),
+    },
+  ]]);
+  ok($res->is_success, "Email/get")
+    or diag explain $res->http_response->as_string;
+
+  my $get = $res->sentence_named("Email/get");
+  my $html_body = $get->arguments->{list}[0]{htmlBody};
+  my $body_values = $get->arguments->{list}[0]{bodyValues};
+
+  ok($html_body, 'got our htmlBody');
+
+  is(@$html_body, 3, 'got 3 parts');
+
+  subtest "order of parts is correct and includes expected parts" => sub {
+    # Ensure we got parts A, E, and K
+    my @got;
+
+    for my $part (@$html_body) {
+      if ($part->{type} eq 'text/plain' || $part->{type} eq 'text/html') {
+        push @got, $body_values->{$part->{partId}}->{value};
+      } else {
+        fail("Unknown type?! $part->{type}");
+      }
+    }
+
+    jcmp_deeply(
+      \@got,
+      [
+        "This is text part A\n",
+        "<html><body> This is html part E </body></html>\n",
+        "This is text part K\n",
+      ],
+      "htmlBody gives us correct parts in order"
+    ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "htmlBody attributes are as expected" => sub {
+    jcmp_deeply(
+      $html_body,
+      [
+        {
+          blobId      => jstr(),
+          charset     => 'us-ascii', # No CT, so default charset
+          cid         => undef,      # not provided
+          disposition => undef,      # not provided
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => undef,      # not provided
+          partId      => jstr(),
+          size        => 21,         # Size if downloaded, includes CR
+          type        => 'text/plain', # No CT so default type
+        },
+        {
+          blobId      => jstr(),
+          charset     => 'us-ascii', # CT present but no charset
+          cid         => undef,      # not provided
+          disposition => undef,
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => undef,      # not provided
+          partId      => jstr(),
+          size        => 49,         # Size if downloaded, includes CR
+          type        => 'text/html',
+        },
+        {
+          blobId      => jstr(),
+          charset     => 'us-ascii', # CT present but no charset
+          cid         => undef,      # not provided
+          disposition => 'inline',
+          language    => [],         # not provided
+          location    => undef,      # not provided
+          name        => undef,      # not provided
+          partId      => jstr(),
+          size        => 21,         # Size if downloaded, includes CR
+          type        => 'text/plain',
+        },
+      ],
+      "htmlBody parts look right"
+    ) or diag explain $res->as_stripped_triples;
+  };
+};
+
 run_me;
 done_testing;
