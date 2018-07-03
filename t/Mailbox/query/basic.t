@@ -37,11 +37,11 @@ pristine_test "Mailbox/query with no existing entities" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/query")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
-        state     => jstr(),
-        position  => jnum(0),
-        total     => jnum(0),
-        ids       => [],
+        accountId  => jstr($self->context->accountId),
+        queryState => jstr(),
+        position   => jnum(0),
+        total      => jnum(0),
+        ids        => [],
         canCalculateChanges => jbool(),
       }),
       "No mailboxes looks good",
@@ -461,10 +461,10 @@ sub test_query {
     jcmp_deeply(
       $res->single_sentence("Mailbox/query")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
-        state     => jstr(),
-        total     => jnum,
-        position  => jnum(0),
+        accountId  => jstr($self->context->accountId),
+        queryState => jstr(),
+        total      => jnum,
+        position   => jnum(0),
         canCalculateChanges => jbool(),
         %$expect, # can override position
       }),
