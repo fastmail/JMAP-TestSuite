@@ -709,7 +709,7 @@ test "properties" => sub {
           replyTo       => [{ name => undef, email => "rt$from" }],
           subject       => $subject,
           sentAt        => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
-          hasAttachment => jtrue(), # XXX FALSE (cyrus...)
+          hasAttachment => jfalse(),
           preview       => jstr(),
           bodyValues    => {},
           textBody => [
@@ -718,9 +718,7 @@ test "properties" => sub {
           htmlBody => [
             superhashof({ partId => jstr() }),
           ],
-#          attachments  => $empty, # XXX, attachments is the new norm!
-          attachedEmails => [],
-          attachedFiles => [],
+          attachments  => $empty,
         }],
       }),
       "Response looks good",
@@ -792,7 +790,7 @@ test "properties" => sub {
           replyTo       => [{ name => undef, email => "rt$from" }],
           subject       => $subject,
           sentAt        => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
-          hasAttachment => jtrue(), # XXX FALSE (cyrus...)
+          hasAttachment => jfalse(),
           preview       => jstr(),
           bodyValues    => {},
           textBody => [
@@ -801,7 +799,7 @@ test "properties" => sub {
           htmlBody => [
             superhashof({ partId => jstr() }),
           ],
-#          attachments  => $empty, # XXX, attachments is the new norm!
+          attachments  => $empty,
           headers => [
             {
               name  => 'From',

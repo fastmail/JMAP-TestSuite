@@ -73,6 +73,7 @@ package JMAP::TestSuite::AccountContext {
           ( $arg->{headers} ? @{ $arg->{headers} } : () ),
         ],
         parts => [
+          "Main body",
           Email::MIME->create(
             attributes => {
               content_type => "text/plain",
