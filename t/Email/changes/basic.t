@@ -38,7 +38,8 @@ pristine_test "Email/changes with no changes" => sub {
       oldState       => jstr($state),
       newState       => jstr($state),
       hasMoreChanges => jfalse,
-      changed        => [],
+      created        => [],
+      updated        => [],
       destroyed      => [],
     },
     "Response looks good",
@@ -50,7 +51,7 @@ pristine_test "Email/changes with changes" => sub {
 
   my $tester = $self->tester;
 
-  subtest "created entities show up in changed" => sub {
+  subtest "created entities show up in created" => sub {
     my $state = $self->context->get_state('email');
 
     my $message = $self->context->create_mailbox->add_message;
@@ -68,14 +69,15 @@ pristine_test "Email/changes with changes" => sub {
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
-        changed        => [ $message->id ],
+        created        => [ $message->id ],
+        updated        => [],
         destroyed      => [],
       },
       "Response looks good",
     );
   };
 
-  subtest "updated entities show up in changed" => sub {
+  subtest "updated entities show up in updated" => sub {
     my $message = $self->context->create_mailbox->add_message;
 
     my $state = $self->context->get_state('email');
@@ -95,7 +97,8 @@ pristine_test "Email/changes with changes" => sub {
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
-        changed        => [ $message->id ],
+        created        => [],
+        updated        => [ $message->id ],
         destroyed      => [],
       },
       "Response looks good",
@@ -122,7 +125,8 @@ pristine_test "Email/changes with changes" => sub {
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
-        changed        => [],
+        created        => [],
+        updated        => [],
         destroyed      => [ $message->id ],
       },
       "Response looks good",
@@ -169,7 +173,8 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
         oldState       => jstr($start_state),
         newState       => all(jstr, none($start_state, $end_state)),
         hasMoreChanges => jtrue,
-        changed        => [ $message1->id ],
+        created        => [ $message1->id ],
+        updated        => [],
         destroyed      => [],
       },
       "Response looks good",
@@ -197,7 +202,8 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
         oldState       => jstr($middle_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
-        changed        => [ $message2->id ],
+        created        => [ $message2->id ],
+        updated        => [],
         destroyed      => [],
       },
       "Response looks good",
@@ -221,7 +227,8 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
         oldState       => jstr($end_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
-        changed        => [],
+        created        => [],
+        updated        => [],
         destroyed      => [],
       },
       "Response looks good",

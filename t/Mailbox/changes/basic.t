@@ -57,7 +57,7 @@ pristine_test "Mailbox/changes with changes" => sub {
 
   my $tester = $self->tester;
 
-  subtest "created entities show up in added" => sub {
+  subtest "created entities show up in created" => sub {
     my $state = $self->context->get_state('mailbox');
 
     my $mailbox = $self->context->create_mailbox;
@@ -227,7 +227,7 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
         created        => [ $mailbox2->id ],
-        updated        => [ ],
+        updated        => [],
         destroyed      => [],
       }),
       "Response looks good",
