@@ -25,21 +25,17 @@ test "Email/get with no ids" => sub {
 
   my $tester = $self->tester;
 
-  my $res = $tester->request([[
-    "Email/get" => { ids => [] },
-  ]]);
-  ok($res->is_success, "Email/get")
-    or diag explain $res->http_response->as_string;
-
-  jcmp_deeply(
-    $res->single_sentence("Email/get")->arguments,
-    superhashof({
-      accountId => jstr($self->context->accountId),
-      state     => jstr(),
-      list      => [],
-    }),
-    "Response for ids => [] looks good",
-  ) or diag explain $res->as_stripped_triples;
+  my $res = $tester->request_ok(
+    [[ "Email/get" => { ids => [] } ]],
+    [[
+      superhashof({
+        accountId => jstr($self->context->accountId),
+        state     => jstr(),
+        list      => [],
+      }),
+    ]],
+    "Response for ids => [] looks good"
+  );
 };
 
 test "bodyProperties" => sub {
@@ -59,18 +55,14 @@ test "bodyProperties" => sub {
     subject => $subject,
   });
 
-  subtest "no bodyProperties specified, defaults returned" => sub {
-    my $res = $tester->request([[
+  $tester->request_ok(
+    [[
       "Email/get" => {
         ids        => [ $message->id ],
         properties => [ 'textBody' ],
       },
-    ]]);
-    ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
-
-    jcmp_deeply(
-      $res->single_sentence("Email/get")->arguments,
+    ]],
+    [[
       superhashof({
         accountId => jstr($self->context->accountId),
         state     => jstr(),
@@ -90,9 +82,9 @@ test "bodyProperties" => sub {
           }],
         }],
       }),
-      "Response looks good",
-    ) or diag explain $res->as_stripped_triples;
-  };
+    ]],
+    "no bodyProperties specified, defaults returned",
+  );
 
   subtest "limit to no body properties" => sub {
     my $res = $tester->request([[
@@ -516,24 +508,26 @@ test "maxBodyValueBytes" => sub {
 
   subtest "invalid values" => sub {
     for my $invalid (-5, 0, "cat", "1", {}, [], jtrue, undef) {
-      my $res = $tester->request([[
-        "Email/get" => {
-          ids               => [ $message->id ],
-          properties        => [ 'bodyStructure', 'bodyValues' ],
-          maxBodyValueBytes => $invalid,
-        },
-      ]]);
-      ok($res->is_success, "Email/get")
-        or diag explain $res->http_response->as_string;
+      my $desc = defined $invalid && ! ref $invalid ? $invalid
+               : defined $invalid                   ? ref $invalid
+               :                                      '<undef>';
 
-      jcmp_deeply(
-        $res->sentence_named('error')->arguments,
-        {
-          type => 'invalidArguments',
-          arguments => [ 'maxBodyValueBytes' ], # XXX - not to spec
-        },
-        "got correct error"
-      ) or diag explain $res->as_stripped_triples;
+      my $res = $tester->request_ok(
+        [[
+          "Email/get" => {
+            ids               => [ $message->id ],
+            properties        => [ 'bodyStructure', 'bodyValues' ],
+            maxBodyValueBytes => $invalid,
+          },
+        ]],
+        [[
+          "error" => {
+            type => 'invalidArguments',
+            arguments => [ 'maxBodyValueBytes' ], # XXX - not to spec
+          },
+        ]],
+        "invalid value '$desc'"
+      );
     }
   };
 
