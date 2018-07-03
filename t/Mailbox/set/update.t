@@ -119,25 +119,30 @@ test "Mailbox/set update" => sub {
       },
     ]]);
 
-    jcmp_deeply(
-      $set_res->single_sentence('Mailbox/set')->arguments->{notUpdated},
-      {
-        $mailbox2->id => {
-          type => 'invalidProperties',
-          properties => set(
-            qw(
-              id
-              totalEmails
-              unreadEmails
-              totalThreads
-              unreadThreads
+    TODO: {
+      todo_skip "Cyrus currently doesn't support this", 1
+        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+      jcmp_deeply(
+        $set_res->single_sentence('Mailbox/set')->arguments->{notUpdated},
+        {
+          $mailbox2->id => {
+            type => 'invalidProperties',
+            properties => set(
+              qw(
+                id
+                totalEmails
+                unreadEmails
+                totalThreads
+                unreadThreads
+              ),
+              map {; "myRights/$_" } keys %rights,
             ),
-            map {; "myRights/$_" } keys %rights,
-          ),
+          },
         },
-      },
-      'got errors for immutable properties'
-    ) or diag explain $set_res->as_stripped_triples;
+        'got errors for immutable properties'
+      ) or diag explain $set_res->as_stripped_triples;
+    }
   };
 };
 

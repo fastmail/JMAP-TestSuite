@@ -240,25 +240,30 @@ test "Setting with immutable fields" => sub {
   delete($mb->{id});
 
   subtest "immutable properties with correct values is okay" => sub {
-    $mb->{name} .= " a change";
+    TODO: {
+      $mb->{name} .= " a change";
 
-    my $res = $tester->request({
-      methodCalls => [[
-        "Mailbox/set" => {
-          create => {
-            new => $mb,
+      todo_skip "Cyrus currently doesn't support this", 2
+        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+      my $res = $tester->request({
+        methodCalls => [[
+          "Mailbox/set" => {
+            create => {
+              new => $mb,
+            },
           },
-        },
-      ]],
-    });
+        ]],
+      });
 
-    ok($res->is_success, "Mailbox/set create")
-      or diag explain $res->http_response->as_string;
+      ok($res->is_success, "Mailbox/set create")
+        or diag explain $res->http_response->as_string;
 
-    ok(
-      $res->single_sentence("Mailbox/set")->arguments->{created}{new},
-      "created our mailbox passing in immutable params!"
-    ) or diag explain $res->as_stripped_triples;
+      ok(
+        $res->single_sentence("Mailbox/set")->arguments->{created}{new},
+        "created our mailbox passing in immutable params!"
+      ) or diag explain $res->as_stripped_triples;
+    }
   };
 
   subtest "immutable properties with wrong values is not okay" => sub {
@@ -287,23 +292,28 @@ test "Setting with immutable fields" => sub {
       ]],
     });
 
-    jcmp_deeply(
-      $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
-      {
-        type => 'invalidProperties',
-        properties => set(
-          qw(
-            id
-            totalEmails
-            unreadEmails
-            totalThreads
-            unreadThreads
+    TODO: {
+      todo_skip "Cyrus currently doesn't support this", 1
+        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+      jcmp_deeply(
+        $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
+        {
+          type => 'invalidProperties',
+          properties => set(
+            qw(
+              id
+              totalEmails
+              unreadEmails
+              totalThreads
+              unreadThreads
+            ),
+            map {; "myRights/$_" } keys %rights,
           ),
-          map {; "myRights/$_" } keys %rights,
-        ),
-      },
-      'got errors for immutable properties'
-    ) or diag explain $set_res->as_stripped_triples;
+        },
+        'got errors for immutable properties'
+      ) or diag explain $set_res->as_stripped_triples;
+    }
   };
 };
 
