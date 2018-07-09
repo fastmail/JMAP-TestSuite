@@ -7,10 +7,9 @@ use Test::Deep::JType;
 use Sub::Exporter -setup => [ qw(mailbox) ];
 
 sub mailbox {
-  my ($req_override, $opt_override) = @_;
+  my ($overrides) = @_;
 
-  $req_override ||= {};
-  $opt_override ||= {};
+  $overrides ||= {};
 
   my %required = (
     id            => jstr,
@@ -35,7 +34,7 @@ sub mailbox {
       )
     }),
 
-    %$req_override,
+    %$overrides,
   );
 
   my %optional = (
@@ -43,7 +42,7 @@ sub mailbox {
     role      => any(jstr, undef), # xxx enum allowed values?
     sortOrder => any(jnum, undef),
 
-    %$opt_override,
+    %$overrides,
   );
 
   # superhashof ensures all of the keys exist and match

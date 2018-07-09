@@ -7,14 +7,15 @@ use Test::Deep::JType;
 use Sub::Exporter -setup => [ qw(thread) ];
 
 sub thread {
-  my ($req_override, $opt_override) = @_;
+  my ($overrides) = @_;
 
-  $req_override ||= {};
-  $opt_override ||= {};
+  $overrides ||= {};
 
   my %required = (
     id            => jstr,
     emailIds      => any([], array_each(jstr)),
+
+    %$overrides,
   );
 
   my %optional = ();
