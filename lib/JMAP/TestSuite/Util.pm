@@ -6,6 +6,7 @@ use Sub::Exporter -setup => [ qw(
   batch_ok
   pristine_test
   mailbox
+  thread
 ) ];
 
 use Test::Deep::JType;
@@ -13,6 +14,7 @@ use Test::More;
 use Sub::Uplevel qw/:aggressive/;
 
 use JMAP::TestSuite::Comparator::Mailbox qw(mailbox);
+use JMAP::TestSuite::Comparator::Thread qw(thread);
 
 sub batch_ok {
   my ($batch) = @_;

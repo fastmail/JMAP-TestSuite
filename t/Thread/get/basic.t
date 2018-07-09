@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok pristine_test thread);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -43,10 +43,10 @@ test "Thread/get with a few messages" => sub {
       accountId => jstr($self->context->accountId),
       state => jstr(),
       list => [
-        {
-          id => jstr($message1->threadId),
+        thread({
+          id       => jstr($message1->threadId),
           emailIds => [ jstr($message1->id), jstr($message2->id) ],
-        },
+        }),
       ],
       notFound => [],
     },
