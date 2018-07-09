@@ -59,6 +59,8 @@ sub add_message_to_mailboxes {
   unless ($batch->is_entirely_successful) {
     die "Failed to import messages: " . Dumper($batch->_batch);
   }
+
+  return $batch->result_for('msg');
 }
 
 sub import_messages {
