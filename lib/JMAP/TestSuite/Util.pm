@@ -5,11 +5,14 @@ package JMAP::TestSuite::Util;
 use Sub::Exporter -setup => [ qw(
   batch_ok
   pristine_test
+  mailbox
 ) ];
 
 use Test::Deep::JType;
 use Test::More;
 use Sub::Uplevel qw/:aggressive/;
+
+use JMAP::TestSuite::Comparator::Mailbox qw(mailbox);
 
 sub batch_ok {
   my ($batch) = @_;

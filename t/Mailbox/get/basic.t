@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok pristine_test mailbox);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -84,31 +84,13 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
       jcmp_deeply(
         $found[0],
-        superhashof({
-          id           => jstr($mailbox1->id),
-          name         => jstr($mailbox1->name),
-          parentId     => undef, # XXX - May be decided by server?
-          role         => undef,
-          sortOrder    => jnum(),
-          totalEmails  => jnum(0),
-          unreadEmails => jnum(0),
-          totalEmails  => jnum(0),
-          unreadEmails => jnum(0),
-          myRights     => superhashof({
-            map {
-              $_ => jbool(),
-            } qw(
-              mayReadItems
-              mayAddItems
-              mayRemoveItems
-              maySetSeen
-              maySetKeywords
-              mayCreateChild
-              mayRename
-              mayDelete
-              maySubmit
-            )
-          }),
+        mailbox({
+          id            => jstr($mailbox1->id),
+          name          => jstr($mailbox1->name),
+          totalEmails   => jnum(0),
+          unreadEmails  => jnum(0),
+          totalThreads  => jnum(0),
+          unreadThreads => jnum(0),
         }),
         "Our mailbox looks good"
       ) or diag explain $res->as_stripped_triples;
@@ -138,31 +120,13 @@ pristine_test "Mailbox/get when some entities exist" => sub {
 
     jcmp_deeply(
       $found[0],
-      superhashof({
-        id           => jstr($mailbox1->id),
-        name         => jstr($mailbox1->name),
-        parentId     => undef, # XXX - May be decided by server?
-        role         => undef,
-        sortOrder    => jnum(),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        myRights     => superhashof({
-          map {
-            $_ => jbool(),
-          } qw(
-            mayReadItems
-            mayAddItems
-            mayRemoveItems
-            maySetSeen
-            maySetKeywords
-            mayCreateChild
-            mayRename
-            mayDelete
-            maySubmit
-          )
-        }),
+      mailbox({
+        id            => jstr($mailbox1->id),
+        name          => jstr($mailbox1->name),
+        totalEmails   => jnum(0),
+        unreadEmails  => jnum(0),
+        totalThreads  => jnum(0),
+        unreadThreads => jnum(0),
       }),
       "Our mailbox looks good"
     ) or diag explain $res->as_stripped_triples;
@@ -221,31 +185,13 @@ test "Mailbox/get with limiting properties in resposne" => sub {
 
     jcmp_deeply(
       $found[0],
-      superhashof({
-        id           => jstr($mailbox1->id),
-        name         => jstr($mailbox1->name),
-        parentId     => undef, # XXX - May be decided by server?
-        role         => undef,
-        sortOrder    => jnum(),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        myRights     => superhashof({
-          map {
-            $_ => jbool(),
-          } qw(
-            mayReadItems
-            mayAddItems
-            mayRemoveItems
-            maySetSeen
-            maySetKeywords
-            mayCreateChild
-            mayRename
-            mayDelete
-            maySubmit
-          )
-        }),
+      mailbox({
+        id            => jstr($mailbox1->id),
+        name          => jstr($mailbox1->name),
+        totalEmails   => jnum(0),
+        unreadEmails  => jnum(0),
+        totalThreads  => jnum(0),
+        unreadThreads => jnum(0),
       }),
       "Our mailbox looks good"
     ) or diag explain $res->as_stripped_triples;
