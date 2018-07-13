@@ -26,14 +26,12 @@ test "Email/get with no ids" => sub {
   my $tester = $self->tester;
 
   my $res = $tester->request_ok(
-    [[ "Email/get" => { ids => [] } ]],
-    [[
-      superhashof({
-        accountId => jstr($self->context->accountId),
-        state     => jstr(),
-        list      => [],
-      }),
-    ]],
+    [ "Email/get" => { ids => [] } ],
+    superhashof({
+      accountId => jstr($self->context->accountId),
+      state     => jstr(),
+      list      => [],
+    }),
     "Response for ids => [] looks good"
   );
 };

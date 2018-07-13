@@ -2,7 +2,7 @@ package JMAP::TestSuite::JMAP::Tester::Wrapper;
 use strict;
 use warnings;
 
-use Params::Util qw(_ARRAY0);
+use Params::Util qw(_ARRAY0 _HASH);
 
 use Moo;
 use Test::More;
@@ -48,6 +48,16 @@ around request => sub {
 
 sub request_ok {
   my ($self, $input_request, $expect_paragraphs, $desc) = @_;
+
+  # Allow ->request_ok([ foo => { ... } ], superhashof({...}), ...)
+  if (
+         _ARRAY0($input_request)
+    && ! _ARRAY0($input_request->[0])
+    && ! _ARRAY0($expect_paragraphs)
+  ) {
+    $input_request = [ $input_request ];
+    $expect_paragraphs = [[ $expect_paragraphs ]];
+  }
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
