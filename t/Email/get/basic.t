@@ -1536,7 +1536,7 @@ pristine_test "htmlBody" => sub {
   };
 };
 
-pristine_test "bodyStructure" => sub {
+pristine_test "bodyStructure and attachments" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -1551,7 +1551,12 @@ pristine_test "bodyStructure" => sub {
   my $res = $tester->request([[
     "Email/get" => {
       ids        => [ $message->id ],
-      properties => [ 'bodyStructure', 'bodyValues', ],
+      properties => [ qw(
+        bodyStructure
+        bodyValues
+        attachments
+        hasAttachment
+      ) ],
       fetchAllBodyValues => jtrue(),
     },
   ]]);
@@ -1650,6 +1655,26 @@ EOF
       ),
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
+  };
+
+  subtest "attachments" => sub {
+    TODO: {
+      local $TODO = "Cyrus says false here. Who is right?";
+
+      jcmp_deeply(
+        $get->arguments->{list}[0],
+        superhashof({ hasAttachment => jtrue() }),
+        'we have attachments'
+      );
+    }
+
+    my $attachments = $get->arguments->{list}[0]{attachments};
+
+    jcmp_deeply(
+      $attachments,
+      [ @PART{ qw(C F G H J) } ],
+      "our attachments are correct"
+    );
   };
 };
 
