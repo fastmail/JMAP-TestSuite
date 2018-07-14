@@ -63,6 +63,15 @@ test "delete mail from mailboxes" => sub {
   );
 
   $tester->request_ok(
+    [ 'Email/get', { ids => [ $message->id ] } ],
+    superhashof({
+      list     => [],
+      notFound => [ $message->id ],
+    }),
+    "Email no longer found"
+  );
+
+  $tester->request_ok(
     [ 'Mailbox/get', { ids => [ $mbox->id ] } ],
     superhashof({ list => [ superhashof({ totalEmails => 0, id => $mbox->id }) ] }),
     "totalEmails count is now 0",
