@@ -1186,7 +1186,7 @@ test "header:{header-field-name}" => sub {
             }, {
               name  => 'bar d',
               email => 'bar@example.org',
-            }, { # XXX - Cyrus adding this in? Why? -- alh, 2018-06-20
+            }, {
               name => undef,
               email => undef,
             },
