@@ -28,36 +28,90 @@ test "update email keywords" => sub {
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";
   my $subject = "A subject for $$";
-
-  my $message = $mbox->add_message({
-    from    => $from,
-    to      => $to,
-    subject => $subject,
-  });
-
-  $tester->request_ok(
-    [ "Email/get" => { ids => [ $message->id ] } ],
-    superhashof({ list => [ superhashof({ keywords => {} }) ] }),
-    "newly created email has no keywords",
+ 
+  my @setters = (
+    {
+      desc  => "bulk set",
+      data  => { keywords => { '$Flagged' => jtrue } },
+    },
+    {
+      desc  => "patch set",
+      data  => { 'keywords/$Flagged' => jtrue },
+    },
+    {
+      desc  => "patch set integer",
+      data  => { 'keywords/$Flagged' => 1 },
+      fail  => 1,
+    },
   );
 
-  $tester->request_ok(
-    [
-      "Email/set" => {
-        update => {
-          $message->id => { keywords => { '$Flagged' => jtrue() } }
-        },
-      }
-    ],
-    superhashof({ updated => { $message->id => ignore } }),
-    'we set $flagged keyword',
+  my @clearers = (
+    {
+      desc  => "bulk clear",
+      data => { keywords => { } },
+    },
+    {
+      desc  => "patch set null",
+      data  => { 'keywords/$Flagged' => undef },
+    },
+    {
+      desc  => "patch set false",
+      data  => { 'keywords/$Flagged' => jfalse },
+      set_fail => 1,
+    },
   );
+  
+  SETTER: for my $setter (@setters) {
+    GETTER: for my $clearer (@clearers) {
+      subtest "setter($setter->{desc}) clearer($clearer->{desc})" => sub {
+        my $message = $mbox->add_message({
+          from    => $from,
+          to      => $to,
+          subject => $subject,
+        });
 
-  $tester->request_ok(
-    [ "Email/get" => { ids => [ $message->id ] } ],
-    superhashof({ list => [ superhashof({ keywords => { '$flagged' => jtrue() } }) ] }),
-    "...and it worked, keyword lowercased",
-  );
+        $tester->request_ok(
+          [ "Email/get" => { ids => [ $message->id ] } ],
+          superhashof({ list => [ superhashof({ keywords => {} }) ] }),
+          "newly created email has no keywords",
+        );
+
+        $tester->request_ok(
+          [ "Email/set" => { update => { $message->id => $setter->{data} } } ],
+          ($setter->{fail}
+            ? superhashof({ notUpdated => { $message->id => ignore } })
+            : superhashof({ updated    => { $message->id => ignore } })),
+          'tried to set $flagged keyword: should ' . ($setter->{fail} ? 'fail' : 'work')
+        );
+
+        return if $setter->{fail};
+
+        $tester->request_ok(
+          [ "Email/get" => { ids => [ $message->id ] } ],
+          superhashof({ list => [ superhashof({ keywords => { '$flagged' => jtrue() } }) ] }),
+          '...and it worked, keyword $flagged set',
+        );
+
+        $tester->request_ok(
+          [ "Email/set" => { update => { $message->id => $clearer->{data} } } ],
+          ($clearer->{fail}
+            ? superhashof({ notUpdated => { $message->id => ignore } })
+            : superhashof({ updated    => { $message->id => ignore } })),
+          'tried to clear $flagged keyword: should ' . ($clearer->{fail} ? 'fail' : 'work')
+        );
+
+        return if $clearer->{fail};
+
+        $tester->request_ok(
+          [ "Email/get" => { ids => [ $message->id ] } ],
+          superhashof({ list => [ superhashof({ keywords => { } }) ] }),
+          "...and it worked, keyword removed",
+        );
+      };
+
+      next SETTER if $setter->{fail};
+    }
+  }
 };
 
 run_me;
