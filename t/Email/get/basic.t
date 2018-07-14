@@ -16,6 +16,7 @@ use Test::Abortable;
 use Path::Tiny;
 use Digest::MD5 qw(md5_hex);
 use Email::MIME;
+use Email::MessageID;
 
 use utf8;
 
@@ -1690,8 +1691,9 @@ test "hasAttachment" => sub {
       email_type => 'provided',
       email      => Email::MIME->create(
         header_str => [
-          From => 'test@example.com',
-          To   => 'test@exapmle.com',
+          MessageId => Email::MessageID->new->in_brackets,
+          From      => 'test@example.com',
+          To        => 'test@exapmle.com',
         ],
         parts => [
           "Main body",
