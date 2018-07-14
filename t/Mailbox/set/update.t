@@ -120,7 +120,7 @@ test "Mailbox/set update" => sub {
     ]]);
 
     TODO: {
-      todo_skip "Cyrus currently doesn't support this", 1
+      local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2314"
         if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
       jcmp_deeply(

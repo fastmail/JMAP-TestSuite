@@ -243,7 +243,7 @@ test "Setting with immutable fields" => sub {
     TODO: {
       $mb->{name} .= " a change";
 
-      todo_skip "Cyrus currently doesn't support this", 2
+      local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2315"
         if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
       my $res = $tester->request({
@@ -259,8 +259,10 @@ test "Setting with immutable fields" => sub {
       ok($res->is_success, "Mailbox/set create")
         or diag explain $res->http_response->as_string;
 
+      my $sentence = $res->sentence(0);
+      is($sentence->name, "Mailbox/set", 'got correct sentence');
       ok(
-        $res->single_sentence("Mailbox/set")->arguments->{created}{new},
+        $sentence->arguments->{created}{new},
         "created our mailbox passing in immutable params!"
       ) or diag explain $res->as_stripped_triples;
     }
@@ -292,9 +294,9 @@ test "Setting with immutable fields" => sub {
       ]],
     });
 
-    TODO: {
-      todo_skip "Cyrus currently doesn't support this", 1
-        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+   TODO: {
+     local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2316"
+       if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
       jcmp_deeply(
         $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
