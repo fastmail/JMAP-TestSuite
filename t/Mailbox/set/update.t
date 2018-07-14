@@ -26,35 +26,33 @@ test "Mailbox/set update" => sub {
   my $mailbox2 = $self->context->create_mailbox;
 
   subtest "change mutable fields" => sub {
-    my $set_res = $tester->request([[
-      "Mailbox/set" => {
-        update => {
-          $mailbox2->id => {
+    my $set_res = $tester->request_ok(
+      [
+        "Mailbox/set" => {
+          update => {
+            $mailbox2->id => {
+              name      => "New Name",
+              parentId  => $mailbox1->id,
+              sortOrder => 53,
+            },
+          },
+        },
+      ],
+      superhashof({ updated => { $mailbox2->id => ignore() } }),
+      'mailbox updated',
+    );
+
+    my $get_res = $tester->request_ok(
+      [ "Mailbox/get" => { ids => [ $mailbox2->id ] } ],
+      superhashof({
+        list => [
+          superhashof({
             name      => "New Name",
             parentId  => $mailbox1->id,
             sortOrder => 53,
-          },
-        },
-      },
-    ]]);
-
-    jcmp_deeply(
-      $set_res->single_sentence('Mailbox/set')->arguments->{updated},
-      { $mailbox2->id => ignore() },
-      'mailbox updated'
-    );
-
-    my $get_res = $tester->request([[
-      "Mailbox/get" => { ids => [ $mailbox2->id ] },
-    ]]);
-
-    jcmp_deeply(
-      $get_res->single_sentence('Mailbox/get')->arguments->{list},
-      [superhashof({
-        name      => "New Name",
-        parentId  => $mailbox1->id,
-        sortOrder => 53,
-      })],
+          })
+        ],
+      }),
       'mailbox updated'
     );
   };
