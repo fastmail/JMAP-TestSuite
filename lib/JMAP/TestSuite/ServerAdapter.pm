@@ -1,6 +1,8 @@
 package JMAP::TestSuite::ServerAdapter;
 use Moose::Role;
 
+use Digest::MD5 qw(md5_hex);
+use Fcntl qw(LOCK_EX LOCK_UN);
 use Hash::Util::FieldHash qw(fieldhash);
 use JMAP::Tester;
 use Scope::Guard ();
@@ -17,16 +19,35 @@ has _locks => (
   },
 );
 
+has lock_dir => (
+  is  => 'ro',
+  isa => 'Str',
+  default => sub {
+    Carp::confess("lock dir doesn't exist or is not directory") unless -d "account-locks";
+    return "account-locks";
+  },
+);
+
+sub wait_for_lock {
+  my ($self, $account_id) = @_;
+
+  my $path = $self->lock_dir . q{/} . md5_hex($account_id);
+  open my $fh, '>>', $path or Carp::confess("can't open $path to flock: $!");
+  flock $fh, LOCK_EX;
+
+  return Scope::Guard->new(sub {
+    flock $fh, LOCK_UN;
+  });
+}
+
 sub unshared_account {
   my ($self) = @_;
   return $self->pristine_account if $self->can('pristine_account');
 
   my $account 	= $self->any_account;
-
   my $accountId = $account->accountId;
-  my $guard = Scope::Guard->new(sub { warn "releasing lock for $accountId" });
 
-  $self->_locks->{ $account } = $guard;
+  $self->_locks->{ $account } = $self->wait_for_lock($accountId);
 
   return $account;
 }
