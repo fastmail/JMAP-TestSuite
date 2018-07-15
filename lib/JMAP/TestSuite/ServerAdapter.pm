@@ -5,6 +5,7 @@ use Digest::MD5 qw(md5_hex);
 use Fcntl qw(LOCK_EX LOCK_UN);
 use Hash::Util::FieldHash qw(fieldhash);
 use JMAP::Tester;
+use JMAP::Tester::Abort qw(abort);
 use Scope::Guard ();
 
 requires 'any_account';
@@ -23,13 +24,16 @@ has lock_dir => (
   is  => 'ro',
   isa => 'Str',
   default => sub {
-    Carp::confess("lock dir doesn't exist or is not directory") unless -d "account-locks";
-    return "account-locks";
+    "account-locks";
   },
 );
 
 sub wait_for_lock {
   my ($self, $account_id) = @_;
+
+  my $lock_dir = $self->lock_dir;
+
+  abort("can't lock, lock directory does not exist") unless -d "account-locks";
 
   my $path = $self->lock_dir . q{/} . md5_hex($account_id);
   open my $fh, '>>', $path or Carp::confess("can't open $path to flock: $!");
