@@ -21,7 +21,8 @@ test "Mailbox/get with no existing entities" => { requires_pristine => 1 } => su
   plan skip_all => "Cyrus requires at least one mailbox"
     if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   subtest "No arguments" => sub {
     my $res = $tester->request([[
@@ -33,7 +34,7 @@ test "Mailbox/get with no existing entities" => { requires_pristine => 1 } => su
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [],
         notFound  => [],
@@ -47,11 +48,12 @@ test "Mailbox/get with no existing entities" => { requires_pristine => 1 } => su
 test "Mailbox/get when some entities exist" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
-  my $mailbox2 = $self->context->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
   # Standard /get method. The ids argument may be null to fetch all at once.
 
@@ -71,7 +73,7 @@ test "Mailbox/get when some entities exist" => { requires_pristine => 1 } => sub
       jcmp_deeply(
         $res->single_sentence("Mailbox/get")->arguments,
         superhashof({
-          accountId => jstr($self->context->accountId),
+          accountId => jstr($account->accountId),
           state     => jstr(),
           notFound  => [],
         }),
@@ -109,7 +111,7 @@ test "Mailbox/get when some entities exist" => { requires_pristine => 1 } => sub
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         notFound  => [],
       }),
@@ -144,7 +146,7 @@ test "Mailbox/get when some entities exist" => { requires_pristine => 1 } => sub
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [],
         notFound  => [],
@@ -157,9 +159,10 @@ test "Mailbox/get when some entities exist" => { requires_pristine => 1 } => sub
 test "Mailbox/get with limiting properties in resposne" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
   subtest "properties => null gives us all properties" => sub {
     my $res = $tester->request([[
@@ -174,7 +177,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         notFound  => [],
       }),
@@ -212,7 +215,7 @@ test "Mailbox/get with limiting properties in resposne" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         notFound  => [],
       }),

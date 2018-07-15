@@ -17,8 +17,8 @@ use Test::Abortable;
 test "Email/import with bad values" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   subtest "emails -> wrong form" => sub {
     for my $bad (undef, "none", ["foo"]) {
@@ -54,8 +54,8 @@ test "Email/import with bad values" => sub {
     ) or diag explain $res->as_stripped_triples;
   };
 
-  my $blob = $context->email_blob(generic => {});
-  my $mailbox = $context->create_mailbox;
+  my $blob = $account->email_blob(generic => {});
+  my $mailbox = $account->create_mailbox;
 
   subtest "blobId" => sub {
     subtest "wrong form" => sub {
@@ -286,15 +286,15 @@ test "Email/import with bad values" => sub {
 test "good imports" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   subtest "single mailbox import, all values" => sub {
-    my $blob = $context->email_blob(generic => {
+    my $blob = $account->email_blob(generic => {
       body => "My pid is $$",
     });
 
-    my $mailbox = $context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
 
     my $res = $tester->request([[
       "Email/import" => {
@@ -312,7 +312,7 @@ test "good imports" => sub {
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments,
       {
-        accountId  => jstr($self->context->accountId),
+        accountId  => jstr($account->accountId),
         notCreated => {},
         created => {
           new => {
@@ -375,11 +375,11 @@ test "good imports" => sub {
   };
 
   subtest "single mailbox import, default values" => sub {
-    my $blob = $context->email_blob(generic => {
+    my $blob = $account->email_blob(generic => {
       body => "My pid is still $$",
     });
 
-    my $mailbox = $context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
 
     my $res = $tester->request([[
       "Email/import" => {
@@ -395,7 +395,7 @@ test "good imports" => sub {
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments,
       {
-        accountId  => jstr($self->context->accountId),
+        accountId  => jstr($account->accountId),
         notCreated => {},
         created => {
           new => {
@@ -457,12 +457,12 @@ test "good imports" => sub {
   };
 
   subtest "multiple mailboxes" => sub {
-    my $blob = $context->email_blob(generic => {
+    my $blob = $account->email_blob(generic => {
       body => "Still $$ for my pid",
     });
 
-    my $mailbox = $context->create_mailbox;
-    my $mailbox2 = $context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
+    my $mailbox2 = $account->create_mailbox;
 
     my $res = $tester->request([[
       "Email/import" => {
@@ -481,7 +481,7 @@ test "good imports" => sub {
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments,
       {
-        accountId  => jstr($self->context->accountId),
+        accountId  => jstr($account->accountId),
         notCreated => {},
         created => {
           new => {
@@ -548,15 +548,15 @@ test "good imports" => sub {
 test "one import fails, another succeeds" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox = $context->create_mailbox;
+  my $mailbox = $account->create_mailbox;
 
-  my $blob = $context->email_blob(generic => {
+  my $blob = $account->email_blob(generic => {
     body => "This one worked ($$)",
   });
-  my $blob2 = $context->email_blob(generic => {
+  my $blob2 = $account->email_blob(generic => {
     body => "This one didn't work ($$)",
   });
 
@@ -578,7 +578,7 @@ test "one import fails, another succeeds" => sub {
   jcmp_deeply(
     $res->single_sentence('Email/import')->arguments,
     {
-      accountId  => jstr($self->context->accountId),
+      accountId  => jstr($account->accountId),
       notCreated => {
         new2 => {
           type => 'invalidProperties',
@@ -647,10 +647,10 @@ test "one import fails, another succeeds" => sub {
 test "invalidEmail" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox = $context->create_mailbox;
+  my $mailbox = $account->create_mailbox;
   my $blob = $tester->upload('text/plain', \"some data");
 
   my $res = $tester->request([[

@@ -17,14 +17,12 @@ use Test::Abortable;
 test "Mailbox/changes with no changes" => sub {
   my ($self) = @_;
 
-  my $account = $self->server->unshared_account;
-  $self->_set_context($account->context);
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $tester = $self->tester;
+  my $mailbox = $account->create_mailbox;
 
-  my $mailbox = $self->context->create_mailbox;
-
-  my $state = $self->context->get_state('mailbox');
+  my $state = $account->get_state('mailbox');
 
   my $res = $tester->request([[
     "Mailbox/changes" => { sinceState => $state, },
@@ -37,7 +35,7 @@ test "Mailbox/changes with no changes" => sub {
   jcmp_deeply(
     $changes,
     superhashof({
-      accountId      => jstr($self->context->accountId),
+      accountId      => jstr($account->accountId),
       oldState       => jstr($state),
       newState       => jstr($state),
       hasMoreChanges => jfalse,
@@ -58,12 +56,13 @@ test "Mailbox/changes with no changes" => sub {
 test "Mailbox/changes with changes" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   subtest "created entities show up in created" => sub {
-    my $state = $self->context->get_state('mailbox');
+    my $state = $account->get_state('mailbox');
 
-    my $mailbox = $self->context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
 
     my $res = $tester->request([[
       "Mailbox/changes" => { sinceState => $state, },
@@ -74,7 +73,7 @@ test "Mailbox/changes with changes" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
@@ -87,9 +86,9 @@ test "Mailbox/changes with changes" => sub {
   };
 
   subtest "updated entities show up in updated" => sub {
-    my $mailbox = $self->context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
 
-    my $state = $self->context->get_state('mailbox');
+    my $state = $account->get_state('mailbox');
 
     subtest "update the mailbox" => sub {
       my $res = $tester->request([[
@@ -112,7 +111,7 @@ test "Mailbox/changes with changes" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
@@ -125,9 +124,9 @@ test "Mailbox/changes with changes" => sub {
   };
 
   subtest "destroyed entities show up in destroyed" => sub {
-    my $mailbox = $self->context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
 
-    my $state = $self->context->get_state('mailbox');
+    my $state = $account->get_state('mailbox');
 
     subtest "destroy the mailbox" => sub {
       my $res = $tester->request([[
@@ -148,7 +147,7 @@ test "Mailbox/changes with changes" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
@@ -166,20 +165,21 @@ test "maxChanges and hasMoreChanges" => sub {
 
   # XXX - Skip if the server under test doesn't support it
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # Create two mailboxes so we should have 3 states (start state,
   # new mailbox 1 state, new mailbox 2 state). Then, ask for changes
   # from start state, with a maxChanges set to 1 so we should get
   # hasMoreChanges when sinceState is start state.
 
-  my $start_state = $self->context->get_state('mailbox');
+  my $start_state = $account->get_state('mailbox');
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
-  my $mailbox2 = $self->context->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
-  my $end_state = $self->context->get_state('mailbox');
+  my $end_state = $account->get_state('mailbox');
 
   my $middle_state;
 
@@ -196,7 +196,7 @@ test "maxChanges and hasMoreChanges" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($start_state),
         newState       => all(jstr, none($start_state, $end_state)),
         hasMoreChanges => jtrue,
@@ -224,7 +224,7 @@ test "maxChanges and hasMoreChanges" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($middle_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
@@ -249,7 +249,7 @@ test "maxChanges and hasMoreChanges" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($end_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
@@ -265,17 +265,18 @@ test "maxChanges and hasMoreChanges" => sub {
 test "updatedProperties" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  subtest "Only counts changed, should get updatedProperties" => sub {
-    my $mailbox = $self->context->create_mailbox;
+  subtest "Only counts changed, should get changedProperties" => sub {
+    my $mailbox = $account->create_mailbox;
 
-    my $mailbox2 = $self->context->create_mailbox;
+    my $mailbox2 = $account->create_mailbox;
 
-    my $state = $self->context->get_state('mailbox');
+    my $state = $account->get_state('mailbox');
 
     # Add an email to one of them
-    $self->context->add_message_to_mailboxes($mailbox->id);
+    $account->add_message_to_mailboxes($mailbox->id);
 
     my $res = $tester->request([[
       "Mailbox/changes" => { sinceState => $state, },
@@ -286,7 +287,7 @@ test "updatedProperties" => sub {
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => all(jstr, none($state)),
         hasMoreChanges => jfalse,
@@ -305,15 +306,15 @@ test "updatedProperties" => sub {
   };
 
   subtest "Counts and other things changed, should not get" => sub {
-    my $mailbox = $self->context->create_mailbox;
+    my $mailbox = $account->create_mailbox;
 
-    my $state = $self->context->get_state('mailbox');
+    my $state = $account->get_state('mailbox');
 
     # Add an email to one of them
-    $self->context->add_message_to_mailboxes($mailbox->id);
+    $account->add_message_to_mailboxes($mailbox->id);
 
     # Add a new mailbox
-    my $mailbox2 = $self->context->create_mailbox;
+    my $mailbox2 = $account->create_mailbox;
 
     my $res = $tester->request([[
       "Mailbox/changes" => { sinceState => $state, },
@@ -326,7 +327,7 @@ test "updatedProperties" => sub {
     jcmp_deeply(
       $changes,
       superhashof({
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => all(jstr, none($state)),
         hasMoreChanges => jfalse,

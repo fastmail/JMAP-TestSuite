@@ -17,11 +17,12 @@ use Test::Abortable;
 test "Email/changes with no changes" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $message = $self->context->create_mailbox->add_message;
+  my $message = $account->create_mailbox->add_message;
 
-  my $state = $self->context->get_state('email');
+  my $state = $account->get_state('email');
 
   my $res = $tester->request([[
     "Email/changes" => { sinceState => $state, },
@@ -34,7 +35,7 @@ test "Email/changes with no changes" => sub {
   jcmp_deeply(
     $changes,
     {
-      accountId      => jstr($self->context->accountId),
+      accountId      => jstr($account->accountId),
       oldState       => jstr($state),
       newState       => jstr($state),
       hasMoreChanges => jfalse,
@@ -49,12 +50,13 @@ test "Email/changes with no changes" => sub {
 test "Email/changes with changes" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   subtest "created entities show up in created" => sub {
-    my $state = $self->context->get_state('email');
+    my $state = $account->get_state('email');
 
-    my $message = $self->context->create_mailbox->add_message;
+    my $message = $account->create_mailbox->add_message;
 
     my $res = $tester->request([[
       "Email/changes" => { sinceState => $state, },
@@ -65,7 +67,7 @@ test "Email/changes with changes" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
@@ -78,9 +80,9 @@ test "Email/changes with changes" => sub {
   };
 
   subtest "updated entities show up in updated" => sub {
-    my $message = $self->context->create_mailbox->add_message;
+    my $message = $account->create_mailbox->add_message;
 
-    my $state = $self->context->get_state('email');
+    my $state = $account->get_state('email');
 
     $message->update({ keywords => { foo => JSON::true } });
 
@@ -93,7 +95,7 @@ test "Email/changes with changes" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
@@ -106,9 +108,9 @@ test "Email/changes with changes" => sub {
   };
 
   subtest "destroyed entities show up in destroyed" => sub {
-    my $message = $self->context->create_mailbox->add_message;
+    my $message = $account->create_mailbox->add_message;
 
-    my $state = $self->context->get_state('email');
+    my $state = $account->get_state('email');
 
     $message->destroy;
 
@@ -121,7 +123,7 @@ test "Email/changes with changes" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($state),
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
@@ -139,20 +141,21 @@ test "maxChanges and hasMoreChanges" => sub {
 
   # XXX - Skip if the server under test doesn't support it
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # Create two message so we should have 3 states (start state,
   # new email 1 state, new email 2 state). Then, ask for changes
   # from start state, with a maxChanges set to 1 so we should get
   # hasMoreChanges when sinceState is start state.
 
-  my $start_state = $self->context->get_state('email');
+  my $start_state = $account->get_state('email');
 
-  my $message1 = $self->context->create_mailbox->add_message;
+  my $message1 = $account->create_mailbox->add_message;
 
-  my $message2 = $self->context->create_mailbox->add_message;
+  my $message2 = $account->create_mailbox->add_message;
 
-  my $end_state = $self->context->get_state('email');
+  my $end_state = $account->get_state('email');
 
   my $middle_state;
 
@@ -169,7 +172,7 @@ test "maxChanges and hasMoreChanges" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($start_state),
         newState       => all(jstr, none($start_state, $end_state)),
         hasMoreChanges => jtrue,
@@ -198,7 +201,7 @@ test "maxChanges and hasMoreChanges" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($middle_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
@@ -223,7 +226,7 @@ test "maxChanges and hasMoreChanges" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
-        accountId      => jstr($self->context->accountId),
+        accountId      => jstr($account->accountId),
         oldState       => jstr($end_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,

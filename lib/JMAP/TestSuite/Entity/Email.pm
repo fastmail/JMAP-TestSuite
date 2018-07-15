@@ -68,11 +68,11 @@ sub reply {
 
   my @mailbox_ids = keys %{ $self->mailboxIds };
 
-  $self->add_message_to_mailboxes($self->context, $arg, @mailbox_ids);
+  $self->add_message_to_mailboxes($self->account, $arg, @mailbox_ids);
 }
 
 sub add_message_to_mailboxes {
-  my ($pkg, $context, @mailboxes) = @_;
+  my ($pkg, $account, @mailboxes) = @_;
 
   my $arg = {};
 
@@ -84,7 +84,7 @@ sub add_message_to_mailboxes {
     $arg = shift @mailboxes;
   }
 
-  my $email = $context->email_blob(
+  my $email = $account->email_blob(
     ($arg->{email_type} || 'generic') => $arg
   );
 
@@ -104,7 +104,7 @@ sub add_message_to_mailboxes {
       },
     },
     {
-      context => $context,
+      account => $account,
     },
   );
 
@@ -118,8 +118,8 @@ sub add_message_to_mailboxes {
 sub import_messages {
   my ($pkg, $to_import, $extra) = @_;
 
-  my $context = $extra->{context}
-             || (blessed $pkg ? $pkg->tester  : die 'no context');
+  my $account = $extra->{account}
+             || (blessed $pkg ? $pkg->tester  : die 'no account');
 
   # pre-process to_import, replacing blob hashrefs with blobs after
   # uploading
@@ -152,7 +152,7 @@ sub import_messages {
   }
 
   my $result = $pkg->_import_batch($to_import, {
-    context => $context,
+    account => $account,
   });
 
   return JMAP::TestSuite::EntityBatch->new({
@@ -164,13 +164,13 @@ sub import_messages {
 sub _import_batch {
   my ($pkg, $to_create, $extra) = @_;
 
-  my $context = $extra->{context};
+  my $account = $extra->{account};
 
   $to_create = {
     map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
   };
 
-  my $set_res = $context->tester->request([[
+  my $set_res = $account->tester->request([[
     "Email/import" => { emails => $to_create },
   ]]);
 
@@ -199,7 +199,7 @@ sub _import_batch {
   my $get_method = $pkg->get_method;
   my $get_expect = $pkg->get_result;
 
-  my $get_res = $context->tester->request([[
+  my $get_res = $account->tester->request([[
     $get_method => { ids => [ $set_sentence->created_ids ] },
   ]]);
 
@@ -218,7 +218,7 @@ sub _import_batch {
   for my $item (@{ $get_res_arg->{list} }) {
     $result{ $crid_for{ $item->{id} } } = $pkg->new({
       _props  => $item,
-      context => $context,
+      account => $account,
     });
   }
 

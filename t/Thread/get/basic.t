@@ -20,10 +20,10 @@ use Test::Abortable;
 test "Thread/get with a few messages" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
   my $message1 = $mailbox1->add_message;
   my $message2 = $message1->reply;
@@ -40,7 +40,7 @@ test "Thread/get with a few messages" => sub {
   jcmp_deeply(
     $get_res->sentence_named('Thread/get')->arguments,
     {
-      accountId => jstr($self->context->accountId),
+      accountId => jstr($account->accountId),
       state => jstr(),
       list => [
         thread({
@@ -58,11 +58,11 @@ test "Thread/get with a few messages" => sub {
 test "Unknown ids goes in notFound" => { required_pristine => 1 } => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $other_context = $self->server->pristine_account->context;
-  my $other_mailbox = $other_context->create_mailbox;
+  my $other_account = $self->pristine_account;
+  my $other_mailbox = $other_account->create_mailbox;
   my $other_message = $other_mailbox->add_message;
 
   # Thread is in another account so we shouldn't see it, therefore
@@ -74,7 +74,7 @@ test "Unknown ids goes in notFound" => { required_pristine => 1 } => sub {
   jcmp_deeply(
     $get_res->sentence_named('Thread/get')->arguments,
     {
-      accountId => jstr($self->context->accountId),
+      accountId => jstr($account->accountId),
       state => jstr(),
       list => [],
       notFound => [ jstr($other_message->threadId) ],
@@ -86,7 +86,8 @@ test "Unknown ids goes in notFound" => { required_pristine => 1 } => sub {
 test "empty list" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   my $get_res = $tester->request([[
     "Thread/get" => { ids => [ ] },
@@ -95,7 +96,7 @@ test "empty list" => sub {
   jcmp_deeply(
     $get_res->sentence_named('Thread/get')->arguments,
     {
-      accountId => jstr($self->context->accountId),
+      accountId => jstr($account->accountId),
       state => jstr(),
       list => [],
       notFound => [],

@@ -17,7 +17,8 @@ use Test::Abortable;
 test "downloading through downloadUrl" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # First, grab our downloadUrl
   my $res = $tester->ua->get($tester->api_uri);
@@ -30,7 +31,7 @@ test "downloading through downloadUrl" => sub {
   my $download_url = $data->{downloadUrl};
   ok($download_url, 'got a download url');
 
-  my $account_id = $self->context->accountId;
+  my $account_id = $account->accountId;
 
   if ($download_url =~ s/{accountId}/$account_id/) {
     note("downloadUrl included {accountId} variable. Using $download_url");
