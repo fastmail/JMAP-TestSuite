@@ -42,7 +42,7 @@ sub add_message {
 
   $arg ||= {};
 
-  $self->context->add_message_to_mailboxes($arg, $self->id);
+  $self->account->add_message_to_mailboxes($arg, $self->id);
 }
 
 no Moose;

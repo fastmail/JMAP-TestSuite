@@ -24,7 +24,8 @@ test "Mailbox/query with no existing entities" => { requires_pristine => 1 } => 
   plan skip_all => "Cyrus requires at least one mailbox"
     if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
-  my $tester = $self->tester;
+  my $account = $self->pristine_account;
+  my $tester  = $account->tester;
 
   subtest "No arguments" => sub {
     my $res = $tester->request([[
@@ -36,7 +37,7 @@ test "Mailbox/query with no existing entities" => { requires_pristine => 1 } => 
     jcmp_deeply(
       $res->single_sentence("Mailbox/query")->arguments,
       superhashof({
-        accountId  => jstr($self->context->accountId),
+        accountId  => jstr($account->accountId),
         queryState => jstr(),
         position   => jnum(0),
         total      => jnum(0),
@@ -55,11 +56,12 @@ test "Mailbox/query with no existing entities" => { requires_pristine => 1 } => 
 test "Mailbox/query filtering with filterConditions" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->pristine_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
-  my $mailbox2 = $self->context->create_mailbox({
+  my $mailbox2 = $account->create_mailbox({
     parentId => $mailbox1->id,
   });
 
@@ -163,30 +165,32 @@ test "Mailbox/query filtering with filterConditions" => { requires_pristine => 1
 test "sorting and limiting" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
+  my $account = $self->pristine_account;
+
   my %mailboxes = (
-    zzz => $self->context->create_mailbox({
+    zzz => $account->create_mailbox({
       name => "zzz", sortOrder => 1,
     }),
-    xxx => $self->context->create_mailbox({
+    xxx => $account->create_mailbox({
       name => "xxx", sortOrder => 2,
     }),
-    yyy => $self->context->create_mailbox({
+    yyy => $account->create_mailbox({
       name => "yyy", sortOrder => 3,
     }),
   );
 
-  $mailboxes{bbb} = $self->context->create_mailbox({
+  $mailboxes{bbb} = $account->create_mailbox({
     name => 'bbb', sortOrder => 4, parentId => $mailboxes{zzz}->id,
   });
-  $mailboxes{aaa} = $self->context->create_mailbox({
+  $mailboxes{aaa} = $account->create_mailbox({
     name => 'aaa', sortOrder => 5, parentId => $mailboxes{zzz}->id,
   });
 
-  $mailboxes{ccc} = $self->context->create_mailbox({
+  $mailboxes{ccc} = $account->create_mailbox({
     name => 'ccc', sortOrder => 6, parentId => $mailboxes{xxx}->id,
   });
 
-  $mailboxes{ddd} = $self->context->create_mailbox({
+  $mailboxes{ddd} = $account->create_mailbox({
     name => 'ddd', sortOrder => 7, parentId => $mailboxes{yyy}->id,
   });
 
@@ -216,21 +220,27 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   my $describer_sub = $self->make_describer_sub(\%mailboxes_by_id);
 
   # name
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'name', }], },
     { ids => \@name_asc, },
     $describer_sub,
     "sort by name, implicit ascending order (default)",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'name', isAscending => JSON::true, }], },
     { ids => \@name_asc, },
     $describer_sub,
     "sort by name, explicit ascending order",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'name', isAscending => JSON::false, }], },
     { ids => \@name_desc, },
     $describer_sub,
@@ -238,21 +248,27 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # sortOrder
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'sortOrder', }], },
     { ids => \@sort_order_asc, },
     $describer_sub,
     "sort by sortOrder, implict ascending order"
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'sortOrder', isAscending => JSON::true, }], },
     { ids => \@sort_order_asc, },
     $describer_sub,
     "sort by sortOrder, explicit ascending order"
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'sortOrder', isAscending => JSON::false, }], },
     { ids => \@sort_order_desc, },
     $describer_sub,
@@ -260,21 +276,27 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # parent/name
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'parent/name', }], },
     { ids => \@parent_name_asc, },
     $describer_sub,
     "sort by parent/name, implict ascending order"
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'parent/name', isAscending => JSON::true, }], },
     { ids => \@parent_name_asc, },
     $describer_sub,
     "sort by parent/name, explicit ascending order"
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     { sort => [{ property => 'parent/name', isAscending => JSON::false, }], },
     { ids => \@parent_name_desc, },
     $describer_sub,
@@ -282,7 +304,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # position 0, explicit
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => 0,
@@ -293,7 +317,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # negative positions start at end of list
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => -1,
@@ -303,7 +329,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
     "sort by parent/name, explicit ascending order, explicit position -1"
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => -3,
@@ -314,7 +342,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # positive positions start at beginning
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => 1,
@@ -324,7 +354,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
     "sort by parent/name, explicit ascending order, explicit position 1"
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => 3,
@@ -335,7 +367,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # position > total = no results
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => $#parent_name_asc + 5,
@@ -346,7 +380,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
   );
 
   # negative position too low clamped to 0
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => $#parent_name_asc - ($#parent_name_asc + 10),
@@ -358,7 +394,7 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
 
   subtest "limits" => sub {
     subtest "Negative limit" => sub {
-      my $res = $self->tester->request([[
+      my $res = $account->tester->request([[
         "Mailbox/query" => { limit => -5 },
       ]]);
 
@@ -375,7 +411,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
       ) or diag explain $res->as_stripped_triples;
     };
 
-    $self->test_query("Mailbox/query",
+    $self->test_query(
+      $account,
+      "Mailbox/query",
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => @parent_name_asc + 5,
@@ -385,7 +423,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
       "limit > total returns total"
     );
 
-    $self->test_query("Mailbox/query",
+    $self->test_query(
+      $account,
+      "Mailbox/query",
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => 0 + @parent_name_asc,
@@ -395,7 +435,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
       "limit == total returns total"
     );
 
-    $self->test_query("Mailbox/query",
+    $self->test_query(
+      $account,
+      "Mailbox/query",
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => @parent_name_asc - 2,
@@ -408,7 +450,9 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
       "limit < total returns limit"
     );
 
-    $self->test_query("Mailbox/query",
+    $self->test_query(
+      $account,
+      "Mailbox/query",
       {
         sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
         limit => 0,
@@ -428,13 +472,14 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
 test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->pristine_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox({
+  my $mailbox1 = $account->create_mailbox({
     name => 'aaa',
   });
 
-  my $mailbox2 = $self->context->create_mailbox({
+  my $mailbox2 = $account->create_mailbox({
     parentId => $mailbox1->id,
     name => 'bbb',
   });
@@ -472,7 +517,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
   } @with_roles;
 
   # AND
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'AND',
@@ -488,7 +535,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
     "AND - two conditions",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'AND',
@@ -504,7 +553,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
     "AND - two conditions",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'AND',
@@ -526,7 +577,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
   );
 
   # OR
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'OR',
@@ -542,7 +595,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
     "OR - two conditions",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'OR',
@@ -558,7 +613,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
     "OR - two conditions, same cond",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'OR',
@@ -575,7 +632,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
   );
 
   # NOT
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'NOT',
@@ -590,7 +649,9 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
     "NOT - one condition",
   );
 
-  $self->test_query("Mailbox/query",
+  $self->test_query(
+    $account,
+    "Mailbox/query",
     {
       filter => {
         operator => 'NOT',

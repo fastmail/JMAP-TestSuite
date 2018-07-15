@@ -15,14 +15,14 @@ use Test::Abortable;
 test "simple backref support" => sub {
   my ($self) = @_;
 
-  my $context = $self->context;
-  my $tester = $context->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
-  my $state = $context->get_state('mailbox');
+  my $state = $account->get_state('mailbox');
 
-  my $mailbox2 = $context->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
   subtest "good ref" => sub {
     # Should only see mailbox2

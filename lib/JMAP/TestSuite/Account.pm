@@ -1,37 +1,23 @@
 package JMAP::TestSuite::Account {
   use Moose::Role;
 
+  use Email::MessageID;
   use JMAP::Tester;
+  use JMAP::TestSuite::Util qw(batch_ok);
+  use Scalar::Util qw(blessed);
+  use Test::More;
 
   has accountId => (is => 'ro', required => 1);
   has server    => (is => 'ro', isa => 'Object', required => 1);
 
   requires 'authenticated_tester';
 
-  sub context { JMAP::TestSuite::AccountContext->new({ account => $_[0] }) }
-
-  no Moose::Role;
-}
-
-package JMAP::TestSuite::AccountContext {
-  use Moose;
-
-  use JMAP::TestSuite::Util qw(batch_ok);
-  use Test::More;
-  use Email::MessageID;
-  use Scalar::Util qw(blessed);
-
-  has account => (
-    is => 'ro',
-    handles  => [ qw(accountId) ],
-    required => 1
-  );
-
   has tester  => (
     is   => 'ro',
     isa  => 'JMAP::TestSuite::JMAP::Tester::Wrapper',
     lazy => 1,
-    default => sub { $_[0]->account->authenticated_tester },
+    default => sub { $_[0]->authenticated_tester },
+    clearer => 'clear_tester',
   );
 
   my %types = (
@@ -131,7 +117,7 @@ package JMAP::TestSuite::AccountContext {
       my $class = "JMAP::TestSuite::Entity::\u$moniker";
       $class->$method($to_pass, {
         $to_munge ? %$to_munge : (),
-        context => $self,
+        account => $self,
       });
     };
     no strict 'refs';
@@ -142,7 +128,7 @@ package JMAP::TestSuite::AccountContext {
     my $code = sub {
       my ($self, $moniker) = @_;
       my $class = "JMAP::TestSuite::Entity::\u$moniker";
-      $class->$method({ context => $self });
+      $class->$method({ account => $self });
     };
     no strict 'refs';
     *$method = $code;
@@ -182,12 +168,11 @@ package JMAP::TestSuite::AccountContext {
     my ($self, $to_pass, $to_munge) = @_;
     JMAP::TestSuite::Entity::Email->import_messages(
       $to_pass,
-      { ($to_munge ? %$to_munge : ()), context => $self },
+      { ($to_munge ? %$to_munge : ()), account => $self },
     );
   }
 
-  no Moose;
-  __PACKAGE__->meta->make_immutable;
+  no Moose::Role;
 }
 
 1;

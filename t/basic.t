@@ -14,9 +14,8 @@ use Test::Abortable;
 test "basic" => sub {
   my ($self) = @_;
 
-  my $context = $self->context;
-
-  my $tester = $context->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
   my $res = $tester->request([[ "Mailbox/get" => {} ]]);
   my $pairs = $res->as_triples;
 
@@ -34,7 +33,7 @@ test "basic" => sub {
   }
 
   {
-    my $batch = $context->create_batch(mailbox => {
+    my $batch = $account->create_batch(mailbox => {
       x => { name => "Folder X at $^T.$$" },
       y => { name => undef },
       z => { name => "Folder Z", parentId => '#x' },
@@ -57,13 +56,13 @@ test "basic" => sub {
   }
 
   {
-    my $blob = $context->email_blob(generic => {
+    my $blob = $account->email_blob(generic => {
       message_id => "<$$.$^T\@$$.example.com>",
     });
 
     ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
-    my $batch = $context->import_messages({
+    my $batch = $account->import_messages({
       msg => { blobId => $blob, mailboxIds => { $role{inbox}{id} => \1 }, },
     });
 
