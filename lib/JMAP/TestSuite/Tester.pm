@@ -14,9 +14,14 @@ if ($ENV{JMTS_TEST_OUTPUT_TO_STDERR}) {
 }
 
 use JMAP::TestSuite;
+use JMAP::TestSuite::TestRoutine::JMAPTest;
 use JMAP::TestSuite::Util;
 use Test::Deep ':v1';
 use Test::Deep::JType;
+
+sub test_routine_test_traits {
+  'JMAP::TestSuite::TestRoutine::JMAPTest'
+}
 
 has server => (
   is      => 'ro',
