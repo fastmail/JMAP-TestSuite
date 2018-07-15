@@ -27,7 +27,6 @@ test "simple backref support" => sub {
   subtest "good ref" => sub {
     # Should only see mailbox2
     my $res = $tester->request({
-      using => ["ietf:jmapmail"],
       methodCalls => [
         [
           "Mailbox/changes" => {
@@ -79,7 +78,6 @@ test "simple backref support" => sub {
     ) {
       # Should only see mailbox2
       my $res = $tester->request({
-        using => ["ietf:jmapmail"],
         methodCalls => [
           [
             "Mailbox/changes" => {
@@ -117,7 +115,6 @@ test "simple backref support" => sub {
   subtest "#foo and foo -> invalidArguments" => sub {
     # Should only see mailbox2
     my $res = $tester->request({
-      using => ["ietf:jmapmail"],
       methodCalls => [
         [
           "Mailbox/changes" => {

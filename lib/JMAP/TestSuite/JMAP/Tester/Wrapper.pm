@@ -18,8 +18,7 @@ has default_using => (
     die "must be an arrayref" unless _ARRAY0 $_[0];
   },
   default => sub {
-    [ "ietf:jmapmail" ],
-#    [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
   },
 );
 

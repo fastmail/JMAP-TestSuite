@@ -40,7 +40,7 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
         },
       },
       capabilities => superhashof({
-        'ietf:jmap' => {
+        'urn:ietf:params:jmap:core' => {
           maxSizeUpload => jnum,
           maxConcurrentUpload => jnum,
           maxSizeRequest => jnum,

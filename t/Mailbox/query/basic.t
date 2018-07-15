@@ -440,7 +440,6 @@ test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 
   });
 
   my $res = $tester->request({
-    using => [ "ietf:jmapmail" ],
     methodCalls => [[
       "Mailbox/get" => {},
     ]],
