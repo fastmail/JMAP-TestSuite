@@ -17,6 +17,9 @@ use Test::Abortable;
 test "Mailbox/changes with no changes" => sub {
   my ($self) = @_;
 
+  my $account = $self->server->unshared_account;
+  $self->_set_context($account->context);
+
   my $tester = $self->tester;
 
   my $mailbox = $self->context->create_mailbox;
