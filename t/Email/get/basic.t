@@ -1394,7 +1394,7 @@ test "header:{header-field-name}" => sub {
   };
 };
 
-pristine_test "textBody" => sub {
+test "textBody" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -1475,7 +1475,7 @@ pristine_test "textBody" => sub {
   };
 };
 
-pristine_test "htmlBody" => sub {
+test "htmlBody" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -1537,7 +1537,7 @@ pristine_test "htmlBody" => sub {
   };
 };
 
-pristine_test "bodyStructure and attachments" => sub {
+test "bodyStructure and attachments" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

@@ -95,6 +95,19 @@ package JMAP::TestSuite::AccountContext {
         Carp::confese("'provided' email_type requires an 'email' argument!");
       }
 
+      unless ($arg->{dont_modify}) {
+        my $obj = blessed($arg->{email})
+                    ? $arg->{email}
+                    : Email::MIME->new($arg->{email});
+
+        # Message needs to be unqiue for cyrus within an account
+        $obj->header_str_set(
+          'X-JMTS-Unique' => Email::MessageID->new->in_brackets,
+        );
+
+        return $obj->as_string;
+      }
+
       return $arg->{email};
     },
   );

@@ -20,13 +20,13 @@ Content-Transfer-Encoding: 7bit
 --MIXED1
 Date: Thu, 21 Jun 2018 11:00:06 -0400
 MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="ALTERNATIVE1";
+Content-Type: multipart/alternative; boundary="ALTERNATIVE1"
 Content-Transfer-Encoding: 7bit
 
 --ALTERNATIVE1
 Date: Thu, 21 Jun 2018 11:00:06 -0400
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="MIXED2";
+Content-Type: multipart/mixed; boundary="MIXED2"
 Content-Transfer-Encoding: 7bit
 
 --MIXED2
@@ -73,7 +73,7 @@ This is text part D
 --ALTERNATIVE1
 Date: Thu, 21 Jun 2018 11:00:06 -0400
 MIME-Version: 1.0
-Content-Type: multipart/related; boundary="RELATED1";
+Content-Type: multipart/related; boundary="RELATED1"
 Content-Transfer-Encoding: 7bit
 
 --RELATED1
