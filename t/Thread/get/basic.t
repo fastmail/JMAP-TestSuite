@@ -54,7 +54,8 @@ test "Thread/get with a few messages" => sub {
   ) or diag explain $get_res->as_stripped_triples;
 };
 
-pristine_test "Unknown ids gives fills in notFound" => sub {
+# We use ->pristine_account directly so we must support pristine
+pristine_test "Unknown ids goes in notFound" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

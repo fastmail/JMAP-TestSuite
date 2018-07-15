@@ -14,6 +14,7 @@ use JSON qw(decode_json);
 use JSON::Typist;
 use Test::Abortable;
 
+# Can't have existing data so must be pristine
 pristine_test "Mailbox/get with no existing entities" => sub {
   my ($self) = @_;
 
@@ -42,6 +43,7 @@ pristine_test "Mailbox/get with no existing entities" => sub {
   };
 };
 
+# Can't have existing data so must be pristine
 pristine_test "Mailbox/get when some entities exist" => sub {
   my ($self) = @_;
 

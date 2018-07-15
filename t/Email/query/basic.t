@@ -16,6 +16,7 @@ use Test::Abortable;
 
 # XXX - Need test for cancalc
 
+# Can't have existing entries so must be pristine
 pristine_test "Email/query with no existing entities" => sub {
   my ($self) = @_;
 
@@ -55,6 +56,7 @@ sub ids_for {
   ];
 }
 
+# Can't have existing messages so must be pristine
 pristine_test "filtering" => sub {
   my ($self) = @_;
 
