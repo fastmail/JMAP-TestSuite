@@ -84,5 +84,4 @@ sub explain_test_query_failure {
   note("Wanted: @exp_names");
 }
 
-
 1;
