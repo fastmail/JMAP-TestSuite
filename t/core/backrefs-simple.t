@@ -12,7 +12,7 @@ use Test::Deep::JType;
 use Test::More;
 use Test::Abortable;
 
-pristine_test "simple backref support" => sub {
+test "simple backref support" => sub {
   my ($self) = @_;
 
   my $context = $self->context;

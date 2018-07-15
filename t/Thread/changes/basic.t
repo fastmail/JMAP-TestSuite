@@ -14,7 +14,7 @@ use JSON qw(decode_json);
 use JSON::Typist;
 use Test::Abortable;
 
-pristine_test "Thread/changes with no changes" => sub {
+test "Thread/changes with no changes" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -46,7 +46,7 @@ pristine_test "Thread/changes with no changes" => sub {
   ) or diag explain $res->as_stripped_triples;
 };
 
-pristine_test "Thread/changes with changes" => sub {
+test "Thread/changes with changes" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -134,7 +134,7 @@ pristine_test "Thread/changes with changes" => sub {
   };
 };
 
-pristine_test "maxChanges and hasMoreChanges" => sub {
+test "maxChanges and hasMoreChanges" => sub {
   my ($self) = @_;
 
   # XXX - Skip if the server under test doesn't support it

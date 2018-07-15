@@ -16,6 +16,8 @@ use Test::Abortable;
 
 # XXX - Need test for cancalc
 
+# This is about testing when there's no mailboxes, so you need a brand new
+# account, basically.
 pristine_test "Mailbox/query with no existing entities" => sub {
   my ($self) = @_;
 
@@ -48,6 +50,8 @@ pristine_test "Mailbox/query with no existing entities" => sub {
 
 # XXX - Test for basic response
 
+# We need to know that only our mailboxes here exist for predicting filter
+# results, so we need a pristine account.
 pristine_test "Mailbox/query filtering with filterConditions" => sub {
   my ($self) = @_;
 
@@ -154,6 +158,8 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
   };
 };
 
+# We need to know that only our mailboxes here exist for predicting filter
+# results, so we need a pristine account.
 pristine_test "sorting and limiting" => sub {
   my ($self) = @_;
 
@@ -417,6 +423,8 @@ pristine_test "sorting and limiting" => sub {
   };
 };
 
+# We need to know that only our mailboxes here exist for predicting filter
+# results, so we need a pristine account.
 pristine_test "Mailbox/query filtering with filterOperators" => sub {
   my ($self) = @_;
 

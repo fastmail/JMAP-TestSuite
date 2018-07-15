@@ -14,7 +14,7 @@ use JSON qw(decode_json);
 use JSON::Typist;
 use Test::Abortable;
 
-pristine_test "Mailbox/changes with no changes" => sub {
+test "Mailbox/changes with no changes" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -52,7 +52,7 @@ pristine_test "Mailbox/changes with no changes" => sub {
   );
 };
 
-pristine_test "Mailbox/changes with changes" => sub {
+test "Mailbox/changes with changes" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -158,7 +158,7 @@ pristine_test "Mailbox/changes with changes" => sub {
   };
 };
 
-pristine_test "maxChanges and hasMoreChanges" => sub {
+test "maxChanges and hasMoreChanges" => sub {
   my ($self) = @_;
 
   # XXX - Skip if the server under test doesn't support it
@@ -207,7 +207,6 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
     $middle_state = $res->single_sentence->arguments->{newState};
     ok($middle_state, 'grabbed middle state');
   };
-
 
   subtest "changes from middle state to final state" => sub {
     my $res = $tester->request([[
@@ -260,7 +259,7 @@ pristine_test "maxChanges and hasMoreChanges" => sub {
   };
 };
 
-pristine_test "changedProperties" => sub {
+test "changedProperties" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

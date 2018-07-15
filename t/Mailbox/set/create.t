@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -15,7 +15,7 @@ use JSON::Typist;
 use Data::GUID qw(guid_string);
 use Test::Abortable;
 
-pristine_test "Mailbox/set create with defaults omitted" => sub {
+test "Mailbox/set create with defaults omitted" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -108,7 +108,7 @@ pristine_test "Mailbox/set create with defaults omitted" => sub {
   };
 };
 
-pristine_test "Mailbox/set create with all settable fields provided" => sub {
+test "Mailbox/set create with all settable fields provided" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
