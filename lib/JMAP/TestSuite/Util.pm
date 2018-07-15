@@ -10,7 +10,6 @@ use Sub::Exporter -setup => [ qw(
 
 use Test::Deep::JType;
 use Test::More;
-use Sub::Uplevel qw/:aggressive/;
 
 use JMAP::TestSuite::Comparator::Mailbox qw(mailbox);
 use JMAP::TestSuite::Comparator::Thread qw(thread);

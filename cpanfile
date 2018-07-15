@@ -22,7 +22,6 @@ requires 'Process::Status'                                       =>       '0';
 requires 'Safe::Isa'                                             =>       '0';
 requires 'Scalar::Util'                                          =>       '0';
 requires 'Sub::Exporter'                                         =>       '0';
-requires 'Sub::Uplevel'                                          =>       '0';
 requires 'Test::Abortable'                                       =>       '0';
 requires 'Test::Deep'                                            =>       '0';
 requires 'Test::Deep::HashRec'                                   =>       '0';
