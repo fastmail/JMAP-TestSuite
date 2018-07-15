@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok);
 
 use Test::Deep::JType;
 use Test::More;

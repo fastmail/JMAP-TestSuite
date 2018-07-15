@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -18,7 +18,7 @@ use Test::Abortable;
 
 # This is about testing when there's no mailboxes, so you need a brand new
 # account, basically.
-pristine_test "Mailbox/query with no existing entities" => sub {
+test "Mailbox/query with no existing entities" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   plan skip_all => "Cyrus requires at least one mailbox"
@@ -52,7 +52,7 @@ pristine_test "Mailbox/query with no existing entities" => sub {
 
 # We need to know that only our mailboxes here exist for predicting filter
 # results, so we need a pristine account.
-pristine_test "Mailbox/query filtering with filterConditions" => sub {
+test "Mailbox/query filtering with filterConditions" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -160,7 +160,7 @@ pristine_test "Mailbox/query filtering with filterConditions" => sub {
 
 # We need to know that only our mailboxes here exist for predicting filter
 # results, so we need a pristine account.
-pristine_test "sorting and limiting" => sub {
+test "sorting and limiting" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   my %mailboxes = (
@@ -425,7 +425,7 @@ pristine_test "sorting and limiting" => sub {
 
 # We need to know that only our mailboxes here exist for predicting filter
 # results, so we need a pristine account.
-pristine_test "Mailbox/query filtering with filterOperators" => sub {
+test "Mailbox/query filtering with filterOperators" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

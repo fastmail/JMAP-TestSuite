@@ -4,7 +4,6 @@ package JMAP::TestSuite::Util;
 
 use Sub::Exporter -setup => [ qw(
   batch_ok
-  pristine_test
   mailbox
   thread
 ) ];
@@ -49,24 +48,5 @@ sub batch_ok {
     }
   }
 }
-
-my %pristine_tests;
-
-sub mark_pristine { $pristine_tests{$$}{$_[0]} = 1; }
-sub is_pristine   { !! $pristine_tests{$$}{$_[0]}   }
-
-sub pristine_test {
-  my ($name, @rest) = @_;
-
-  mark_pristine($name);
-
-  my ($pkg) = caller;
-
-  my $sub = \&{"$pkg\::test"};
-
-  # Test::Routine needs to think the test came from our .t file
-  uplevel 1, $sub, $name, @rest;
-}
-
 
 1;

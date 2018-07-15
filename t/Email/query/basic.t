@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -17,7 +17,7 @@ use Test::Abortable;
 # XXX - Need test for cancalc
 
 # Can't have existing entries so must be pristine
-pristine_test "Email/query with no existing entities" => sub {
+test "Email/query with no existing entities" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
@@ -57,7 +57,7 @@ sub ids_for {
 }
 
 # Can't have existing messages so must be pristine
-pristine_test "filtering" => sub {
+test "filtering" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   my %mailboxes = (

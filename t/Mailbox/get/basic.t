@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test mailbox);
+use JMAP::TestSuite::Util qw(batch_ok mailbox);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -15,7 +15,7 @@ use JSON::Typist;
 use Test::Abortable;
 
 # Can't have existing data so must be pristine
-pristine_test "Mailbox/get with no existing entities" => sub {
+test "Mailbox/get with no existing entities" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   plan skip_all => "Cyrus requires at least one mailbox"
@@ -44,7 +44,7 @@ pristine_test "Mailbox/get with no existing entities" => sub {
 };
 
 # Can't have existing data so must be pristine
-pristine_test "Mailbox/get when some entities exist" => sub {
+test "Mailbox/get when some entities exist" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

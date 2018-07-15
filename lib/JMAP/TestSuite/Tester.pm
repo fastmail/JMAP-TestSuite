@@ -44,51 +44,18 @@ has context => (
   )],
 );
 
-sub should_skip_test {
-  my ($self, $test) = @_;
-
-  if (
-       JMAP::TestSuite::Util::is_pristine($test->description)
-    && ! $self->server->can('pristine_account')
-  ) {
-    return 1;
-  }
-
-  return;
-}
-
 before run_test => sub {
   my ($self, $test) = @_;
-
-  # If we can't provide a pristine account and the test requires it, perform
-  # no other actions
-  return if $self->should_skip_test($test);
 
   # Give us a fresh context every time
   $self->_clear_context;
 
-  if (JMAP::TestSuite::Util::is_pristine($test->description)) {
+  if ($test->requires_pristine) {
     # XXX - Ick. -- alh, 2018-02-21
     $self->_set_context(
       $self->server->pristine_account->context,
     );
   }
-};
-
-around run_test => sub {
-  my ($orig, $self, $test, @rest) = @_;
-
-  if ($self->should_skip_test($test)) {
-    my $desc = $test->description;
-
-    Test::Abortable::subtest($desc, sub {
-      plan skip_all => "Test requires pristine account, none available";
-    });
-
-    return;
-  }
-
-  $self->$orig($test, @rest);
 };
 
 sub test_query {

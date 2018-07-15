@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test thread);
+use JMAP::TestSuite::Util qw(batch_ok thread);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -55,7 +55,7 @@ test "Thread/get with a few messages" => sub {
 };
 
 # We use ->pristine_account directly so we must support pristine
-pristine_test "Unknown ids goes in notFound" => sub {
+test "Unknown ids goes in notFound" => { required_pristine => 1 } => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;

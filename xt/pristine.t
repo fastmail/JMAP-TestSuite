@@ -5,7 +5,7 @@ use Test::Routine::Util;
 
 with 'JMAP::TestSuite::Tester';
 
-use JMAP::TestSuite::Util qw(batch_ok pristine_test);
+use JMAP::TestSuite::Util qw(batch_ok);
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
@@ -14,7 +14,7 @@ use JSON qw(decode_json);
 use JSON::Typist;
 use Test::Abortable;
 
-pristine_test "Ensure pristine accounts are pristine" => sub {
+test "Ensure pristine accounts are pristine" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
   # Cheat - just make sure we don't get a reused account
