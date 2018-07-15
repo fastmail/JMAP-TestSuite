@@ -14,12 +14,10 @@ use Test::Abortable;
 test "getMesageUpdates-sinceState" => sub {
   my ($self) = @_;
 
-  my $context = $self->context;
-
   # We should be able to pass junk (like an integer sinceState instead of a
   # string sinceState like the spec requires) and get back a sensible JSON
   # blob telling us what we did wrong.
-  my $res = $context->tester->request([[
+  my $res = $self->any_account->tester->request([[
     'Email/queryChanges' => {
       # JMAP expects this state value to be a string, so this call may be
       # rejected, but it shouldn't cause a server error.

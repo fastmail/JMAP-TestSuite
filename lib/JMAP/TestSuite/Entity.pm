@@ -64,10 +64,10 @@ package JMAP::TestSuite::EntityRole::Common {
 
   sub is_error { 0 }
 
-  has context => (
+  has account => (
     is => 'ro',
     required => 1,
-    handles  => [ qw(account accountId tester clear_tester) ],
+    handles  => [ qw(accountId tester clear_tester) ],
   );
 
   no Moose::Role;
@@ -85,8 +85,8 @@ package JMAP::TestSuite::EntityRole::Common {
     # have both an account and accountId, with the account only implying the
     # accountId *by default*. -- rjbs, 2016-11-15
 
-    my $context = $extra->{context}
-               || (blessed $pkg ? $pkg->tester  : die 'no context');
+    my $account = $extra->{account}
+               || (blessed $pkg ? $pkg->tester  : die 'no account');
 
     my $set_method = $pkg->set_method;
     my $set_expect = $pkg->set_result;
@@ -95,7 +95,7 @@ package JMAP::TestSuite::EntityRole::Common {
       map {; $_ => $pkg->create_args($to_create->{$_}) } keys %$to_create
     };
 
-    my $set_res = $context->tester->request([[
+    my $set_res = $account->tester->request([[
       $set_method => { create => $to_create },
     ]]);
 
@@ -122,7 +122,7 @@ package JMAP::TestSuite::EntityRole::Common {
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request([[
+    my $get_res = $account->tester->request([[
       $get_method => { ids => [ $set_sentence->created_ids ] },
     ]]);
 
@@ -141,7 +141,7 @@ package JMAP::TestSuite::EntityRole::Common {
     for my $item (@{ $get_res_arg->{list} }) {
       $result{ $crid_for{ $item->{id} } } = $pkg->new({
         _props  => $item,
-        context => $context,
+        account => $account,
       });
     }
 
@@ -166,13 +166,13 @@ package JMAP::TestSuite::EntityRole::Common {
   sub _retrieve_batch {
     my ($pkg, $ids, $extra) = @_;
 
-    my $context = $extra->{context}
-               || (blessed $pkg ? $pkg->tester  : die 'no context');
+    my $account = $extra->{account}
+               || (blessed $pkg ? $pkg->tester  : die 'no account');
 
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request([[
+    my $get_res = $account->tester->request([[
       $get_method => { ids => [ @$ids ] },
     ]]);
 
@@ -189,7 +189,7 @@ package JMAP::TestSuite::EntityRole::Common {
     for my $item (@{ $get_res_arg->{list} }) {
       $result{ $item->{id} } = $pkg->new({
         _props  => $item,
-        context => $context,
+        account => $account,
       });
     }
 
@@ -207,13 +207,13 @@ package JMAP::TestSuite::EntityRole::Common {
   sub get_state {
     my ($pkg, $extra) = @_;
 
-    my $context = $extra->{context}
-               || (blessed $pkg ? $pkg->tester  : die 'no context');
+    my $account = $extra->{account}
+               || (blessed $pkg ? $pkg->tester  : die 'no account');
 
     my $get_method = $pkg->get_method;
     my $get_expect = $pkg->get_result;
 
-    my $get_res = $context->tester->request([[
+    my $get_res = $account->tester->request([[
       $get_method => { ids => [], },
     ]]);
 

@@ -21,9 +21,10 @@ use utf8;
 test "delete mail from mailboxes" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";

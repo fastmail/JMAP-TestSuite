@@ -18,7 +18,8 @@ use Test::Abortable;
 test "Mailbox/set create with defaults omitted" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   my $new_name = guid_string();
 
@@ -38,7 +39,7 @@ test "Mailbox/set create with defaults omitted" => sub {
   jcmp_deeply(
     $res->single_sentence("Mailbox/set")->arguments,
     superhashof({
-      accountId => jstr($self->context->accountId),
+      accountId => jstr($account->accountId),
       newState  => jstr(),
     }),
     "Set response looks good",
@@ -111,14 +112,15 @@ test "Mailbox/set create with defaults omitted" => sub {
 test "Mailbox/set create with all settable fields provided" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   my $new_name = guid_string();
 
-  my $parent = $self->context->create_mailbox;
+  my $parent = $account->create_mailbox;
 
   # We should have state after creating a parent mailbox
-  my $state = $self->context->get_state('mailbox');
+  my $state = $account->get_state('mailbox');
 
   # XXX - Create with role test -- alh, 2018-02-22
 
@@ -141,7 +143,7 @@ test "Mailbox/set create with all settable fields provided" => sub {
   jcmp_deeply(
     $res->single_sentence("Mailbox/set")->arguments,
     superhashof({
-      accountId => jstr($self->context->accountId),
+      accountId => jstr($account->accountId),
       newState  => jstr(),
       oldState  => jstr($state),
     }),
@@ -196,12 +198,13 @@ test "Mailbox/set create with all settable fields provided" => sub {
 test "Setting with immutable fields" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # First, figure out our defaults. See if they are consistent across
   # at least two creates
-  my $mailbox1 = $self->context->create_mailbox;
-  my $mailbox2 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
   my @immutable = qw(
     totalEmails
