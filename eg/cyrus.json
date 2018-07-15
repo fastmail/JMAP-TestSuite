@@ -1,0 +1,9 @@
+{
+  "adapter"   : "Cyrus",
+  "base_uri"  : "http://localhost",
+  "credentials" : [{
+    "username": "example@localhost",
+    "password": "mypassword"
+  }],
+  "virtual_domain_enabled": 1
+}
