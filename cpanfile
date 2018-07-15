@@ -25,6 +25,7 @@ requires 'Sub::Exporter'                                         =>       '0';
 requires 'Sub::Uplevel'                                          =>       '0';
 requires 'Test::Abortable'                                       =>       '0';
 requires 'Test::Deep'                                            =>       '0';
+requires 'Test::Deep::HashRec'                                   =>       '0';
 requires 'Test::Deep::JType'                                     =>       '0';
 requires 'Test::More'                                            =>       '0';
 requires 'Test::Routine'                                         =>   '0.025';
