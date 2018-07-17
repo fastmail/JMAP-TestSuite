@@ -11,6 +11,7 @@ requires 'JSON'                                                  =>       '0';
 requires 'JSON::Typist'                                          =>       '0';
 requires 'LWP::UserAgent'                                        =>       '0';
 requires 'MIME::Base64'                                          =>       '0';
+requires 'Mail::IMAPClient'                                      =>       '0';
 requires 'Module::Runtime'                                       =>       '0';
 requires 'Moo'                                                   =>       '0';
 requires 'Moose'                                                 =>       '0';

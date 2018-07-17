@@ -4,6 +4,7 @@ with 'JMAP::TestSuite::ServerAdapter';
 
 use Process::Status;
 use Data::GUID qw(guid_string);
+use Mail::IMAPClient;
 
 has base_uri => (
   is => 'ro',
@@ -53,6 +54,11 @@ has cyrus_admin_pass => (
   default => 'secret',
 );
 
+has cyrus_admin_use_ssl => (
+  is => 'ro',
+  default => 0,
+);
+
 has cyrus_hierarchy_separator => (
   is => 'ro',
   default => '/',
@@ -63,6 +69,25 @@ has credentials => (
   traits  => [ 'Array' ],
   handles => { credentials => 'elements' },
   required => 1,
+);
+
+has imap_client => (
+  is  => 'ro',
+  isa => 'Mail::IMAPClient',
+  lazy => 1,
+  default => sub {
+    my ($self) = @_;
+
+    Mail::IMAPClient->new(
+      Server   => $self->cyrus_host,
+      Port     => $self->cyrus_port,
+      Ssl      => $self->cyrus_admin_use_ssl ? 1 : 0,
+
+      User     => $self->cyrus_admin_user,
+      Password => $self->cyrus_admin_pass,
+      Uid      => 1,
+    ) or die "Failed to connect to cyrus imap: $@\n";
+  },
 );
 
 sub any_account {
@@ -107,26 +132,12 @@ sub pristine_account {
     }
   }
 
-  my $cyradm = $self->cyrus_prefix . "/bin/cyradm";
-
-  my $host = $self->cyrus_host;
-  my $port = $self->cyrus_port ? "--port " . $self->cyrus_port : "";
-  my $cyr_user = $self->cyrus_admin_user;
-  my $cyr_pass = $self->cyrus_admin_pass;
   my $sep = $self->cyrus_hierarchy_separator;
 
-  my $cmd = "echo 'createmailbox user$sep$user\@localhost' \\
-             | $cyradm --notls -u $cyr_user -w $cyr_pass $host $port";
+  my $folder = "user$sep$user\@localhost";
 
-  my $res = `$cmd 2>&1`;
-  unless ($res =~ /\s*[^\s]+>\s*[^\s]+>\s*$/) {
-    die "Failed to run $cmd: $res\n";
-  }
-
-  my $ps = Process::Status->new;
-
-  unless ($ps->is_success) {
-    die "Failed to create a new account in cyrus. Got output: $res\n";
+  unless ($self->imap_client->create($folder)) {
+    die "Failed to create folder '$folder': $@\n";
   }
 
   my $username = "$user\@localhost";
