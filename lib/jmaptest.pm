@@ -22,6 +22,7 @@ sub import {
   strict->import;
   warnings->import;
 
+  JSON->import::into($caller);
   Test::Deep->import::into($caller, ':v1');
   Test::Deep::JType->import::into($caller);
   Test::More->import::into($caller);

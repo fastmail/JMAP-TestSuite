@@ -1,20 +1,6 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-
-test "uploading through uploadUrl" => sub {
+test {
   my ($self) = @_;
 
   my $account = $self->any_account;
@@ -70,6 +56,3 @@ test "uploading through uploadUrl" => sub {
     'upload response looks good',
   );
 };
-
-run_me;
-done_testing;
