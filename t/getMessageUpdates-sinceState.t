@@ -1,17 +1,6 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep::JType;
-use Test::More;
-use Test::Abortable;
-
-test "getMesageUpdates-sinceState" => sub {
+test {
   my ($self) = @_;
 
   # We should be able to pass junk (like an integer sinceState instead of a
@@ -28,6 +17,3 @@ test "getMesageUpdates-sinceState" => sub {
   ok($res->is_success, 'called getMessageUpdates')
     or diag explain $res->http_response->as_string;
 };
-
-run_me;
-done_testing;

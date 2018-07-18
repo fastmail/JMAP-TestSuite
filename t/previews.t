@@ -1,21 +1,6 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep::JType;
-use Test::More;
-use Test::Abortable;
-
-use DateTime;
-use Email::MessageID;
-use JSON;
-
-test "previews" => sub {
+test {
   my ($self) = @_;
 
   my $account = $self->any_account;
@@ -111,6 +96,3 @@ test "previews" => sub {
     );
   };
 };
-
-run_me;
-done_testing;
