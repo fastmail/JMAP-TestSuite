@@ -17,10 +17,12 @@ use Test::Abortable;
 test "Ensure pristine accounts are pristine" => { requires_pristine => 1 } => sub {
   my ($self) = @_;
 
+  my $account_1 = $self->any_account;
+  my $account_2 = $self->pristine_account;
   # Cheat - just make sure we don't get a reused account
   isnt(
-    $self->context->accountId,
-    $self->server->pristine_account->accountId,
+    $account_1->accountId,
+    $account_1->accountId,
     'Got unique accountIds from pristine_account',
   );
 };

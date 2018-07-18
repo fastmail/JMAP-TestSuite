@@ -21,9 +21,10 @@ use utf8;
 test "update email keywords" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";
@@ -63,7 +64,8 @@ test "update email keywords" => sub {
 test "move email from one folder to another" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   for my $mover (
     {
@@ -86,8 +88,8 @@ test "move email from one folder to another" => sub {
     }
   ) {
     subtest "move mail with $mover->{desc}" => sub {
-      my $mbox_1 = $self->context->create_mailbox;
-      my $mbox_2 = $self->context->create_mailbox;
+      my $mbox_1 = $account->create_mailbox;
+      my $mbox_2 = $account->create_mailbox;
 
       my $from    = "test$$\@example.net";
       my $to      = "recip$$\@example.net";

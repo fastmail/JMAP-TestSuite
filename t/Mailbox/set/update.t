@@ -20,10 +20,11 @@ use Test::Abortable;
 test "Mailbox/set update" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
-  my $mailbox2 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
   subtest "change mutable fields" => sub {
     my $set_res = $tester->request_ok(

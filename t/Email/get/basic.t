@@ -25,12 +25,13 @@ my %PART = _get_parts();
 test "Email/get with no ids" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   my $res = $tester->request_ok(
     [ "Email/get" => { ids => [] } ],
     superhashof({
-      accountId => jstr($self->context->accountId),
+      accountId => jstr($account->accountId),
       state     => jstr(),
       list      => [],
     }),
@@ -41,9 +42,10 @@ test "Email/get with no ids" => sub {
 test "bodyProperties" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";
@@ -64,7 +66,7 @@ test "bodyProperties" => sub {
     ]],
     [[
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -100,7 +102,7 @@ test "bodyProperties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -128,7 +130,7 @@ test "bodyProperties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -188,7 +190,7 @@ test "bodyProperties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -207,9 +209,10 @@ test "bodyProperties" => sub {
 test "fetchTextBodyValues" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $body = "an email body $$";
 
@@ -228,7 +231,7 @@ test "fetchTextBodyValues" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -256,7 +259,7 @@ test "fetchTextBodyValues" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -303,9 +306,10 @@ test "fetchTextBodyValues" => sub {
 test "fetchHTMLBodyValues" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $body = "an email body $$";
 
@@ -324,7 +328,7 @@ test "fetchHTMLBodyValues" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -352,7 +356,7 @@ test "fetchHTMLBodyValues" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -399,9 +403,10 @@ test "fetchHTMLBodyValues" => sub {
 test "fetchAllBodyValues" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $body = "an email body $$";
 
@@ -420,7 +425,7 @@ test "fetchAllBodyValues" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -446,7 +451,7 @@ test "fetchAllBodyValues" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -491,9 +496,10 @@ test "fetchAllBodyValues" => sub {
 test "maxBodyValueBytes" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $body = "1234☃"; # snowman is 3 bytes (E2 98 83)
 
@@ -648,9 +654,10 @@ test "maxBodyValueBytes" => sub {
 test "properties" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";
@@ -686,7 +693,7 @@ test "properties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id            => $reply->id,
@@ -738,7 +745,7 @@ test "properties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $reply->id,
@@ -767,7 +774,7 @@ test "properties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id            => $reply->id,
@@ -863,7 +870,7 @@ test "properties" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id       => $reply->id,
@@ -880,9 +887,10 @@ test "properties" => sub {
 test "header:{header-field-name}" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";
@@ -928,7 +936,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id                      => $message->id,
@@ -963,7 +971,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id                      => $message->id,
@@ -1045,7 +1053,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id                      => $message->id,
@@ -1149,7 +1157,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id                      => $message->id,
@@ -1247,7 +1255,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id                      => $message->id,
@@ -1309,7 +1317,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id                          => $message->id,
@@ -1375,7 +1383,7 @@ test "header:{header-field-name}" => sub {
     jcmp_deeply(
       $res->single_sentence("Email/get")->arguments,
       superhashof({
-        accountId => jstr($self->context->accountId),
+        accountId => jstr($account->accountId),
         state     => jstr(),
         list      => [{
           id => $message->id,
@@ -1397,9 +1405,10 @@ test "header:{header-field-name}" => sub {
 test "textBody" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $message = $mbox->add_message({
     email_type => 'provided',
@@ -1440,7 +1449,7 @@ test "textBody" => sub {
       } elsif ($part->{type} eq 'image/jpeg') {
         my $download_res = $tester->download({
           blobId    => $part->{blobId},
-          accountId => $self->context->accountId,
+          accountId => $account->accountId,
           name      => "image.jpg"
         });
 
@@ -1478,9 +1487,10 @@ test "textBody" => sub {
 test "htmlBody" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $message = $mbox->add_message({
     email_type => 'provided',
@@ -1540,9 +1550,10 @@ test "htmlBody" => sub {
 test "bodyStructure and attachments" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $message = $mbox->add_message({
     email_type => 'provided',
@@ -1584,7 +1595,7 @@ test "bodyStructure and attachments" => sub {
       } else {
         my $download_res = $tester->download({
           blobId    => $part->{blobId},
-          accountId => $self->context->accountId,
+          accountId => $account->accountId,
           name      => "what.ever"
         });
 
@@ -1682,9 +1693,10 @@ EOF
 test "hasAttachment" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   subtest "no attachments" => sub {
     my $message = $mbox->add_message({
@@ -1763,9 +1775,10 @@ test "hasAttachment" => sub {
 test "attachments" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   subtest "image/audio/video in text only, attached" => sub {
     my $email = cmultipart("alternative", [

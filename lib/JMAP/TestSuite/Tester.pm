@@ -26,42 +26,14 @@ sub test_routine_test_traits {
 has server => (
   is      => 'ro',
   does    => 'JMAP::TestSuite::ServerAdapter',
-  default => sub {
-    JMAP::TestSuite->get_server;
-  },
+  default => sub { JMAP::TestSuite->get_server },
+  handles => [ qw( any_account pristine_account unshared_account ) ],
 );
-
-has context => (
-  is      => 'ro',
-  lazy    => 1,
-  clearer => '_clear_context',
-  default => sub {
-    shift->server->any_account->context
-  },
-  writer  => '_set_context',
-  handles => [qw(
-    tester
-  )],
-);
-
-before run_test => sub {
-  my ($self, $test) = @_;
-
-  # Give us a fresh context every time
-  $self->_clear_context;
-
-  if ($test->requires_pristine) {
-    # XXX - Ick. -- alh, 2018-02-21
-    $self->_set_context(
-      $self->server->pristine_account->context,
-    );
-  }
-};
 
 sub test_query {
-  my ($self, $call, $args, $expect, $describer_sub, $test) = @_;
+  my ($self, $account, $call, $args, $expect, $describer_sub, $test) = @_;
 
-  my $tester = $self->tester;
+  my $tester = $account->tester;
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
@@ -83,7 +55,7 @@ sub test_query {
     jcmp_deeply(
       $res->single_sentence("$call")->arguments,
       superhashof({
-        accountId  => jstr($self->context->accountId),
+        accountId  => jstr($account->accountId),
         queryState => jstr(),
         total      => jnum,
         position   => jnum(0),

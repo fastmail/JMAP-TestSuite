@@ -18,10 +18,10 @@ use Test::Abortable;
 test "Mailbox/set good destroy, no messages" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
   my $set_res = $tester->request([[
     "Mailbox/set" => {
@@ -55,8 +55,8 @@ test "Mailbox/set good destroy, no messages" => sub {
 test "mailboxHasEmail error" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   for my $test (
     [ 'implicit onDestroyRemoveMessages false' => {} ],
@@ -68,7 +68,7 @@ test "mailboxHasEmail error" => sub {
     my ($desc, $arg) = @$test;
 
     subtest "has message - $desc" => sub {
-      my $mailbox1 = $self->context->create_mailbox;
+      my $mailbox1 = $account->create_mailbox;
 
       my $message = $mailbox1->add_message;
 
@@ -114,12 +114,12 @@ test "mailboxHasEmail error" => sub {
 test "has message - onDestroyRemoveMessages true, mail only here" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
 
-  my $blob = $context->email_blob(generic => {});
+  my $blob = $account->email_blob(generic => {});
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
   my $message = $mailbox1->add_message;
@@ -161,18 +161,18 @@ test "has message - onDestroyRemoveMessages true, mail only here" => sub {
 test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # Put our message in two boxes. It should be removed from the first when
   # we destroy the mailbox but exist in the second.
-  my $mailbox1 = $self->context->create_mailbox;
-  my $mailbox2 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
-  my $blob = $context->email_blob(generic => {});
+  my $blob = $account->email_blob(generic => {});
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
-  my $message = $context->add_message_to_mailboxes(
+  my $message = $account->add_message_to_mailboxes(
     $mailbox1->id, $mailbox2->id,
   );
 
@@ -216,11 +216,11 @@ test "has message - onDestroyRemoveMessages true, mail in other boxes" => sub {
 test "mailboxHasChild error" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-  my $context = $self->context;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
-  my $mailbox2 = $self->context->create_mailbox({
+  my $mailbox1 = $account->create_mailbox;
+  my $mailbox2 = $account->create_mailbox({
     parentId => $mailbox1->id,
   });
 
