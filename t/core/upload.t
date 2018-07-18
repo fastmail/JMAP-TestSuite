@@ -17,7 +17,8 @@ use Test::Abortable;
 test "uploading through uploadUrl" => sub {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # First, grab our uploadUrl
   my $res = $tester->ua->get($tester->api_uri);
@@ -30,7 +31,7 @@ test "uploading through uploadUrl" => sub {
   my $upload_url = $data->{uploadUrl};
   ok($upload_url, 'got an upload url');
 
-  my $account_id = $self->context->accountId;
+  my $account_id = $account->accountId;
 
   if ($upload_url =~ s/{accountId}/$account_id/) {
     note("uploadUrl included {accountId} variable. Using $upload_url");

@@ -18,12 +18,11 @@ use JSON;
 test "getMessages-htmlBody" => sub {
   my ($self) = @_;
 
-  my ($context) = $self->context;
-
-  my $tester = $context->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # Get us a mailbox to play with
-  my $batch = $context->create_batch(mailbox => {
+  my $batch = $account->create_batch(mailbox => {
       x => { name => "Folder X at $^T.$$" },
   });
 
@@ -32,10 +31,10 @@ test "getMessages-htmlBody" => sub {
   ok( $batch->is_entirely_successful, "created a mailbox");
   my $x = $batch->result_for('x');
 
-  my $blob = $context->email_blob(generic => {});
+  my $blob = $account->email_blob(generic => {});
   ok($blob->is_success, "our upload succeeded (" . $blob->blobId . ")");
 
-  $batch = $context->import_messages({
+  $batch = $account->import_messages({
     msg => { blobId => $blob, mailboxIds => { $x->id => \1 }, },
   });
 
