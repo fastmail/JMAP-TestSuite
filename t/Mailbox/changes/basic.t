@@ -46,9 +46,9 @@ test "Mailbox/changes with no changes" => sub {
   ) or diag explain $res->as_stripped_triples;
 
   ok(
-       ! exists $changes->{changedProperties}
-    || ! defined $changes->{changedProperties},
-    "changedProperties is null or omitted"
+       ! exists $changes->{updatedProperties}
+    || ! defined $changes->{updatedProperties},
+    "updatedProperties is null or omitted"
   );
 };
 
@@ -259,12 +259,12 @@ test "maxChanges and hasMoreChanges" => sub {
   };
 };
 
-test "changedProperties" => sub {
+test "updatedProperties" => sub {
   my ($self) = @_;
 
   my $tester = $self->tester;
 
-  subtest "Only counts changed, should get changedProperties" => sub {
+  subtest "Only counts changed, should get updatedProperties" => sub {
     my $mailbox = $self->context->create_mailbox;
 
     my $mailbox2 = $self->context->create_mailbox;
@@ -290,7 +290,7 @@ test "changedProperties" => sub {
         created        => [],
         updated        => [ $mailbox->id ],
         destroyed      => [],
-        changedProperties => set(qw(
+        updatedProperties => set(qw(
           totalEmails
           unreadEmails
           totalThreads
@@ -335,9 +335,9 @@ test "changedProperties" => sub {
     ) or diag explain $res->as_stripped_triples;
 
     ok(
-         ! exists $changes->{changedProperties}
-      || ! defined $changes->{changedProperties},
-      "changedProperties is null or omitted"
+         ! exists $changes->{updatedProperties}
+      || ! defined $changes->{updatedProperties},
+      "updatedProperties is null or omitted"
     );
   };
 };
