@@ -340,7 +340,7 @@ test "sorting and limiting" => { requires_pristine => 1 } => sub {
       sort => [{ property => 'parent/name', isAscending => JSON::true, }],
       position => $#parent_name_asc + 5,
     },
-    { ids => [], position => $#parent_name_asc + 5, },
+    { ids => [], position => 0 },
     $describer_sub,
     "sort by parent/name, explicit ascending order, explicit position too high"
   );
