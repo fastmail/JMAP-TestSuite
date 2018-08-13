@@ -22,7 +22,7 @@ test "Ensure pristine accounts are pristine" => { requires_pristine => 1 } => su
   # Cheat - just make sure we don't get a reused account
   isnt(
     $account_1->accountId,
-    $account_1->accountId,
+    $account_2->accountId,
     'Got unique accountIds from pristine_account',
   );
 };
