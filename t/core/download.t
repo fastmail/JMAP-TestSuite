@@ -45,6 +45,8 @@ test "downloading through downloadUrl" => sub {
 
   ok($download_url =~ s/{blobId}/$id/, 'downloadUrl included a blobId');
 
+  ok($download_url =~ s:{type}:text/plain:, 'downloadUrl included a blobId');
+
   # XXX - downloadUrl should probably be required to be an absolute url
   unless ($download_url =~ /^http/i) {
     my $base = $tester->api_uri;
@@ -55,7 +57,6 @@ test "downloading through downloadUrl" => sub {
 
   my $download_res = $tester->ua->get($download_url,
     $tester->_maybe_auth_header,
-    Accept => 'text/plain',
   );
 
   ok($download_res->is_success, 'downloaded a file');
