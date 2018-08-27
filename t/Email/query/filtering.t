@@ -1,64 +1,9 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
-
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-
-# XXX - Need test for cancalc
-
-# Can't have existing entries so must be pristine
-test "Email/query with no existing entities" => { requires_pristine => 1 } => sub {
-  my ($self) = @_;
-
-  my $account = $self->pristine_account;
-  my $tester  = $account->tester;
-
-  subtest "No arguments" => sub {
-    my $res = $tester->request([[
-      "Email/query" => {},
-    ]]);
-    ok($res->is_success, "Email/query")
-      or diag explain $res->http_response->as_string;
-
-    jcmp_deeply(
-      $res->single_sentence("Email/query")->arguments,
-      superhashof({
-        accountId  => jstr($account->accountId),
-        queryState => jstr(),
-        position   => jnum(0),
-        total      => jnum(0),
-        ids        => [],
-        canCalculateChanges => jbool(),
-      }),
-      "No Emailes looks good",
-    ) or diag explain $res->as_stripped_triples;
-  };
-};
-
-# Allows ids_for(%hash) and ids_for(@list)
-sub ids_for {
-  my @list = @_;
-
-  return [
-    map  {; $_->id }
-    sort { $a->subject cmp $b->subject }
-    grep {; ref($_) }
-    values @list,
-  ];
-}
+use jmaptest;
 
 # Can't have existing messages so must be pristine
-test "filtering" => { requires_pristine => 1 } => sub {
+attr pristine => 1;
+
+test {
   my ($self) = @_;
 
   my $account = $self->pristine_account;
@@ -446,8 +391,19 @@ test "filtering" => { requires_pristine => 1 } => sub {
   #  body
   #  attachments
   #  header
-
 };
+
+# Allows ids_for(%hash) and ids_for(@list)
+sub ids_for {
+  my @list = @_;
+
+  return [
+    map  {; $_->id }
+    sort { $a->subject cmp $b->subject }
+    grep {; ref($_) }
+    values @list,
+  ];
+}
 
 sub make_describer_sub {
   my ($self, $emails_by_id) = @_;
@@ -459,6 +415,3 @@ sub make_describer_sub {
            || $emails_by_id->{$id}->subject;
   }
 }
-
-run_me;
-done_testing;
