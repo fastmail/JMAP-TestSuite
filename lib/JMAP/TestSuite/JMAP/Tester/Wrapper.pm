@@ -7,6 +7,7 @@ use Params::Util qw(_ARRAY0 _HASH);
 use Moo;
 use Test::More;
 use Test::Deep::JType;
+use Try::Tiny;
 
 use feature qw(state);
 
@@ -130,7 +131,16 @@ sub request_ok {
        };
 
         # Will croak if not found
-        my $res_sentence = $res_para->sentence_named($expect_name);
+        my $res_sentence = try {
+          $res_para->sentence_named($expect_name);
+        } catch {
+          my $err = $_;
+          my ($fl) = $err =~ /\A(.*)$/m;
+          note "$fl\n";
+          diag explain $res_para->as_stripped_triples;
+          die $err;
+        };
+
         ok($res_sentence, "Found a sentence named $expect_name");
 
         jcmp_deeply(
