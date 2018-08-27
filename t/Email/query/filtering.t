@@ -1,78 +1,18 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
-
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-
-# XXX - Need test for cancalc
-
-# Can't have existing entries so must be pristine
-test "Email/query with no existing entities" => { requires_pristine => 1 } => sub {
-  my ($self) = @_;
-
-  my $tester = $self->tester;
-
-  subtest "No arguments" => sub {
-    my $res = $tester->request([[
-      "Email/query" => {},
-    ]]);
-    ok($res->is_success, "Email/query")
-      or diag explain $res->http_response->as_string;
-
-    jcmp_deeply(
-      $res->single_sentence("Email/query")->arguments,
-      superhashof({
-        accountId  => jstr($self->context->accountId),
-        queryState => jstr(),
-        position   => jnum(0),
-        total      => jnum(0),
-        ids        => [],
-        canCalculateChanges => jbool(),
-      }),
-      "No Emailes looks good",
-    ) or diag explain $res->as_stripped_triples;
-  };
-};
-
-# Allows ids_for(%hash) and ids_for(@list)
-sub ids_for {
-  my @list = @_;
-
-  return [
-    map  {; $_->id }
-    sort { $a->subject cmp $b->subject }
-    grep {; ref($_) }
-    values @list,
-  ];
-}
+use jmaptest;
 
 # Can't have existing messages so must be pristine
-test "filtering" => { requires_pristine => 1 } => sub {
+attr pristine => 1;
+
+test {
   my ($self) = @_;
 
+  my $account = $self->pristine_account;
+
   my %mailboxes = (
-    aaa => $self->context->create_mailbox({
-      name => "aaa",
-    }),
-    bbb => $self->context->create_mailbox({
-      name => "bbb",
-    }),
-    ccc => $self->context->create_mailbox({
-      name => "ccc",
-    }),
-    ddd => $self->context->create_mailbox({
-      name => "ddd",
-    }),
+    aaa => $account->create_mailbox({ name => "aaa" }),
+    bbb => $account->create_mailbox({ name => "bbb" }),
+    ccc => $account->create_mailbox({ name => "ccc" }),
+    ddd => $account->create_mailbox({ name => "ddd" }),
   );
 
   my %in_aaa = (
@@ -141,7 +81,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   my $describer_sub = $self->make_describer_sub(\%emails_by_id);
 
   # inMailbox
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => { inMailbox => $mailboxes{aaa}->id },
       sort   => [{ property => 'subject', isAscending => jtrue()  }],
@@ -152,7 +94,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # inMailboxOtherThan
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => { inMailboxOtherThan => [ $mailboxes{aaa}->id ] },
       sort   => [{ property => 'subject', isAscending => jtrue()  }],
@@ -162,7 +106,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
     "inMailboxOtherThan filter excluded in_aaa",
   );
 
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         inMailboxOtherThan => [ $mailboxes{aaa}->id, $mailboxes{bbb}->id ]
@@ -175,7 +121,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # before
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+     "Email/query",
     {
       filter => {
         before => '2017-10-10T05:05:05Z',
@@ -188,7 +136,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # after
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         after => '2040-02-02T05:04:03Z',
@@ -201,7 +151,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # minSize
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         minSize => 1000 * 450, # < .5mb
@@ -214,7 +166,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # maxSize
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         maxSize => 1000 * 450, # < .5mb
@@ -235,7 +189,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
     skip "No support for allInThreadHaveKeyword", 2
       if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
-    $self->test_query("Email/query",
+    $self->test_query(
+      $account,
+      "Email/query",
       {
         filter => {
           allInThreadHaveKeyword => 'some',
@@ -249,7 +205,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
       "allInThreadHaveKeyword filter, none match that all have",
     );
 
-    $self->test_query("Email/query",
+    $self->test_query(
+      $account,
+      "Email/query",
       {
         filter => {
           allInThreadHaveKeyword => 'all',
@@ -271,7 +229,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
     skip "No support for someInThreadHaveKeyword", 2
       if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
-    $self->test_query("Email/query",
+    $self->test_query(
+      $account,
+      "Email/query",
       {
         filter => {
           someInThreadHaveKeyword => 'nope',
@@ -285,7 +245,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
       "someInThreadHaveKeyword filter, no match",
     );
 
-    $self->test_query("Email/query",
+    $self->test_query(
+      $account,
+      "Email/query",
       {
         filter => {
           someInThreadHaveKeyword => 'some',
@@ -307,7 +269,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
     skip "No support for noneInThreadHaveKeyword", 2
       if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
-    $self->test_query("Email/query",
+    $self->test_query(
+      $account,
+      "Email/query",
       {
         filter => {
           noneInThreadHaveKeyword => 'nope',
@@ -321,7 +285,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
       "noneInThreadHaveKeyword filter, no match, get all back",
     );
 
-    $self->test_query("Email/query",
+    $self->test_query(
+      $account,
+      "Email/query",
       {
         filter => {
           noneInThreadHaveKeyword => 'some',
@@ -339,7 +305,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   }
 
   # hasKeyword
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         hasKeyword => 'some',
@@ -357,7 +325,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # notKeyword
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         notKeyword => 'some',
@@ -377,7 +347,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
   );
 
   # hasAttachment
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         hasAttachment => jfalse(),
@@ -393,7 +365,9 @@ test "filtering" => { requires_pristine => 1 } => sub {
     "hasAttachment false, matches all but 1",
   );
 
-  $self->test_query("Email/query",
+  $self->test_query(
+    $account,
+    "Email/query",
     {
       filter => {
         hasAttachment => jtrue(),
@@ -417,8 +391,19 @@ test "filtering" => { requires_pristine => 1 } => sub {
   #  body
   #  attachments
   #  header
-
 };
+
+# Allows ids_for(%hash) and ids_for(@list)
+sub ids_for {
+  my @list = @_;
+
+  return [
+    map  {; $_->id }
+    sort { $a->subject cmp $b->subject }
+    grep {; ref($_) }
+    values @list,
+  ];
+}
 
 sub make_describer_sub {
   my ($self, $emails_by_id) = @_;
@@ -430,6 +415,3 @@ sub make_describer_sub {
            || $emails_by_id->{$id}->subject;
   }
 }
-
-run_me;
-done_testing;

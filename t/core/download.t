@@ -1,23 +1,10 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-
-test "downloading through downloadUrl" => sub {
+test {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   # First, grab our downloadUrl
   my $res = $tester->ua->get($tester->api_uri);
@@ -30,7 +17,7 @@ test "downloading through downloadUrl" => sub {
   my $download_url = $data->{downloadUrl};
   ok($download_url, 'got a download url');
 
-  my $account_id = $self->context->accountId;
+  my $account_id = $account->accountId;
 
   if ($download_url =~ s/{accountId}/$account_id/) {
     note("downloadUrl included {accountId} variable. Using $download_url");
@@ -69,6 +56,3 @@ test "downloading through downloadUrl" => sub {
     like($cd, qr/filename="myfile.txt"/, 'filename is correct');
   }
 };
-
-run_me;
-done_testing;

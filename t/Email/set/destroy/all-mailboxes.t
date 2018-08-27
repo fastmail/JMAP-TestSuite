@@ -1,29 +1,12 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-use Path::Tiny;
-use Digest::MD5 qw(md5_hex);
-
-use utf8;
-
-test "delete mail from mailboxes" => sub {
+test {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mbox = $self->context->create_mailbox;
+  my $mbox = $account->create_mailbox;
 
   my $from    = "test$$\@example.net";
   my $to      = "recip$$\@example.net";
@@ -77,7 +60,3 @@ test "delete mail from mailboxes" => sub {
     "totalEmails count is now 0",
   );
 };
-
-run_me;
-done_testing;
-

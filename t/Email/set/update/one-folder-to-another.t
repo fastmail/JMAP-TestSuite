@@ -1,69 +1,10 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-use Path::Tiny;
-use Digest::MD5 qw(md5_hex);
-
-use utf8;
-
-test "update email keywords" => sub {
+test {
   my ($self) = @_;
 
-  my $tester = $self->tester;
-
-  my $mbox = $self->context->create_mailbox;
-
-  my $from    = "test$$\@example.net";
-  my $to      = "recip$$\@example.net";
-  my $subject = "A subject for $$";
-
-  my $message = $mbox->add_message({
-    from    => $from,
-    to      => $to,
-    subject => $subject,
-  });
-
-  $tester->request_ok(
-    [ "Email/get" => { ids => [ $message->id ] } ],
-    superhashof({ list => [ superhashof({ keywords => {} }) ] }),
-    "newly created email has no keywords",
-  );
-
-  $tester->request_ok(
-    [
-      "Email/set" => {
-        update => {
-          $message->id => { keywords => { '$Flagged' => jtrue() } }
-        },
-      }
-    ],
-    superhashof({ updated => { $message->id => ignore } }),
-    'we set $flagged keyword',
-  );
-
-  $tester->request_ok(
-    [ "Email/get" => { ids => [ $message->id ] } ],
-    superhashof({ list => [ superhashof({ keywords => { '$flagged' => jtrue() } }) ] }),
-    "...and it worked, keyword lowercased",
-  );
-};
-
-test "move email from one folder to another" => sub {
-  my ($self) = @_;
-
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
   for my $mover (
     {
@@ -86,8 +27,8 @@ test "move email from one folder to another" => sub {
     }
   ) {
     subtest "move mail with $mover->{desc}" => sub {
-      my $mbox_1 = $self->context->create_mailbox;
-      my $mbox_2 = $self->context->create_mailbox;
+      my $mbox_1 = $account->create_mailbox;
+      my $mbox_2 = $account->create_mailbox;
 
       my $from    = "test$$\@example.net";
       my $to      = "recip$$\@example.net";
@@ -143,6 +84,3 @@ test "move email from one folder to another" => sub {
     };
   }
 };
-
-run_me;
-done_testing;

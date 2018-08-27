@@ -1,29 +1,13 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Data::GUID qw(guid_string);
-use Test::Abortable;
-
-# XXX - Test for setting role
-
-test "Mailbox/set update" => sub {
+test {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
 
-  my $mailbox1 = $self->context->create_mailbox;
-  my $mailbox2 = $self->context->create_mailbox;
+  my $mailbox1 = $account->create_mailbox;
+  my $mailbox2 = $account->create_mailbox;
 
   subtest "change mutable fields" => sub {
     my $set_res = $tester->request_ok(
@@ -143,6 +127,3 @@ test "Mailbox/set update" => sub {
     }
   };
 };
-
-run_me;
-done_testing;

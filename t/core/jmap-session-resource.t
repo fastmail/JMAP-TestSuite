@@ -1,23 +1,10 @@
-use strict;
-use warnings;
-use Test::Routine;
-use Test::Routine::Util;
+use jmaptest;
 
-with 'JMAP::TestSuite::Tester';
-
-use JMAP::TestSuite::Util qw(batch_ok);
-
-use Test::Deep ':v1';
-use Test::Deep::JType;
-use Test::More;
-use JSON qw(decode_json);
-use JSON::Typist;
-use Test::Abortable;
-
-test "GETting jmap api gives us data and capabilities about the server" => sub {
+test {
   my ($self) = @_;
 
-  my $tester = $self->tester;
+  my $account = $self->any_account;
+  my $tester  = $account->tester;
   my $res = $tester->ua->get($tester->api_uri);
   ok($res->is_success, "GET " . $tester->api_uri);
 
@@ -32,7 +19,7 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
     {
       username => jstr,
       accounts => {
-        $self->context->accountId => {
+        $account->accountId => {
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
@@ -59,6 +46,3 @@ test "GETting jmap api gives us data and capabilities about the server" => sub {
     'Response looks good',
   ) or diag explain $data;
 };
-
-run_me;
-done_testing;
