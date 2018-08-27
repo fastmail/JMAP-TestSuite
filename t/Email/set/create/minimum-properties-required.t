@@ -45,7 +45,7 @@ test {
       superhashof({
         created => {
           new => superhashof({
-            id => ignore(),
+            id => jstr(),
           }),
         },
       }),
