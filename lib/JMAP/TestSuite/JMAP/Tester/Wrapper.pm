@@ -60,13 +60,14 @@ sub request_ok {
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
+  my ($res, $failures);
+
   subtest "$desc" => sub {
     state $ident = 'a';
     my %seen;
     my @suffixed;
     my @req_client_ids;
     my @req_sentence_names;
-    my $failures;
 
     my $request = _ARRAY0($input_request)
                 ? { methodCalls => $input_request }
@@ -94,7 +95,7 @@ sub request_ok {
 
     $request->{methodCalls} = \@suffixed;
 
-    my $res = $self->request($request);
+    $res = $self->request($request);
 
     # Check success, give diagnostic on failure
     ok($res->is_success, 'JMAP request succeeded')
@@ -143,7 +144,15 @@ sub request_ok {
     if ($failures) {
       diag explain $res->as_stripped_triples;
     }
-  }
+  };
+
+  # So you can my ($res) = ->request_ok(...)
+  if (wantarray) {
+    return $res;
+  };
+
+  # So you can ->request_ok(..) or foo();
+  return ! $failures;
 }
 
 1;
