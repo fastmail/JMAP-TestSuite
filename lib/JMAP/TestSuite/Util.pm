@@ -60,7 +60,7 @@ sub get_parts {
       charset     => 'us-ascii', # No CT, so default charset
       cid         => undef,      # not provided
       disposition => undef,      # not provided
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => undef,      # not provided
       partId      => jstr(),
@@ -86,7 +86,7 @@ sub get_parts {
       charset     => undef,
       cid         => undef,      # not provided
       disposition => 'inline',
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => 'c.jpg',    # Content-Type name
       partId      => jstr(),
@@ -99,7 +99,7 @@ sub get_parts {
       charset     => 'iso-8859-1', # Content-Type provided
       cid         => undef,      # not provided
       disposition => 'inline',
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => undef,      # not provided
       partId      => jstr(),
@@ -112,7 +112,7 @@ sub get_parts {
       charset     => 'us-ascii', # CT present but no charset
       cid         => undef,      # not provided
       disposition => undef,
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => undef,      # not provided
       partId      => jstr(),
@@ -125,7 +125,7 @@ sub get_parts {
       charset     => undef,
       cid         => undef,      # not provided
       disposition => 'inline',
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => 'f.jpg',    # Content-Type name
       partId      => jstr(),
@@ -138,7 +138,7 @@ sub get_parts {
       charset     => undef,
       cid         => undef,      # not provided
       disposition => 'attachment',
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => 'g.jpg',    # Content-Type name
       partId      => jstr(),
@@ -151,7 +151,7 @@ sub get_parts {
       charset     => undef,
       cid         => undef,      # not provided
       disposition => undef,
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => undef,
       partId      => jstr(),
@@ -164,7 +164,7 @@ sub get_parts {
       charset     => undef,
       cid         => undef,      # not provided
       disposition => undef,
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => undef,
       partId      => jstr(),
@@ -177,7 +177,7 @@ sub get_parts {
       charset     => 'us-ascii', # CT present but no charset
       cid         => undef,      # not provided
       disposition => 'inline',
-      language    => [],         # not provided
+      language    => any([], undef), # not provided
       location    => undef,      # not provided
       name        => undef,      # not provided
       partId      => jstr(),
@@ -196,7 +196,7 @@ sub multipart {
     charset     => undef,
     cid         => undef,
     disposition => undef,
-    language    => [],
+    language    => any([], undef),
     location    => undef,
     name        => undef,
     partId      => undef,
@@ -214,7 +214,7 @@ sub part {
     charset     => ignore(),
     cid         => undef,      # not provided
     disposition => undef,      # not provided
-    language    => [],         # not provided
+    language    => any([], undef), # not provided
     location    => undef,      # not provided
     name        => undef,      # not provided
     partId      => jstr(),
