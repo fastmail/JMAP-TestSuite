@@ -40,7 +40,7 @@ test {
           },
         },
       }),
-      "required properties not provided gives correct error",
+      "partId must be present in bodyValues",
     );
   };
 };
