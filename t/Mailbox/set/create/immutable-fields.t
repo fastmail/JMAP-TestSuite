@@ -110,7 +110,7 @@ test {
         $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
         {
           type => 'invalidProperties',
-          properties => set(
+          properties => bag(
             qw(
               id
               totalEmails

@@ -135,7 +135,7 @@ test {
         notCreated => {
           new => {
             type => 'invalidProperties',
-            properties => set(qw(
+            properties => bag(qw(
               bodyValues/text/isEncodingProblem
               bodyValues/text/isTruncated
             )),

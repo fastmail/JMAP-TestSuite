@@ -32,7 +32,7 @@ test {
         created        => [],
         updated        => [ $mailbox->id ],
         destroyed      => [],
-        updatedProperties => set(qw(
+        updatedProperties => bag(qw(
           totalEmails
           unreadEmails
           totalThreads

@@ -75,7 +75,7 @@ sub get_parts {
       charset     => 'us-ascii', # not provided, so default us-ascii
       cid         => 'foo4*foo1@bar.net',
       disposition => 'inline',
-      language    => set(qw(en de)),
+      language    => bag(qw(en de)),
       location    => 'foo/bar',
       name        => 'b.txt',    # Content-Disposition filename
       partId      => jstr(),

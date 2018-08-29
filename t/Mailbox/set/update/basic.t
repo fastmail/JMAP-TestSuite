@@ -110,7 +110,7 @@ test {
         {
           $mailbox2->id => {
             type => 'invalidProperties',
-            properties => set(
+            properties => bag(
               qw(
                 id
                 totalEmails
