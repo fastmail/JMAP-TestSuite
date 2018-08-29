@@ -26,6 +26,7 @@ test {
         notCreated => {
           new => superhashof({
             type => 'invalidProperties',
+            properties => [ 'header:Content-foo' ],
           }),
         },
       }),
