@@ -132,17 +132,12 @@ test {
       'Mailbox/changes looks good',
     );
 
-    TODO: {
-      local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2328"
-        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
-
-      jcmp_deeply(
-        $get->arguments,
-        superhashof({
-          type => 'invalidArguments',
-        }),
-        'Mailbox/get with backref and arg sharing name fails'
-      ) or diag explain $res->as_stripped_triples;
-    };
+    jcmp_deeply(
+      $get->arguments,
+      superhashof({
+        type => 'invalidArguments',
+      }),
+      'Mailbox/get with backref and arg sharing name fails'
+    ) or diag explain $res->as_stripped_triples;
   };
 };
