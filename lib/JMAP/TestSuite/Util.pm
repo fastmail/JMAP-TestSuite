@@ -4,6 +4,7 @@ package JMAP::TestSuite::Util;
 
 use Sub::Exporter -setup => [ qw(
   batch_ok
+  email
   mailbox
   thread
   get_parts multipart part parts cmultipart cpart
@@ -13,6 +14,7 @@ use Test::Deep ':v1';
 use Test::Deep::JType;
 use Test::More;
 
+use JMAP::TestSuite::Comparator::Email qw(email);
 use JMAP::TestSuite::Comparator::Mailbox qw(mailbox);
 use JMAP::TestSuite::Comparator::Thread qw(thread);
 
