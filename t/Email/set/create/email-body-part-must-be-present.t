@@ -11,7 +11,7 @@ test {
   my $mbox = $account->create_mailbox;
 
   TODO: {
-    local $TODO = 'foo';
+    local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2495';
 
     $tester->request_ok(
       [

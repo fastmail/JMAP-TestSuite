@@ -15,7 +15,7 @@ test {
   });
 
   TODO: {
-    local $TODO = 'foo';
+    local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2497';
 
     $tester->request_ok(
       [
