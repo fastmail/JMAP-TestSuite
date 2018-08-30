@@ -1,7 +1,5 @@
 use jmaptest;
 
-use Data::GUID qw(guid_string);
-
 test {
   my ($self) = @_;
 
