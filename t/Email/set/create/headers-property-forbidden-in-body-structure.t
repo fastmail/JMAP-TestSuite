@@ -8,36 +8,34 @@ test {
 
   my $mbox = $account->create_mailbox;
 
-  subtest "forbidden on top level" => sub {
-    $tester->request_ok(
-      [
-        "Email/set" => {
-          create => {
-            new => {
-              mailboxIds => { $mbox->id => \1, },
-              bodyStructure => {
-                headers => [{ name => 'foo', value => 'bar' }],
-                partId => 'text',
-                type   => 'text/plain',
-              },
-              bodyValues => {
-                text => {
-                  value => 'email',
-                },
+  $tester->request_ok(
+    [
+      "Email/set" => {
+        create => {
+          new => {
+            mailboxIds => { $mbox->id => \1, },
+            bodyStructure => {
+              headers => [{ name => 'foo', value => 'bar' }],
+              partId => 'text',
+              type   => 'text/plain',
+            },
+            bodyValues => {
+              text => {
+                value => 'email',
               },
             },
           },
         },
-      ],
-      superhashof({
-        notCreated => {
-          new => superhashof({
-            type => 'invalidProperties',
-            properties => [ 'bodyStructure/headers' ],
-          }),
-        },
-      }),
-      "got invalidProperties error",
-    );
-  };
+      },
+    ],
+    superhashof({
+      notCreated => {
+        new => superhashof({
+          type => 'invalidProperties',
+          properties => [ 'bodyStructure/headers' ],
+        }),
+      },
+    }),
+    "got invalidProperties error",
+  );
 };
