@@ -15,7 +15,16 @@ test {
           create => {
             new => {
               mailboxIds => { $mbox->id => \1, },
-              headers => [{ name => 'foo', value => 'bar' }],
+              bodyStructure => {
+                headers => [{ name => 'foo', value => 'bar' }],
+                partId => 'text',
+                type   => 'text/plain',
+              },
+              bodyValues => {
+                text => {
+                  value => 'email',
+                },
+              },
             },
           },
         },
@@ -24,7 +33,7 @@ test {
         notCreated => {
           new => superhashof({
             type => 'invalidProperties',
-            properties => [ 'headers' ],
+            properties => [ 'bodyStructure/headers' ],
           }),
         },
       }),
