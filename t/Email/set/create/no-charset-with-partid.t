@@ -39,7 +39,7 @@ test {
         notCreated => {
           new => {
             type => 'invalidProperties',
-            properties => [ 'charset' ],
+            properties => [ 'bodyStructure/charset' ],
           },
         },
       }),
