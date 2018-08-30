@@ -130,15 +130,11 @@ EOF
   };
 
   subtest "attachments" => sub {
-    TODO: {
-      local $TODO = "Cyrus says false here. Who is right?";
-
-      jcmp_deeply(
-        $get->arguments->{list}[0],
-        superhashof({ hasAttachment => jtrue() }),
-        'we have attachments'
-      );
-    }
+    jcmp_deeply(
+      $get->arguments->{list}[0],
+      superhashof({ hasAttachment => jtrue() }),
+      'we have attachments'
+    );
 
     my $attachments = $get->arguments->{list}[0]{attachments};
 
