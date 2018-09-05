@@ -39,6 +39,7 @@ test {
       mailbox({
         id            => jstr($mailbox1->id),
         name          => jstr($mailbox1->name),
+        isSubscribed  => jfalse,
         totalEmails   => jnum(0),
         unreadEmails  => jnum(0),
         totalThreads  => jnum(0),
