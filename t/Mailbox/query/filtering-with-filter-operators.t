@@ -58,7 +58,7 @@ test {
       filter => {
         operator => 'AND',
         conditions => [
-          { hasRole => JSON::false, },
+          { hasAnyRole => JSON::false, },
           { parentId => undef, },
         ],
       },
@@ -76,7 +76,7 @@ test {
       filter => {
         operator => 'AND',
         conditions => [
-          { hasRole => JSON::false, },
+          { hasAnyRole => JSON::false, },
           { parentId => $mailbox1->id, },
         ],
       },
@@ -97,7 +97,7 @@ test {
           {
             operator => 'AND',
             conditions => [
-              { hasRole => JSON::false, },
+              { hasAnyRole => JSON::false, },
               { parentId => $mailbox1->id, },
             ],
           },
@@ -118,7 +118,7 @@ test {
       filter => {
         operator => 'OR',
         conditions => [
-          { hasRole => JSON::false, },
+          { hasAnyRole => JSON::false, },
           { parentId => $mailbox1->id, },
         ],
       },
@@ -136,8 +136,8 @@ test {
       filter => {
         operator => 'OR',
         conditions => [
-          { hasRole => JSON::true, },
-          { hasRole => JSON::true, },
+          { hasAnyRole => JSON::true, },
+          { hasAnyRole => JSON::true, },
         ],
       },
       sort => [{ property => 'name', isAscending => JSON::true, }],
@@ -154,8 +154,8 @@ test {
       filter => {
         operator => 'OR',
         conditions => [
-          { hasRole => JSON::true, },
-          { hasRole => JSON::false, },
+          { hasAnyRole => JSON::true, },
+          { hasAnyRole => JSON::false, },
         ],
       },
       sort => [{ property => 'name', isAscending => JSON::true, }],
@@ -173,7 +173,7 @@ test {
       filter => {
         operator => 'NOT',
         conditions => [
-          { hasRole => JSON::true, },
+          { hasAnyRole => JSON::true, },
         ],
       },
       sort => [{ property => 'name', isAscending => JSON::true, }],
@@ -190,8 +190,8 @@ test {
       filter => {
         operator => 'NOT',
         conditions => [
-          { hasRole => JSON::true, },
-          { hasRole => JSON::false, },
+          { hasAnyRole => JSON::true, },
+          { hasAnyRole => JSON::false, },
         ],
       },
       sort => [{ property => 'name', isAscending => JSON::true, }],

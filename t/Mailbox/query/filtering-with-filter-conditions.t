@@ -53,7 +53,7 @@ test {
     };
   };
 
-  subtest "hasRole" => sub {
+  subtest "hasAnyRole" => sub {
     # Find some mailboxes with roles
     my $res = $tester->request([[
       "Mailbox/get" => {},
@@ -72,7 +72,7 @@ test {
       my $res = $tester->request([[
         "Mailbox/query" => {
           filter => {
-            hasRole => JSON::false,
+            hasAnyRole => JSON::false,
           },
         },
       ]]);
@@ -98,7 +98,7 @@ test {
       my $res = $tester->request([[
         "Mailbox/query" => {
           filter => {
-            hasRole => JSON::true,
+            hasAnyRole => JSON::true,
           },
         },
       ]]);

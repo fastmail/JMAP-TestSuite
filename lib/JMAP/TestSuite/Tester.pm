@@ -39,7 +39,7 @@ sub test_query {
 
   # sort/limit tests don't want to know about server-provided folders
   unless ($args->{filter}) {
-    $args->{filter}{hasRole} = JSON::false;
+    $args->{filter}{hasAnyRole} = JSON::false;
   }
 
   subtest "$test" => sub {
