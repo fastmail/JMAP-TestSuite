@@ -23,7 +23,7 @@ test {
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
-          hasDataFor => [jstr, jstr, jstr], # XXX - Spec updates might change
+          hasDataFor => [jstr, jstr, jstr, jstr], # XXX - Spec updates might change
         },
       },
       capabilities => superhashof({
