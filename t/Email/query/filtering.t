@@ -20,18 +20,31 @@ test {
     aaa_old    => $mailboxes{aaa}->add_message({
       subject    => 'aaa_old',
       receivedAt => '2017-08-08T05:04:03Z',
+      from       => 'fromtest@example.com',
+      body       => 'a test body thing',
     }),
     aaa_future => $mailboxes{aaa}->add_message({
       subject    => 'aaa_future',
       receivedAt => '2040-08-08T05:04:03Z',
+      body       => "the future is here",
+      to         => 'totest@example.com',
     }),
     aaa_large  => $mailboxes{aaa}->add_message({
       subject    => 'aaa_large',
       body       => 'x' x (1000 * 500), # .5mb, roughly
+      headers    => [
+        cc => 'cctest@example.com',
+        'x-foo' => 'bar',
+      ],
     }),
     aaa_keyword_some => $mailboxes{aaa}->add_message({
       subject  => 'aaa_keyword_some',
       keywords => { some => jtrue() },
+      headers    => [
+        bcc => 'b.c.ctest@example.com',
+        'x-foo' => 'baz',
+        'x-bar' => 'bar',
+      ],
     }),
     aaa_keyword_all => $mailboxes{aaa}->add_message({
       subject  => 'aaa_keyword_all',
@@ -381,16 +394,163 @@ test {
     "hasAttachment true, matches only 1",
   );
 
-  # XXX - Search is broken for me, cannot test atm. -- alh, 2018-06-12
-  #  text
-  #  from
-  #  to
-  #  cc
-  #  bcc
-  #  subject
-  #  body
-  #  attachments
-  #  header
+  # text
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        text => "here",
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_future}->id ],
+   },
+    $describer_sub,
+    "text search",
+  );
+
+  # from
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        from => "fromtest",
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_old}->id ],
+    },
+    $describer_sub,
+    "from search",
+  );
+
+  # to
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        to => "totest",
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_future}->id ],
+    },
+    $describer_sub,
+    "to search",
+  );
+
+  # cc
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        cc => "cctest",
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_large}->id ],
+    },
+    $describer_sub,
+    "cc search",
+  );
+
+  # bcc
+  SKIP: {
+    skip "No support for bcc", 2
+      if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+
+    $self->test_query(
+      $account,
+      "Email/query",
+      {
+        filter => {
+          bcc => "b.c.ctest",
+        },
+        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      },
+      {
+        ids => [ $emails{aaa_keyword_some}->id ],
+      },
+      $describer_sub,
+      "bcc search",
+    );
+  }
+
+  # subject
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        subject => "aaa_future",
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_future}->id ],
+    },
+    $describer_sub,
+    "subject search",
+  );
+
+  # body
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        body => "test body thing",
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_old}->id ],
+    },
+    $describer_sub,
+    "body search",
+  );
+
+  # header, form one (match if header exists)
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        header => [ 'x-foo' ],
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_keyword_some}->id, $emails{aaa_large}->id ],
+    },
+    $describer_sub,
+    "header exists search",
+  );
+
+  # header, form two (match if header/value match)
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        header => [ 'x-foo', 'bar' ],
+      },
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_large}->id ],
+    },
+    $describer_sub,
+    "header exists and matches search",
+  );
 };
 
 # Allows ids_for(%hash) and ids_for(@list)
