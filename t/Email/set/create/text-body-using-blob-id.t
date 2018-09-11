@@ -15,6 +15,8 @@ test {
     \"Hello there",
   );
 
+  my $mid = guid_string() . '@example.net';
+
   my ($create) = $tester->request_ok(
     [
       "Email/set" => {
@@ -27,6 +29,7 @@ test {
                 'header:from'  => 'Foo <test@example.org>',
                 'header:X-Foo' => 'x-bar',
                 'header:subject' => 'a test subject',
+                'header:Message-Id' => "<$mid>",
                 cid => 'fooz',
                 language => [ 'US' ],
               },
@@ -94,7 +97,7 @@ test {
           mailboxIds  => {
             $mbox->id => jtrue(),
           },
-          messageId   => [ jstr(), ],
+          messageId   => [ $mid, ],
           preview     => jstr(),
           receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
           references  => undef,
