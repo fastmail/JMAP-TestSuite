@@ -102,9 +102,9 @@ test {
       ]],
     });
 
-   TODO: {
-     local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2316"
-       if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+    TODO: {
+      local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2316"
+        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
       jcmp_deeply(
         $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
