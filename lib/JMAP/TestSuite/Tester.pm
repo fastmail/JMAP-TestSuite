@@ -42,15 +42,33 @@ sub test_query {
     $args->{filter}{hasAnyRole} = JSON::false;
   }
 
+  my ($res, $failures);
+
   subtest "$test" => sub {
-    my $res = $tester->request([[
+    my $failed = 0;
+
+    $res = $tester->request([[
       "$call" => $args,
     ]]);
     ok($res->is_success, "$call")
-      or diag explain $res->http_response->as_string;
+      or $failed++;
+
+    if ($failed) {
+      diag explain $res->http_response->as_string;
+
+      $failures++;
+      $failed = 0;
+    }
 
     is($res->sentence(0)->name, $call, "Got $call response")
-      or diag explain $res->as_stripped_triples;
+      or $failed++;
+
+    if ($failed) {
+      diag explain $res->as_stripped_triples;
+
+      $failures++;
+      $failed = 0;
+    }
 
     jcmp_deeply(
       $res->single_sentence("$call")->arguments,
@@ -63,13 +81,28 @@ sub test_query {
         %$expect, # can override position
       }),
       "sorted as expected",
-    ) or $self->explain_test_query_failure(
-      $res,
-      $call,
-      $expect->{ids},
-      $describer_sub,
-    );
+    ) or $failed++;
+
+    if ($failed) {
+      $self->explain_test_query_failure(
+        $res,
+        $call,
+        $expect->{ids},
+        $describer_sub,
+      );
+
+      $failures++;
+      $failed = 0;
+    }
   };
+
+  # So you can my ($res) = ->request_ok(...)
+  if (wantarray) {
+    return $res;
+  };
+
+  # So you can ->request_ok(..) or foo();
+  return ! $failures;
 }
 
 sub explain_test_query_failure {
