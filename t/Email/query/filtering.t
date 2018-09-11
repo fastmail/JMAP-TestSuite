@@ -463,26 +463,21 @@ test {
   );
 
   # bcc
-  SKIP: {
-    skip "No support for bcc", 2
-      if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
-
-    $self->test_query(
-      $account,
-      "Email/query",
-      {
-        filter => {
-          bcc => "b.c.ctest",
-        },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+  $self->test_query(
+    $account,
+    "Email/query",
+    {
+      filter => {
+        bcc => "b.c.ctest",
       },
-      {
-        ids => [ $emails{aaa_keyword_some}->id ],
-      },
-      $describer_sub,
-      "bcc search",
-    );
-  }
+      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+    },
+    {
+      ids => [ $emails{aaa_keyword_some}->id ],
+    },
+    $describer_sub,
+    "bcc search",
+  );
 
   # subject
   $self->test_query(
