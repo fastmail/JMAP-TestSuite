@@ -32,6 +32,7 @@ sub mailbox {
         mayRename
         mayDelete
         maySubmit
+        mayAdmin
       )
     }),
   );
@@ -40,6 +41,7 @@ sub mailbox {
     parentId  => any(jstr, undef),
     role      => any(jstr, undef), # xxx enum allowed values?
     sortOrder => any(jnum, undef),
+    shareWith => undef,
   );
 
   for my $k (keys %$overrides) {

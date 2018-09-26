@@ -15,6 +15,7 @@ with 'JMAP::TestSuite::Entity' => {
     unreadEmails
     totalThreads
     unreadThreads
+    shareWith
   ) ],
 };
 
@@ -28,6 +29,7 @@ for my $f (qw(
   mayRename
   mayDelete
   maySubmit
+  mayAdmin
 )) {
   no strict 'refs';
 
