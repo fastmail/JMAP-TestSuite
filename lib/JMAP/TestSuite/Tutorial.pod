@@ -189,11 +189,135 @@ of the generated tests.
 In this form, you can make multiple requets at a single time and examine
 the responses for them all at once.
 
+=head1 WORKING WITH THE MAIN TESTER OBJECT (C<$self>)
+
+The main test object is the entryway to getting test accounts from the
+JMAP server under test. From it, you get:
+
+=over 4
+
+=item any_account
+
+This will return any account the server adapter wants to return. Generally
+a reused account that most tests will make changes to.
+
+=item pristine_account
+
+A new, fresh account that only this test will be using / making changes to.
+This should only be used for tests that cannot pass if there is existing
+data in the way.
+
+=item server
+
+This returns the underlying L<JMAP::TestSuite::ServerAdapter> object being
+used for this test run.
+
+=back
+
 =head1 WORKING WITH ACCOUNTS
+
+Accounts represent a single account on the JMAP server. From it, you
+get a number of convenience methods:
+
+=over 4
+
+=item create_mailbox
+
+This creates a mailbox on the server for you using JMAP. It takes one
+argument, which should be a HASHREF of arguments to pass into the JMAP
+"Mailbox/create" call. You may omit the argument if you like and any
+required properties will be filled in for you. It returns a
+L<JMAP::TestSuite::Entity::Mailbox> object.
+
+=item get_state
+
+This allows you to retrieve the state string for a particular entity type.
+For example:
+
+  my $state = $account->get_state('email');
+
+=item tester
+
+This returns the L<JMAP::TestSuite::JMAP::Tester::Wrapper> object which
+you can use to make requests/examine responses.
+
+=back
+
+=head1 WORKING WITH ENTITIES
+
+All L<JMAP::TestSuite::Entity> derived objects get a few convenience methods:
+
+=over 4
+
+=item update
+
+  $mailbox->update({ name => "new name" });
+
+C<update> does a JMAP "foo/set" C<update => { ... }> for the entity in
+question and asserts that the update succeeds, and updates the local cache
+for the object.
+
+=item destroy
+
+  $mailbox->destroy;
+
+C<destroy> does a JMAP "foo/set" C<destroy => { ... }> for the entity in
+question and asserts that the destroy succeeded.
+
+=back
+
+In addition to this, each entity class maps jmap properties to object
+methods.
+
+For example, on a C<mailbox> object, you can request C<id>, C<role>, etc...
 
 =head1 WORKING WITH MAILBOXES
 
+A L<JMAP::TestSuite::Entity::Mailbox> object. In addition to the above,
+you get:
+
+=over 4
+
+=item add_message
+
+  $mailbox->add_message;
+
+  $mailbox->add_message({
+    from => '..',
+    to   => '..',
+    subject => '...',
+    headers => [
+      'x-foo' => '...',
+    ],
+  });
+
+This lets you easily add messages to a mailbox. You can specify a few
+convenience headers at the top level as shown above, or provide C<headers>
+or even C<raw_headers> for pre-encoded header fields. See the source of
+L<JMAP::TestSuite::Account> to see what kinds of things you can provide to
+this method (look in the C<%types> variable).
+
+=back
+
 =head1 WORKING WITH MESSAGES
+
+A L<JMAP::TestSuite::Entity::Email> object. In addition to the above,
+you get:
+
+=over 4
+
+=item reply
+
+  $message->reply;
+
+  $message->reply({
+    headers => [ 'x-foo' => '...' ],
+  });
+
+Like C<< $mailbox->add_message >>, but sets up the correct headers for the new
+message to be considered as a reply to the previous message.
+
+=back
 
 =head1 AUTHOR
 
