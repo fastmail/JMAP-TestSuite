@@ -1,0 +1,202 @@
+=head1 NAME
+
+JMAP::TestSuite Tutorial
+
+=head1 DESCRIPTION
+
+JMAP::TestSuite is a suite of tests to verify that a server implementation
+adheres to the JMAP specifications (L<https://jmap.io/>).
+
+This document is aimed at test *writers*. For writing an adapter for your
+server implementation, see L<JMAP::TestSuite::ServerAdapter>.
+
+=head1 A BASIC TEST
+
+Let's write a very simple test to verify that we can get a message that
+we've created. We'll go over the details after.
+
+=head2 The test
+
+Imagine we have a file, newtest.t:
+
+  use jmaptest;
+
+  test {
+    my ($self) = @_;
+
+    my $account = $self->any_account;
+    my $tester = $account->tester;
+
+    my $message = $account->create_mailbox->add_message;
+
+    $tester->request_ok(
+      [ "Email/get" => { ids => [ $message->id ] } ],
+      superhashof({
+        list => [ superhashof({ subject => $message->subject }) ],
+      }),
+      'our subject matches'
+    );
+  }
+
+If we run this test:
+
+  JMAP_SERVER_ADAPTER_FILE=cyrus.json perl -Ilib newtest.t
+
+We get:
+
+  # tests
+      # test from newtest.t
+          ok 1 - batch has results for every creation id and nothing more
+          ok 2 - created a mailbox
+          # Subtest: our subject matches
+              ok 1 - JMAP request succeeded
+              ok 2 - Found a sentence named Email/get
+              ok 3 - Sentence for cid 'a' in response to 'Email/get' matches up
+              1..3
+          ok 3 - our subject matches
+          1..3
+      ok 1 - test from newtest.t
+      1..1
+  ok 1 - tests
+  1..1
+
+=head2 The Breakdown
+
+Let's break it down.
+
+  use jmaptest;
+
+This imports the 'test' method and a bunch of other libraries we may
+need. As always, you can import more libraries as needed.
+
+  test {
+    my ($self) = @_:
+
+    my $account = $self->any_account;
+
+Here our subroutine grabs the L<JMAP::TestSuite::Tester> object and requests
+a usable L<JMAP::TestSuite::Account> object for the server adapter being used.
+(In our case, a C<JMAP::TestSuite::Account::Cyrus> object (defined in
+L<JMAP::TestSuite::ServerAdapter::Cyrus>).
+
+    my $tester = $account->tester;
+
+Here we get a L<JMAP::TestSuite::JMAP::Tester::Wrapper> object which gives
+us a number ways to make requests against the JMAP server and examine the
+responses. This class is a wrapper around L<JMAP::Tester>, so all of its
+methods are also available.
+
+    my $message = $account->create_mailbox->add_message;  
+
+This does two things - creates us a mailbox on the JMAP server (using JMAP)
+and adds a message to it (also using JMAP).
+
+C<create_mailbox()> returns a L<JMAP::TestSuite::Entity::Mailbox> object,
+C<add_message()> return a L<JMAP::TestSuite::Entity::Email> object.
+
+You can use these objects to examine the underlying data in the JMAP server
+and to make changes to the server.
+
+    $tester->request_ok(
+      [ "Email/get" => { ids => [ $message->id ] } ],
+      superhashof({
+        list => [ superhashof({ subject => $message->subject }) ],
+      }),
+      'our subject matches'
+    );
+  }
+
+C<request_ok()> is a handy method that allows us to make a JMAP request
+and examine the response all in one. The C<_ok()> part of it means that
+it will generate Test output for us (and does so inside of a
+L<Test::More::subtest()> identified by the C<our subject matches>
+description).
+
+The first argument is shorthand for a single JMAP request. The second
+argument is the structure we want to compare the response against. The
+third argument is the description for the test.
+
+In our case above using shorthand, the second argument will be checked
+against the matching JMAP C<methodResponse> section for our JMAP
+request's C<methodCall> (here, "Email/get").
+
+(C<superhashof()> comes from L<Test::Deep>.)
+
+=head1 MAKING REQUESTS
+
+There are a number of ways to make requests using C<$tester>:
+
+=head2 request()
+
+  my $res = $tester->request([[
+    "Email/get" => { ids => [ $message->id ] },
+  ]]);
+
+  jcmp_deeply(
+    $res->single_sentence("Email/get")->arguments,
+    superhashof({ list => [ superhashof({ subject => $subject }) ] }),
+    "our subject was returend"
+  );
+
+C<request()> is specified in detail at L<JMAP::Tester::request>. It returns
+a response object that you can use to examine the response in detail.
+
+Particularly of use is dumping out the response for debugging:
+
+  diag explain $res->as_stripped_triples;
+
+which will show the decoded JMAP response.
+
+=head2 request_ok() simple usage
+
+  $tester->request_ok($requst, $response, $description);
+
+  $tester->request_ok(
+    [ "Email/get" => { ids => [ $message->id ] } ],
+    superhashof({
+      list => [ superhashof({ subject => $message->subject }) ],
+    }),
+    'our subject matches'
+  );
+
+In this form, C<$request> should be an ARRAYREF containing a single
+request. C<$response> should be a structure (or L<Test::Deep> comparator)
+to compare the matching sentence in the response against.
+
+In the event that there is no matching sentence in the response for the
+request, C<request_ok()> will output test failures with some diagnostics
+to help pinpoint what went wrong.
+
+C<$description> will be passed to L<Test::More::subtest()> to wrap all
+of the generated tests.
+
+=head2 request_ok() with full paragraphs
+
+  $tester->request_ok($requests, $responses, $description);
+
+  $tester->request_ok(
+    [
+      [ "Email/get", { ids => [ $message->id ], }, ],   # implicit client-id
+      [ "Email/get", { ids => [ "otherid" ], }, "r2" ], # explicit client-id
+    ],
+    [
+      [ superhashof({ ... }), ]      # Implicit name
+      [ "Email/get" => ({ ... }), ], # Explicit name
+    ],
+    "a test!"
+  );
+
+In this form, you can make multiple requets at a single time and examine
+the responses for them all at once.
+
+=head1 WORKING WITH ACCOUNTS
+
+=head1 WORKING WITH MAILBOXES
+
+=head1 WORKING WITH MESSAGES
+
+=head1 AUTHOR
+
+Matthew Horsfall (alh) - <alh@fastmailteam.com>
+
+=cut
