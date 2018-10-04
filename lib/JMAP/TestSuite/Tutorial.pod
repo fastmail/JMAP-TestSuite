@@ -207,6 +207,21 @@ A new, fresh account that only this test will be using / making changes to.
 This should only be used for tests that cannot pass if there is existing
 data in the way.
 
+In order to use this, you must mark the test as pristine, since not all
+server adapters can provide pristine accounts. Marking a test as pristine
+looks like this:
+
+  use jmaptest;
+
+  attr pristine => 1;
+
+  test {
+    ...
+  }
+
+If a server adapter does not support pristine tests, the test will be
+skipped.
+
 =item server
 
 This returns the underlying L<JMAP::TestSuite::ServerAdapter> object being
