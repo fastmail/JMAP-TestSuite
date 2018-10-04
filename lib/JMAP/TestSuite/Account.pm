@@ -158,6 +158,19 @@ package JMAP::TestSuite::Account {
 
     my $x = $batch->result_for('x');
 
+    if ($ENV{JMTS_TELEMETRY}) {
+      my $extra = '';
+
+      if ($x->parentId) {
+        $extra = " with parentId " . $x->parentId;
+      }
+
+      note(
+          "Account " . $self->accountId
+        . " Created mailbox '" . $x->name . "' id (" . $x->id . ")$extra"
+      );
+    }
+
     return $x;
   }
 

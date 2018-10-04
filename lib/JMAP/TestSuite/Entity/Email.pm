@@ -41,6 +41,7 @@ use Safe::Isa;
 use Data::Dumper;
 use feature qw(state);
 use DateTime;
+use Test::More;
 
 sub next_time {
   state $start = DateTime->now(time_zone => 'UTC');
@@ -154,6 +155,22 @@ sub import_messages {
   my $result = $pkg->_import_batch($to_import, {
     account => $account,
   });
+
+  if ($ENV{JMTS_TELEMETRY}) {
+    for my $msg (values %$result) {
+      if ($msg && $msg->isa('JMAP::TestSuite::Entity::Email')) {
+        my $blob_id = $msg->blobId;
+        my $msg_id = $msg->id;
+        my $ac_id = $account->accountId;
+        my $mbox_ids = join(', ', keys %{ $msg->mailboxIds });
+
+        note(
+            "Account $ac_id Imported blob $blob_id as message $msg_id"
+          . " to mailboxes $mbox_ids"
+        );
+      }
+    }
+  }
 
   return JMAP::TestSuite::EntityBatch->new({
     create_spec => $to_import,
