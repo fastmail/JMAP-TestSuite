@@ -47,5 +47,17 @@ sub add_message {
   $self->account->add_message_to_mailboxes($arg, $self->id);
 }
 
+sub add_mailbox {
+  my ($self, $arg) = @_;
+
+  $arg ||= {};
+
+
+  $self->account->create_mailbox({
+    %$arg,
+    parentId => $self->id,
+  });
+}
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
