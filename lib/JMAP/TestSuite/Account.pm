@@ -153,7 +153,8 @@ package JMAP::TestSuite::Account {
 
     batch_ok($batch);
 
-    ok($batch->is_entirely_successful, "created a mailbox");
+    ok($batch->is_entirely_successful, "created a mailbox")
+      or diag explain $batch->all_results;
 
     my $x = $batch->result_for('x');
 
