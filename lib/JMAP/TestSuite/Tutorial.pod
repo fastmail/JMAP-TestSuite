@@ -238,18 +238,33 @@ get a number of convenience methods:
 
 =item create_mailbox
 
+  my $mailbox = $account->create_mailbox;
+
 This creates a mailbox on the server for you using JMAP. It takes one
 argument, which should be a HASHREF of arguments to pass into the JMAP
 "Mailbox/create" call. You may omit the argument if you like and any
 required properties will be filled in for you. It returns a
 L<JMAP::TestSuite::Entity::Mailbox> object.
 
+=item email_blob
+
+  my $blob = $account->email_blob(generic => $args);
+
+This lets you upload a message to the server (using JMAP) and returns
+the blob. This message is not in any mailbox but may be added to one using
+C<Email/import> and providing C<< $blob->blobId >> as the C<blobId>.
+
+The HASHREF C<$args> of C<< generic => $args >> may contain anything that
+can be passsed to C<< $mailbox->add_message($args) >>.
+
+C<$blob> is a L<JMAP::Tester::Result::Upload> object.
+
 =item get_state
+
+  my $state = $account->get_state('email');
 
 This allows you to retrieve the state string for a particular entity type.
 For example:
-
-  my $state = $account->get_state('email');
 
 =item tester
 
