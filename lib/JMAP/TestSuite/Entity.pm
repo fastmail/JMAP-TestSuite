@@ -178,7 +178,6 @@ package JMAP::TestSuite::EntityRole::Common {
 
     my $get_res_arg = $get_res->single_sentence($get_expect)
                               ->as_stripped_pair->[1];
-
     my %result;
     for my $nf_id (@{ $get_res_arg->{notFound} // [] }) {
       $result{$nf_id} = JMAP::TestSuite::EntityError->new({
@@ -280,7 +279,32 @@ package JMAP::TestSuite::EntityRole::Common {
       );
     }
 
+    $self->refresh;
+
     return;
+  }
+
+  sub refresh {
+    my ($self) = @_;
+
+    my $get_method = $self->get_method;
+    my $get_expect = $self->get_result;
+
+    my $get_res = $self->tester->request([[
+      $get_method => { ids => [ $self->id ] },
+    ]]);
+
+    my $get_res_arg = $get_res->single_sentence($get_expect)
+                              ->as_stripped_pair->[1];
+
+    my $updates = $get_res_arg->{list}[0];
+    unless ($updates) {
+      Carp::confess(
+          "failed to refresh $self (" . $self->id . "): "
+        . Dumper($get_res_arg)
+      );
+    }
+    $self->{_props} = $updates;
   }
 }
 
@@ -293,7 +317,6 @@ package JMAP::TestSuite::EntityRole::Common {
 #
 # accessors
 # accountId
-# refresh
 
 package JMAP::TestSuite::EntityError {
   use Moose;
