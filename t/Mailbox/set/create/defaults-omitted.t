@@ -20,7 +20,7 @@ test {
     },
   ]]);
   ok($res->is_success, "Mailbox/set create")
-    or diag explain $res->http_response->as_string;
+    or diag explain $res->response_payload;
 
   # Not checking oldState here as server may not have one yet
   jcmp_deeply(
@@ -58,7 +58,7 @@ test {
       ]],
     });
     ok($res->is_success, "Mailbox/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     my @found = @{ $res->single_sentence("Mailbox/get")->arguments->{list} };
     is(@found, 1, 'got only 1 mailbox');

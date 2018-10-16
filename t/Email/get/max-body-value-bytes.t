@@ -55,7 +55,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     my $arg = $res->single_sentence("Email/get")->arguments;
 
@@ -82,7 +82,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     my $arg = $res->single_sentence("Email/get")->arguments;
 
@@ -110,7 +110,7 @@ test {
         },
       ]]);
       ok($res->is_success, "Email/get")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       my $arg = $res->single_sentence("Email/get")->arguments;
 
@@ -141,7 +141,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     my $arg = $res->single_sentence("Email/get")->arguments;
 

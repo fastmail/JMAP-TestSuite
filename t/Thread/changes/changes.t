@@ -15,7 +15,7 @@ test {
       "Thread/changes" => { sinceState => $state, },
     ]]);
     ok($res->is_success, "Thread/changes")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Thread/changes")->arguments,
@@ -43,7 +43,7 @@ test {
       "Thread/changes" => { sinceState => $state, },
     ]]);
     ok($res->is_success, "Thread/changes")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Thread/changes")->arguments,
@@ -71,7 +71,7 @@ test {
         "Thread/changes" => { sinceState => $state, },
     ]]);
     ok($res->is_success, "Thread/changes")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Thread/changes")->arguments,

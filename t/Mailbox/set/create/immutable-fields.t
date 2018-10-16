@@ -65,7 +65,7 @@ test {
       });
 
       ok($res->is_success, "Mailbox/set create")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       my $sentence = $res->sentence(0);
       is($sentence->name, "Mailbox/set", 'got correct sentence');

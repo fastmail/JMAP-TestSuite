@@ -39,7 +39,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->sentence_named("Email/get")->arguments->{list}[0]{bodyStructure},
@@ -99,7 +99,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->sentence_named("Email/get")->arguments->{list}[0]{bodyStructure},
@@ -159,7 +159,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->sentence_named("Email/get")->arguments->{list}[0]{bodyStructure},
@@ -218,7 +218,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     my $email = $res->sentence_named("Email/get")->arguments->{list}[0];
     jcmp_deeply(
@@ -259,7 +259,7 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     my $email = $res->sentence_named("Email/get")->arguments->{list}[0];
     jcmp_deeply(

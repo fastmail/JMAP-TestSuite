@@ -28,7 +28,7 @@ test {
     },
   ]]);
   ok($res->is_success, "Email/get")
-    or diag explain $res->http_response->as_string;
+    or diag explain $res->response_payload;
 
   my $get = $res->sentence_named("Email/get");
   my $text_body = $get->arguments->{list}[0]{textBody};

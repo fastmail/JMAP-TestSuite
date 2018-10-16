@@ -28,7 +28,7 @@ test {
         },
       ]]);
       ok($res->is_success, "Mailbox/query")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       my $ids = $res->single_sentence("Mailbox/query")->arguments->{ids};
 
@@ -45,7 +45,7 @@ test {
         },
       ]]);
       ok($res->is_success, "Mailbox/query")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       my $ids = $res->single_sentence("Mailbox/query")->arguments->{ids};
 
@@ -77,7 +77,7 @@ test {
         },
       ]]);
       ok($res->is_success, "Mailbox/query")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       my $ids = $res->single_sentence("Mailbox/query")->arguments->{ids};
 
@@ -103,7 +103,7 @@ test {
         },
       ]]);
       ok($res->is_success, "Mailbox/query")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       my $ids = $res->single_sentence("Mailbox/query")->arguments->{ids};
 

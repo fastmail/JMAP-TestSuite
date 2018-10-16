@@ -13,7 +13,7 @@ test {
       "Email/query" => {},
     ]]);
     ok($res->is_success, "Email/query")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Email/query")->arguments,
