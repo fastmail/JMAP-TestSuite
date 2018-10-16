@@ -11,6 +11,10 @@ has base_uri => (
   required => 1,
 );
 
+has '+can_use_websockets' => (
+  default => 1,
+);
+
 has saslpasswd2_path => (
   is => 'ro',
   default => 'saslpasswd2',
@@ -163,7 +167,6 @@ package JMAP::TestSuite::Account::Cyrus {
   use Moose;
   with 'JMAP::TestSuite::Account';
 
-  use JMAP::TestSuite::JMAP::Tester::Wrapper;
   use MIME::Base64 ();
 
   has credentials => (is => 'ro', required => 1);
@@ -171,7 +174,21 @@ package JMAP::TestSuite::Account::Cyrus {
   sub authenticated_tester {
     my ($self) = @_;
 
+    if ($self->server->use_websockets) {
+      return $self->authenticated_websocket_tester;
+    }
+
+    return $self->authenticated_http_tester;
+  }
+
+  sub authenticated_http_tester {
+    my ($self) = @_;
+
     my $base = $self->server->base_uri =~ s{/\z}{}r;
+
+    my $auth = join q{:}, @{ $self->credentials }{ qw(username password) };
+
+    require JMAP::TestSuite::JMAP::Tester::Wrapper;
 
     my $tester = JMAP::TestSuite::JMAP::Tester::Wrapper->new({
       api_uri    => "$base/jmap/",
@@ -179,7 +196,30 @@ package JMAP::TestSuite::Account::Cyrus {
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
     });
 
+    $tester->ua->default_header(
+      Authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
+    );
+
+    return $tester;
+  }
+
+  sub authenticated_websocket_tester {
+    my ($self) = @_;
+
+    my $base = $self->server->base_uri =~ s{/\z}{}r;
+    (my $ws_base = $base) =~ s/^https?/ws/;
+
     my $auth = join q{:}, @{ $self->credentials }{ qw(username password) };
+
+    require JMAP::TestSuite::JMAP::Tester::WebSocket::Wrapper;
+
+    my $tester = JMAP::TestSuite::JMAP::Tester::WebSocket::Wrapper->new({
+      api_uri    => "$base/jmap/",
+      upload_uri => "$base/jmap/upload/" . $self->credentials->{username} . "/",
+      download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
+      ws_api_uri => "$ws_base/jmap/",
+      authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
+    });
 
     $tester->ua->default_header(
       Authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),

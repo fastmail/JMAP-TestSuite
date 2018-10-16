@@ -20,6 +20,28 @@ has _locks => (
   },
 );
 
+has use_websockets => (
+  is => 'ro',
+  isa => 'Bool',
+  default => sub { $ENV{JMTS_USE_WEBSOCKETS} || 0 },
+);
+
+has can_use_websockets => (
+  is => 'ro',
+  isa => 'Bool',
+  default => 0,
+  init_arg => undef,
+);
+
+sub BUILD {
+  my ($self) = @_;
+
+  if ($self->use_websockets && ! $self->can_use_websockets) {
+    my $what = ref($self);
+    die "Cannot build $what: use_websockets requested but $what does not support it\n";
+  }
+}
+
 has lock_dir => (
   is  => 'ro',
   isa => 'Str',
