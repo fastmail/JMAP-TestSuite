@@ -203,10 +203,6 @@ test {
     # \S -> S (quoted-pair)
     $expect_name =~ s/\\//g;
 
-    # XXX - Really this should be in headers_raw but can't because it won't
-    # override defaults headers To... -- alh, 2018-06-20
-    my $to_value = qq{"$expect_name" <$email>};
-
     # No name
     my $from_value = 'foo@example.net';
 
@@ -221,6 +217,7 @@ test {
       Resent-To
       Resent-Cc
       X-Foo
+      To
     );
 
     my $long_name = "a" x 58;
@@ -236,11 +233,9 @@ test {
           $_ => $value,
         } @hlist, ),
         'Resent-Bcc' => $long_value,
-      ],
-      # raw_headers doesn't override these sadly. XXX - To fix
-      headers => [
         From      => $from_value,
-        To        => $value,
+      ],
+      headers => [
         'X-Group' => $group_value,
       ],
     });
@@ -258,8 +253,6 @@ test {
           qw(
             header:From:asRaw
             header:From:asAddresses
-            header:To:asRaw
-            header:To:asAddresses
             header:Resent-Bcc:asRaw
             header:Resent-Bcc:asAddresses
             header:X-Group:asRaw
@@ -288,7 +281,6 @@ test {
             }],
           } @hlist, ),
           'header:From:asRaw' => " $from_value",
-          'header:To:asRaw'   => " $to_value",
           'header:From:asAddresses' => [{
             name => undef,
             email => $from_value,

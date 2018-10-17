@@ -6,6 +6,7 @@ package JMAP::TestSuite::Account {
   use JMAP::TestSuite::Util qw(batch_ok);
   use Scalar::Util qw(blessed);
   use Test::More;
+  use List::Util qw(pairkeys);
 
   has accountId => (is => 'ro', required => 1);
   has server    => (is => 'ro', isa => 'Object', required => 1);
@@ -24,15 +25,29 @@ package JMAP::TestSuite::Account {
     generic => sub {
       my ($self, $arg) = @_;
 
+      my %default_headers = (
+        From => $arg->{from} // 'example@example.com',
+        To   => $arg->{to} // 'example@example.biz',
+        Subject => $arg->{subject} // 'This is a test',
+        'Message-Id' =>    $arg->{message_id}
+                        // Email::MessageID->new->in_brackets,
+      );
+
+      if ($arg->{raw_headers}) {
+        delete $default_headers{$_} for pairkeys @{ $arg->{raw_headers} };
+      }
+
+      my @default_headers = map {;
+        $_ => $default_headers{$_}
+      } grep {
+        exists $default_headers{$_}
+      } qw(From To Subject Message-Id);
+
       require Email::MIME;
       return Email::MIME->create(
         ( $arg->{raw_headers} ? ( header => $arg->{raw_headers} ) : () ),
         header_str => [
-          From => $arg->{from} // 'example@example.com',
-          To   => $arg->{to} // 'example@example.biz',
-          Subject => $arg->{subject} // 'This is a test',
-          'Message-Id' =>    $arg->{message_id}
-                          // Email::MessageID->new->in_brackets,
+          @default_headers,
           ( $arg->{headers} ? @{ $arg->{headers} } : () ),
         ],
         (
@@ -46,16 +61,30 @@ package JMAP::TestSuite::Account {
     with_attachment => sub {
       my ($self, $arg) = @_;
 
+      my %default_headers = (
+        From => $arg->{from} // 'example@example.com',
+        To   => $arg->{to} // 'example@example.biz',
+        Subject => $arg->{subject} // 'This is a test',
+        'Message-Id' =>    $arg->{message_id}
+                        // Email::MessageID->new->in_brackets,
+      );
+
+      if ($arg->{raw_headers}) {
+        delete $default_headers{$_} for pairkeys @{ $arg->{raw_headers} };
+      }
+
+      my @default_headers = map {;
+        $_ => $default_headers{$_}
+      } grep {
+        exists $default_headers{$_}
+      } qw(From To Subject Message-Id);
+
       require Email::MIME;
       return Email::MIME->create(
         attributes => $arg->{attributes} // {},
         ( $arg->{raw_headers} ? ( header => $arg->{raw_headers} ) : () ),
         header_str => [
-          From => $arg->{from} // 'example@example.com',
-          To   => $arg->{to} // 'example@example.biz',
-          Subject => $arg->{subject} // 'This is a test',
-          'Message-Id' =>    $arg->{message_id}
-                          // Email::MessageID->new->in_brackets,
+          %default_headers,
           ( $arg->{headers} ? @{ $arg->{headers} } : () ),
         ],
         parts => [
