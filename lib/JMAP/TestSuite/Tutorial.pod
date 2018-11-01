@@ -81,7 +81,7 @@ L<JMAP::TestSuite::ServerAdapter::Cyrus>).
 
     my $tester = $account->tester;
 
-Here we get a L<JMAP::TestSuite::JMAP::Tester::Wrapper> object which gives
+Here we get a L<JMAP::TestSuite::JMAP::Tester::WithSugar> object which gives
 us a number ways to make requests against the JMAP server and examine the
 responses. This class is a wrapper around L<JMAP::Tester>, so all of its
 methods are also available.
@@ -268,7 +268,7 @@ For example:
 
 =item tester
 
-This returns the L<JMAP::TestSuite::JMAP::Tester::Wrapper> object which
+This returns the L<JMAP::TestSuite::JMAP::Tester::WithSugar> object which
 you can use to make requests/examine responses.
 
 =back

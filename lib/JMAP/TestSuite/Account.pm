@@ -15,7 +15,7 @@ package JMAP::TestSuite::Account {
 
   has tester  => (
     is   => 'ro',
-    does  => 'JMAP::TestSuite::JMAP::Tester::WrapperRole',
+    does  => 'JMAP::TestSuite::JMAP::Tester::WithSugarRole',
     lazy => 1,
     default => sub { $_[0]->authenticated_tester },
     clearer => 'clear_tester',

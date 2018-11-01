@@ -188,9 +188,9 @@ package JMAP::TestSuite::Account::Cyrus {
 
     my $auth = join q{:}, @{ $self->credentials }{ qw(username password) };
 
-    require JMAP::TestSuite::JMAP::Tester::Wrapper;
+    require JMAP::TestSuite::JMAP::Tester::WithSugar;
 
-    my $tester = JMAP::TestSuite::JMAP::Tester::Wrapper->new({
+    my $tester = JMAP::TestSuite::JMAP::Tester::WithSugar->new({
       api_uri    => "$base/jmap/",
       upload_uri => "$base/jmap/upload/" . $self->credentials->{username} . "/",
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
@@ -211,9 +211,9 @@ package JMAP::TestSuite::Account::Cyrus {
 
     my $auth = join q{:}, @{ $self->credentials }{ qw(username password) };
 
-    require JMAP::TestSuite::JMAP::Tester::WebSocket::Wrapper;
+    require JMAP::TestSuite::JMAP::Tester::WebSocket::WithSugar;
 
-    my $tester = JMAP::TestSuite::JMAP::Tester::WebSocket::Wrapper->new({
+    my $tester = JMAP::TestSuite::JMAP::Tester::WebSocket::WithSugar->new({
       api_uri    => "$base/jmap/",
       upload_uri => "$base/jmap/upload/" . $self->credentials->{username} . "/",
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",

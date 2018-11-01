@@ -1,4 +1,4 @@
-package JMAP::TestSuite::JMAP::Tester::WrapperRole;
+package JMAP::TestSuite::JMAP::Tester::WithSugarRole;
 use strict;
 use warnings;
 

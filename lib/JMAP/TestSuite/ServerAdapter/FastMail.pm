@@ -41,7 +41,7 @@ package JMAP::TestSuite::Account::FastMail {
   with 'JMAP::TestSuite::Account';
 
   use Carp qw(croak);
-  use JMAP::TestSuite::JMAP::Tester::Wrapper;
+  use JMAP::TestSuite::JMAP::Tester::WithSugar;
   use HTTP::Cookies;
   use LWP::UserAgent;
   use JSON qw(encode_json decode_json);
@@ -99,7 +99,7 @@ package JMAP::TestSuite::Account::FastMail {
 
     my $base = $self->server->base_uri =~ s{/\z}{}r;
 
-    my $tester = JMAP::TestSuite::JMAP::Tester::Wrapper->new({
+    my $tester = JMAP::TestSuite::JMAP::Tester::WithSugar->new({
       api_uri => "$base/jmap/api/?u=$json->{userId}&jmap=1",
       ua      => $self->lwp,
       default_arguments => {
