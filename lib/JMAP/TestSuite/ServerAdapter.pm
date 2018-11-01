@@ -26,12 +26,7 @@ has use_websockets => (
   default => sub { $ENV{JMTS_USE_WEBSOCKETS} || 0 },
 );
 
-has can_use_websockets => (
-  is => 'ro',
-  isa => 'Bool',
-  default => 0,
-  init_arg => undef,
-);
+sub can_use_websockets { 0 }
 
 sub BUILD {
   my ($self) = @_;

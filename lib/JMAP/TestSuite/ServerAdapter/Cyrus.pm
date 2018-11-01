@@ -11,9 +11,7 @@ has base_uri => (
   required => 1,
 );
 
-has '+can_use_websockets' => (
-  default => 1,
-);
+sub can_use_websockets { 1 }
 
 has saslpasswd2_path => (
   is => 'ro',
