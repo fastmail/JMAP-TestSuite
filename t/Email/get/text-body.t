@@ -60,7 +60,7 @@ test {
 
         ok($download_res->is_success, 'downloaded image blob');
 
-        push @got, md5_hex($download_res->bytes_ref);
+        push @got, md5_hex(${ $download_res->bytes_ref });
       } else {
         fail("Unknown type?! $part->{type}");
       }

@@ -62,9 +62,9 @@ test {
         ok($download_res->is_success, 'downloaded blob');
 
         if ($part->{type} =~ /image/) {
-          push @got, md5_hex($download_res->bytes_ref);
+          push @got, md5_hex(${ $download_res->bytes_ref });
         } else {
-          push @got, $download_res->bytes_ref;
+          push @got, ${ $download_res->bytes_ref };
         }
       }
     };
