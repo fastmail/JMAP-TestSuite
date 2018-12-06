@@ -18,7 +18,7 @@ test {
       "Mailbox/query" => {},
     ]]);
     ok($res->is_success, "Mailbox/query")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Mailbox/query")->arguments,

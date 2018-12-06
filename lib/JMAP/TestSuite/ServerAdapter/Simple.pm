@@ -36,12 +36,12 @@ package JMAP::TestSuite::Account::Simple {
   use Moose;
   with 'JMAP::TestSuite::Account';
 
-  use JMAP::TestSuite::JMAP::Tester::Wrapper;
+  use JMAP::TestSuite::JMAP::Tester::WithSugar;
 
   sub authenticated_tester {
     my ($self) = @_;
 
-    my $tester = JMAP::TestSuite::JMAP::Tester::Wrapper->new({
+    my $tester = JMAP::TestSuite::JMAP::Tester::WithSugar->new({
       authentication_uri => $self->server->authentication_uri,
     });
 

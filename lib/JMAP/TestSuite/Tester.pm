@@ -54,7 +54,7 @@ sub test_query {
       or $failed++;
 
     if ($failed) {
-      diag explain $res->http_response->as_string;
+      diag explain $res->response_payload;
 
       $failures++;
       $failed = 0;

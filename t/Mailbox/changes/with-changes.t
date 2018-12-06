@@ -15,7 +15,7 @@ test {
       "Mailbox/changes" => { sinceState => $state, },
     ]]);
     ok($res->is_success, "Mailbox/changes")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
@@ -46,14 +46,14 @@ test {
         },
       ]]);
       ok($res->is_success, "Mailbox/set")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
     };
 
     my $res = $tester->request([[
       "Mailbox/changes" => { sinceState => $state, },
     ]]);
     ok($res->is_success, "Mailbox/changes")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
@@ -82,14 +82,14 @@ test {
         },
       ]]);
       ok($res->is_success, "Mailbox/set")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
     };
 
     my $res = $tester->request([[
       "Mailbox/changes" => { sinceState => $state, },
     ]]);
     ok($res->is_success, "Mailbox/changes")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,

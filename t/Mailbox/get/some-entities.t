@@ -28,7 +28,7 @@ test {
         "Mailbox/get" => $args,
       ]]);
       ok($res->is_success, "Mailbox/get")
-        or diag explain $res->http_response->as_string;
+        or diag explain $res->response_payload;
 
       jcmp_deeply(
         $res->single_sentence("Mailbox/get")->arguments,
@@ -68,7 +68,7 @@ test {
       "Mailbox/get" => { ids => [ $mailbox1->id ], },
     ]]);
     ok($res->is_success, "Mailbox/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,
@@ -105,7 +105,7 @@ test {
       "Mailbox/get" => { ids => [ ], },
     ]]);
     ok($res->is_success, "Mailbox/get")
-      or diag explain $res->http_response->as_string;
+      or diag explain $res->response_payload;
 
     jcmp_deeply(
       $res->single_sentence("Mailbox/get")->arguments,

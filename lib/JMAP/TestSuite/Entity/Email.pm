@@ -220,6 +220,12 @@ sub _import_batch {
     $get_method => { ids => [ $set_sentence->created_ids ] },
   ]]);
 
+  unless ($get_res->is_success) {
+    my $diag = join(", ", $get_res->response_payload, $get_res->ident);
+
+    Carp::confess("Failed to $get_method: $diag");
+  }
+
   my $get_res_arg = $get_res->single_sentence($get_expect)
                             ->as_stripped_pair->[1];
 

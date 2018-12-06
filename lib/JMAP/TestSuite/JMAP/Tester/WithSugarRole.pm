@@ -1,17 +1,15 @@
-package JMAP::TestSuite::JMAP::Tester::Wrapper;
+package JMAP::TestSuite::JMAP::Tester::WithSugarRole;
 use strict;
 use warnings;
 
 use Params::Util qw(_ARRAY0 _HASH);
 
-use Moo;
+use Moo::Role;
 use Test::More;
 use Test::Deep::JType;
 use Try::Tiny;
 
 use feature qw(state);
-
-extends 'JMAP::Tester';
 
 has default_using => (
   is  => 'rw',
@@ -100,7 +98,7 @@ sub request_ok {
 
     # Check success, give diagnostic on failure
     ok($res->is_success, 'JMAP request succeeded')
-      or die "Request failed: " . $res->http_response->as_string;
+      or die "Request failed: " . $res->response_payload;
 
     for my $expect_para (@$expect_paragraphs) {
       my $cid = shift @req_client_ids;

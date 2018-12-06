@@ -33,7 +33,7 @@ test {
     },
   ]]);
   ok($res->is_success, "Email/get")
-    or diag explain $res->http_response->as_string;
+    or diag explain $res->response_payload;
 
   my $get = $res->sentence_named("Email/get");
   my $body_structure = $get->arguments->{list}[0]{bodyStructure};
@@ -62,9 +62,9 @@ test {
         ok($download_res->is_success, 'downloaded blob');
 
         if ($part->{type} =~ /image/) {
-          push @got, md5_hex($download_res->bytes_ref);
+          push @got, md5_hex(${ $download_res->bytes_ref });
         } else {
-          push @got, $download_res->bytes_ref;
+          push @got, ${ $download_res->bytes_ref };
         }
       }
     };
