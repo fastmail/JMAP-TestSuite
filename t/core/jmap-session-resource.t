@@ -41,6 +41,7 @@ test {
       apiUrl => jstr,
       downloadUrl => jstr,
       uploadUrl => jstr,
+      state => jstr,
 #      eventSourceUrl => jstr, # XXX - Spec updates might change
     },
     'Response looks good',
