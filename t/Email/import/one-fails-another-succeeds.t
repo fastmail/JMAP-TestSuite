@@ -37,7 +37,7 @@ test {
       notCreated => {
         new2 => {
           type => 'invalidProperties',
-          properties => [ 'mailboxIds/junk' ], # XXX - Standard?
+          properties => [ 'mailboxIds' ],
         },
       },
       created => {
