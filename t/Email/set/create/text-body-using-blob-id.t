@@ -89,7 +89,7 @@ test {
               email => 'test@example.org',
             },
           ],
-          hasAttachment => jtrue,
+          hasAttachment => jfalse,
           htmlBody    => [ \%body ],
           id          => $id,
           inReplyTo   => undef,
