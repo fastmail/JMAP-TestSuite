@@ -10,10 +10,11 @@ test {
 
   my $mbox = $account->create_mailbox;
 
-  my $blob = $tester->upload(
-    'image/jpeg',
-    \"image data",
-  );
+  my $blob = $tester->upload({
+    accountId => $account->accountId,
+    type      => 'image/jpeg',
+    blob      => \"image data",
+  });
 
   my ($create) = $tester->request_ok(
     [

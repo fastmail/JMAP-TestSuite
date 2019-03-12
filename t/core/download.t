@@ -27,7 +27,11 @@ test {
     note("downloadUrl included {name} variable. Using $download_url");
   }
 
-  my $blob = $tester->upload('text/plain', \"foo");
+  my $blob = $tester->upload({
+    accountId => $account->accountId,
+    type      => 'text/plain',
+    blob      => \"foo"
+  });
   my $id = $blob->blobId;
 
   ok($download_url =~ s/{blobId}/$id/, 'downloadUrl included a blobId');

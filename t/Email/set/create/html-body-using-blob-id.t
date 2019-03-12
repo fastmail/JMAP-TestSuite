@@ -10,10 +10,11 @@ test {
 
   my $mbox = $account->create_mailbox;
 
-  my $blob = $tester->upload(
-    'text/plain',
-    \"Hello there",
-  );
+  my $blob = $tester->upload({
+    accountId => $account->accountId,
+    type      => 'text/plain',
+    blob      => \"Hello there",
+  });
 
   my ($create) = $tester->request_ok(
     [

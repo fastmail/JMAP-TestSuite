@@ -135,9 +135,11 @@ package JMAP::TestSuite::Account {
 
     my $email = $gen->($self, $arg);
 
-    return $self->tester->upload('message/rfc822',
-      blessed($email) ? \$email->as_string : \$email,
-    );
+    return $self->tester->upload({
+      accountId => $self->accountId,
+      type      => 'message/rfc822',
+      blob      => blessed($email) ? \$email->as_string : \$email,
+    });
   }
 
   for my $method (qw(create create_list create_batch retrieve retrieve_batch)) {

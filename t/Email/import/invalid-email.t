@@ -7,7 +7,11 @@ test {
   my $tester  = $account->tester;
 
   my $mailbox = $account->create_mailbox;
-  my $blob = $tester->upload('text/plain', \"some data");
+  my $blob = $tester->upload({
+    accountId => $account->accountId,
+    type      => 'text/plain',
+    blob      => \"some data"
+  });
 
   my $res = $tester->request([[
     "Email/import" => {
