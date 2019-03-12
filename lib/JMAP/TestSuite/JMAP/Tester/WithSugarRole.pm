@@ -11,38 +11,15 @@ use Try::Tiny;
 
 use feature qw(state);
 
-has default_using => (
-  is  => 'rw',
-  isa => sub {
-    die "must be an arrayref" unless _ARRAY0 $_[0];
-  },
-  default => sub {
-    [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-  },
-);
+sub BUILD {
+  my $self = shift;
 
-around request => sub {
-  my ($orig, $self, $input_request) = @_;
-
-  my $request;
-
-  if (_ARRAY0($input_request)) {
-    $request = {
-      methodCalls => $input_request,
-    },
-  } else {
-    $request = $input_request;
+  unless ($self->_has_default_using) {
+    $self->default_using(
+      [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+    );
   }
-
-  unless (
-       exists $request->{using}
-    || delete $request->{no_using}
-  ) {
-    $request->{using} = $self->default_using;
-  }
-
-  return $orig->($self, $request);
-};
+}
 
 sub request_ok {
   my ($self, $input_request, $expect_paragraphs, $desc) = @_;
