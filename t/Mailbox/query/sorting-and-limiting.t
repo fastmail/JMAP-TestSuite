@@ -48,17 +48,6 @@ test {
   )};
   my @sort_order_desc = reverse @sort_order_asc;
 
-  my @parent_name_asc = map {; $_->id } @mailboxes{qw(
-    xxx
-      ccc
-    yyy
-      ddd
-    zzz
-      aaa
-      bbb
-  )};
-  my @parent_name_desc = reverse @parent_name_asc;
-
   my $describer_sub = $self->make_describer_sub(\%mailboxes_by_id);
 
   # name
@@ -117,123 +106,6 @@ test {
     "sort by sortOrder, explicit descending order"
   );
 
-  # parent/name
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    { sort => [{ property => 'parent/name', }], },
-    { ids => \@parent_name_asc, },
-    $describer_sub,
-    "sort by parent/name, implict ascending order"
-  );
-
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    { sort => [{ property => 'parent/name', isAscending => JSON::true, }], },
-    { ids => \@parent_name_asc, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order"
-  );
-
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    { sort => [{ property => 'parent/name', isAscending => JSON::false, }], },
-    { ids => \@parent_name_desc, },
-    $describer_sub,
-    "sort by parent/name, explicit descending order"
-  );
-
-  # position 0, explicit
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => 0,
-    },
-    { ids => \@parent_name_asc, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position 0"
-  );
-
-  # negative positions start at end of list
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => -1,
-    },
-    { ids => [ $parent_name_asc[-1] ], position => $#parent_name_asc, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position -1"
-  );
-
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => -3,
-    },
-    { ids => [ @parent_name_asc[-3..-1] ], position => $#parent_name_asc - 2, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position -3"
-  );
-
-  # positive positions start at beginning
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => 1,
-    },
-    { ids => [ @parent_name_asc[1..$#parent_name_asc] ], position => 1, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position 1"
-  );
-
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => 3,
-    },
-    { ids => [ @parent_name_asc[3..$#parent_name_asc] ], position => 3, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position 3"
-  );
-
-  # position > total = no results
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => $#parent_name_asc + 5,
-    },
-    { ids => [], position => 0, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position too high"
-  );
-
-  # negative position too low clamped to 0
-  $self->test_query(
-    $account,
-    "Mailbox/query",
-    {
-      sort => [{ property => 'parent/name', isAscending => JSON::true, }],
-      position => $#parent_name_asc - ($#parent_name_asc + 10),
-    },
-    { ids => \@parent_name_asc, position => 0, },
-    $describer_sub,
-    "sort by parent/name, explicit ascending order, explicit position too low"
-  );
-
   subtest "limits" => sub {
     subtest "Negative limit" => sub {
       my $res = $account->tester->request([[
@@ -252,60 +124,6 @@ test {
         "got invalidArguments for negative limit",
       ) or diag explain $res->as_stripped_triples;
     };
-
-    $self->test_query(
-      $account,
-      "Mailbox/query",
-      {
-        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
-        limit => @parent_name_asc + 5,
-      },
-      { ids => \@parent_name_asc, total => 0+@parent_name_asc, },
-      $describer_sub,
-      "limit > total returns total"
-    );
-
-    $self->test_query(
-      $account,
-      "Mailbox/query",
-      {
-        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
-        limit => 0 + @parent_name_asc,
-      },
-      { ids => \@parent_name_asc, total => 0+@parent_name_asc, },
-      $describer_sub,
-      "limit == total returns total"
-    );
-
-    $self->test_query(
-      $account,
-      "Mailbox/query",
-      {
-        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
-        limit => @parent_name_asc - 2,
-      },
-      {
-        ids => [ @parent_name_asc[0..($#parent_name_asc - 2)] ],
-        total => 0+@parent_name_asc,
-      },
-      $describer_sub,
-      "limit < total returns limit"
-    );
-
-    $self->test_query(
-      $account,
-      "Mailbox/query",
-      {
-        sort  => [{ property => 'parent/name', isAscending => JSON::true, }],
-        limit => 0,
-      },
-      {
-        ids => [ ],
-        total => 0+@parent_name_asc,
-      },
-      $describer_sub,
-      "limit 0 returns none"
-    );
   };
 };
 
