@@ -19,12 +19,11 @@ test {
     {
       username => jstr,
       accounts => {
-        $account->accountId => {
+        $account->accountId => superhashof({
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
-          hasDataFor => [jstr, jstr, jstr, jstr, jstr], # XXX - Spec updates might change
-        },
+        }),
       },
       capabilities => superhashof({
         'urn:ietf:params:jmap:core' => {
@@ -37,6 +36,9 @@ test {
           maxObjectsInSet => jnum,
           collationAlgorithms => ignore(),
         },
+      }),
+      primaryAccounts => superhashof({
+        'urn:ietf:params:jmap:mail' => $account->accountId,
       }),
       apiUrl => jstr,
       downloadUrl => jstr,
