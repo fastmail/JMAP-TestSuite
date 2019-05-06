@@ -124,7 +124,7 @@ test {
           references  => undef,
           replyTo     => undef,
           sender      => undef,
-          sentAt      => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+          sentAt      => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(Z|([+-]\d\d:\d\d))\z'),
           size        => jnum(),
           subject     => 'a test subject',
           textBody    => [ \%body ],
