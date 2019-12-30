@@ -257,6 +257,7 @@ test {
             header:Resent-Bcc:asAddresses
             header:X-Group:asRaw
             header:X-Group:asAddresses
+            header:X-Group:asGroupedAddresses
           ),
         ],
       },
@@ -297,17 +298,23 @@ test {
           'header:X-Group:asRaw' => " $group_value",
           'header:X-Group:asAddresses' => [
             {
-              name  => 'A group',
-              email => undef,
-            }, {
               name  => 'foo',
               email => 'foo@example.org',
             }, {
               name  => 'bar d',
               email => 'bar@example.org',
-            }, {
-              name => undef,
-              email => undef,
+            },
+          ],
+          'header:X-Group:asGroupedAddresses' => [
+            {
+              name => 'A group',
+              addresses => [{
+                name  => 'foo',
+                email => 'foo@example.org',
+              }, {
+                name  => 'bar d',
+                email => 'bar@example.org',
+              }],
             },
           ],
         }],
