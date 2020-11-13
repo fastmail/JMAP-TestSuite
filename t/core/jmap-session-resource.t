@@ -44,7 +44,7 @@ test {
       downloadUrl => jstr,
       uploadUrl => jstr,
       state => jstr,
-#      eventSourceUrl => jstr, # XXX - Spec updates might change
+      eventSourceUrl => jstr,
     },
     'Response looks good',
   ) or diag explain $data;
