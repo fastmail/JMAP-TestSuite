@@ -399,7 +399,7 @@ test {
     my $value = "Thu, 13 Feb 1969 23:32 -0330 (Newfoundland Time)";
 
     # 13th at 23:32 + 3.5h...
-    my $expect = "1969-02-14T03:02:00Z";
+    my $expect = "1969-02-13T23:32:00-03:30";
 
     my $message = $mbox->add_message({
       raw_headers => [
