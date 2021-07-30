@@ -215,7 +215,7 @@ package JMAP::TestSuite::Account::Cyrus {
       api_uri    => "$base/jmap/",
       upload_uri => "$base/jmap/upload/" . $self->credentials->{username} . "/",
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
-      ws_api_uri => "$ws_base/jmap/",
+      ws_api_uri => "$ws_base/jmap/ws/",
       authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
     });
 
