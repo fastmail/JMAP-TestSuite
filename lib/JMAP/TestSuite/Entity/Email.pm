@@ -191,23 +191,19 @@ sub _import_batch {
     "Email/import" => { emails => $to_create },
   ]]);
 
-  unless ($set_res->sentence(0)->name eq 'Email/import') {
+  my $sentence = $set_res->sentence(0);
+
+  unless ($sentence->name eq 'Email/import') {
     die(
       "Failed to import a message: " . Dumper($set_res->as_stripped_triples)
     );
   }
 
-  # this isn't quite a "set" sentence, but this will work anyway for created
-  # and notCreated -- rjbs, 2016-11-16
-  my $set_sentence = $set_res->single_sentence('Email/import')->as_set;
-
-  my $create_errors = $set_sentence->create_errors;
-
   my %result;
-  for my $crid ($set_sentence->not_created_ids) {
+  for my $crid (keys %{ $sentence->arguments->{notCreated} }) {
     $result{$crid} = JMAP::TestSuite::EntityError->new({
       creation_id => $crid,
-      result      => $create_errors->{$crid},
+      result      => $sentence->arguments->{notCreated}->{$crid},
     });
   }
 
@@ -217,7 +213,7 @@ sub _import_batch {
   my $get_expect = $pkg->get_result;
 
   my $get_res = $account->tester->request([[
-    $get_method => { ids => [ $set_sentence->created_ids ] },
+    $get_method => { ids => [ map { $_->{id} } values %{ $sentence->arguments->{created} } ] },
   ]]);
 
   unless ($get_res->is_success) {
@@ -235,7 +231,7 @@ sub _import_batch {
     Carp::confess("failed to retrieve test entity data: " . Data::Dumper::Dumper($get_res_arg));
   }
 
-  my $created = $set_sentence->created;
+  my $created = $sentence->arguments->{created};
   my %crid_for = map {; $created->{$_}{id} => $_ } keys %$created;
 
   for my $item (@{ $get_res_arg->{list} }) {
