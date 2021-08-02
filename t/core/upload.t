@@ -7,7 +7,7 @@ test {
   my $tester  = $account->tester;
 
   # First, grab our uploadUrl
-  my $res = $tester->ua->get($tester->api_uri);
+  my $res = $tester->ua->lwp->get($tester->api_uri);
   ok($res->is_success, "GET " . $tester->api_uri);
 
   my $data = eval { decode_json($res->decoded_content) };
@@ -31,7 +31,7 @@ test {
     $upload_url = $base . $upload_url;
   }
 
-  my $upload_res = $tester->ua->post($upload_url,
+  my $upload_res = $tester->ua->lwp->post($upload_url,
     'Content-Type' => 'text/plain',
     $tester->_maybe_auth_header,
     Content => "foo",

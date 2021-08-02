@@ -7,7 +7,7 @@ test {
   my $tester  = $account->tester;
 
   # First, grab our downloadUrl
-  my $res = $tester->ua->get($tester->api_uri);
+  my $res = $tester->ua->lwp->get($tester->api_uri);
   ok($res->is_success, "GET " . $tester->api_uri);
 
   my $data = eval { decode_json($res->decoded_content) };
@@ -46,7 +46,7 @@ test {
     $download_url = $base . $download_url;
   }
 
-  my $download_res = $tester->ua->get($download_url,
+  my $download_res = $tester->ua->lwp->get($download_url,
     $tester->_maybe_auth_header,
   );
 

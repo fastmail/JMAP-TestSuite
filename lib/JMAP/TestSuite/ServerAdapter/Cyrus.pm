@@ -194,7 +194,7 @@ package JMAP::TestSuite::Account::Cyrus {
       download_uri => "$base/jmap/download/{accountId}/{blobId}/{name}/",
     });
 
-    $tester->ua->default_header(
+    $tester->ua->set_default_header(
       Authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
     );
 
@@ -219,7 +219,7 @@ package JMAP::TestSuite::Account::Cyrus {
       authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
     });
 
-    $tester->ua->default_header(
+    $tester->ua->set_default_header(
       Authorization => 'Basic ' . MIME::Base64::encode_base64($auth, ''),
     );
 
