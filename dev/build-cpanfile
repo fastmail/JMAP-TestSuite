@@ -16,7 +16,8 @@ use Getopt::Long::Descriptive;
 
 # Extra modules that aren't explicitly used anywhere but are needed
 my %extra_modules = (
-  'JMAP::Tester' => '0.022', # JMAP::Tester::WebSocket needs this
+  'JMAP::Tester' => '0.101',            # Futures
+  'JMAP::Tester::WebSocket' => '0.003', # Futures
 );
 
 my ($opt, $usage) = describe_options(
