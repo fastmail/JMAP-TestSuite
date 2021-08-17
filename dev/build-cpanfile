@@ -16,8 +16,8 @@ use Getopt::Long::Descriptive;
 
 # Extra modules that aren't explicitly used anywhere but are needed
 my %extra_modules = (
-  'JMAP::Tester'            => '0.101', # Futures
-  'JMAP::Tester::WebSocket' => '0.003', # Futures
+  'JMAP::Tester'            => '0.101', # Futures + Role::Tiny fix
+  'JMAP::Tester::WebSocket' => '0.004', # Futures + Role::Tiny fix
   'LWP::UserAgent'          => '6.56',  # https://github.com/libwww-perl/libwww-perl/pull/385
 );
 
