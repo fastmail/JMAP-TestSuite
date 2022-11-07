@@ -516,4 +516,64 @@ test {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
   };
+
+  subtest "grouped addresses" => sub {
+    my $message = $mbox->add_message({
+      raw_headers => [
+        To => qq{powers-that-be: "P" <powerful$$\@example.net>, "M" <mighty$$\@example.net>;},
+      ],
+    });
+
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ qw( to ) ],
+      }
+    ]]);
+    ok($res->is_success, "Email/get")
+      or diag explain $res->response_payload;
+
+    jcmp_deeply(
+      $res->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($account->accountId),
+        state     => jstr(),
+        list      => [{
+          id => $message->id,
+          to => [
+            { name => 'P', email => "powerful$$\@example.com" },
+            { name => 'M', email => "mighty$$\@example.com" },
+          ],
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res->as_stripped_triples;
+
+    my $res2 = $tester->request([[
+      "Email/get" => {
+        ids        => [ $message->id ],
+        properties => [ qw( header:to:asGroupedAddresses ) ],
+      }
+    ]]);
+    ok($res2->is_success, "Email/get")
+      or diag explain $res2->response_payload;
+
+    jcmp_deeply(
+      $res2->single_sentence("Email/get")->arguments,
+      superhashof({
+        accountId => jstr($account->accountId),
+        state     => jstr(),
+        list      => [{
+          id => $message->id,
+          'header:to:asGroupedAddresses' => [
+            { name => 'powers-that-be', addresses => [
+              { name => 'P', email => "powerful$$\@example.com" },
+              { name => 'M', email => "mighty$$\@example.com" },
+            ] },
+          ],
+        }],
+      }),
+      "Response looks good",
+    ) or diag explain $res2->as_stripped_triples;
+  };
 };
