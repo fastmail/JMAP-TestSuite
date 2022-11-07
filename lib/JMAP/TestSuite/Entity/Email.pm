@@ -27,10 +27,6 @@ with 'JMAP::TestSuite::Entity' => {
     htmlBody
     attachments
     attachedEmails
-    isUnread
-    isFlagged
-    isAnswered
-    isDraft
   ) ],
 
   # I'm not sure the is* flags are still valid XXX
@@ -126,9 +122,6 @@ sub import_messages {
   # uploading
   my %upload_failure;
   for my $crid (keys %$to_import) {
-    $to_import->{$crid}{$_} //= \0
-      for qw(isUnread isAnswered isFlagged isDraft);
-
     my $blob = $to_import->{$crid}{blobId};
     next unless blessed $blob;
 
