@@ -165,7 +165,7 @@ package JMAP::TestSuite::Account {
     *$method = $code;
   }
 
-  my $inc = 0;
+  my $mb_inc = 0;
 
   sub create_mailbox {
     # XXX - This should probably not use Test::* functions and
@@ -175,8 +175,8 @@ package JMAP::TestSuite::Account {
     my ($self, $arg) = @_;
 
     $arg ||= {};
-    $arg->{name} ||= "Folder $inc at $^T.$$";
-    $inc++;
+    $arg->{name} ||= "Folder $mb_inc at $^T.$$";
+    $mb_inc++;
 
     my $batch = $self->create_batch(mailbox => {
       x => $arg,
@@ -215,6 +215,41 @@ package JMAP::TestSuite::Account {
       $to_pass,
       { ($to_munge ? %$to_munge : ()), account => $self },
     );
+  }
+
+  my $cal_inc = 0;
+
+  sub create_calendar {
+    # XXX - This should probably not use Test::* functions and
+    #       instead hard fail if something goes wrong.
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+
+    $arg ||= {};
+    $arg->{name} ||= "Calendar $cal_inc at $^T.$$";
+    $arg->{color} ||= '#ffffff';
+    $cal_inc++;
+
+    my $batch = $self->create_batch(calendar => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created a calendar")
+      or diag explain $batch->all_results;
+
+    my $x = $batch->result_for('x');
+
+    if ($ENV{JMTS_TELEMETRY}) {
+      note(
+          "Account " . $self->accountId
+        . " Created calendar '" . $x->name . "' id (" . $x->id . ")"
+      );
+    }
+
+    return $x;
   }
 
   no Moose::Role;
