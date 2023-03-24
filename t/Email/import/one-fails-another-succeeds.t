@@ -34,6 +34,8 @@ test {
     $res->single_sentence('Email/import')->arguments,
     {
       accountId  => jstr($account->accountId),
+      oldState => jstr(),
+      newState => jstr(),
       notCreated => {
         new2 => {
           type => 'invalidProperties',

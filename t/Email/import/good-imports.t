@@ -30,6 +30,8 @@ test {
       $res->single_sentence('Email/import')->arguments,
       {
         accountId  => jstr($account->accountId),
+        oldState => jstr(),
+        newState => jstr(),
         notCreated => {},
         created => {
           new => {
@@ -113,6 +115,8 @@ test {
       $res->single_sentence('Email/import')->arguments,
       {
         accountId  => jstr($account->accountId),
+        oldState => jstr(),
+        newState => jstr(),
         notCreated => {},
         created => {
           new => {
@@ -199,6 +203,8 @@ test {
       $res->single_sentence('Email/import')->arguments,
       {
         accountId  => jstr($account->accountId),
+        oldState => jstr(),
+        newState => jstr(),
         notCreated => {},
         created => {
           new => {
