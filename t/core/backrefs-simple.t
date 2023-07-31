@@ -93,7 +93,7 @@ test {
       jcmp_deeply(
         $get->arguments,
         superhashof({
-          type => 'resultReference',
+          type => 'invalidResultReference',
         }),
         'Mailbox/get with bad backref gets error'
       );
