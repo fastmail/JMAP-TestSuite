@@ -23,9 +23,21 @@ test {
           name => jstr,
           isPrimary => jbool,
           isReadOnly => jbool,
+          accountCapabilities => superhashof({
+            'urn:ietf:params:jmap:core' => {},
+            'urn:ietf:params:jmap:mail' => {
+              maxMailboxesPerEmail => any(jnum, undef),
+              maxMailboxDepth => any(jnum, undef),
+              maxSizeMailboxName => jnum,
+              maxSizeAttachmentsPerEmail => jnum,
+              emailQuerySortOptions => superbagof(),
+              mayCreateTopLevelMailbox => jbool,
+            },
+          }),
         }),
       },
       capabilities => superhashof({
+        'urn:ietf:params:jmap:mail' => {},
         'urn:ietf:params:jmap:core' => {
           maxSizeUpload => jnum,
           maxConcurrentUpload => jnum,
