@@ -97,7 +97,7 @@ test {
               disposition => 'attachment',
               name        => 'image.jpg',
               cid         => 'fooz',
-              blobId      => $blob->blobId,
+              blobId      => jstr(), # server may assign a new blobId
             },
           ],
           bcc         => undef,
@@ -150,4 +150,17 @@ test {
       value             => 'this is a text part',
     },
   );
+
+  # If server assigned a new blobId, verify content is unchanged
+  my $att = $email->{attachments}[0];
+  my $orig_blob_id = $blob->blobId;
+  if ($att && $att->{blobId} && $att->{blobId} ne $orig_blob_id) {
+    my $download = $tester->download({
+      blobId    => $att->{blobId},
+      accountId => $account->accountId,
+      name      => 'image.jpg',
+    });
+    ok($download->is_success, 'downloaded attachment blob');
+    is(${ $download->bytes_ref }, 'image data', 'attachment content preserved despite new blobId');
+  }
 };
