@@ -87,7 +87,7 @@ test {
     $mb->{myRights} = \%rights;
     $mb->{$_} = 52 for qw(
       totalEmails
-      unrealEmails
+      unreadEmails
       totalThreads
       unreadThreads
     );
