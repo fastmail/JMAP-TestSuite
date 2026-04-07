@@ -6,10 +6,7 @@ attr pristine => 1;
 test {
   my ($self) = @_;
 
-  plan skip_all => "Cyrus requires at least one mailbox"
-    if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
-
-  my $account = $self->any_account;
+  my $account = $self->pristine_account;
   my $tester  = $account->tester;
 
   subtest "No arguments" => sub {
@@ -19,15 +16,20 @@ test {
     ok($res->is_success, "Mailbox/get")
       or diag explain $res->response_payload;
 
+    my $args = $res->single_sentence("Mailbox/get")->arguments;
+
     jcmp_deeply(
-      $res->single_sentence("Mailbox/get")->arguments,
+      $args,
       superhashof({
         accountId => jstr($account->accountId),
         state     => jstr(),
-        list      => [],
         notFound  => [],
       }),
-      "No mailboxes looks good",
+      "Mailbox/get response looks good",
     );
+
+    # Filter out INBOX — most servers auto-create it
+    my @non_inbox = grep { ($_->{role} // '') ne 'inbox' } @{ $args->{list} };
+    is(scalar @non_inbox, 0, "No non-INBOX mailboxes exist");
   };
 };
