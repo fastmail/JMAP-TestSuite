@@ -116,7 +116,7 @@ test {
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],
-        removed       => [ ],
+        removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
       "expected resposne",
     );
@@ -186,7 +186,7 @@ test {
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],
-        removed       => [ ],
+        removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
       "expected resposne",
     );
