@@ -38,7 +38,7 @@ test {
       ]]);
       my @non_inbox = grep { ($_->{role} // '') ne 'inbox' }
         @{ $get_res->single_sentence("Mailbox/get")->arguments->{list} };
-      is(scalar @non_inbox, 0, "No non-INBOX mailboxes exist");
+      is(@non_inbox, 0, "No non-INBOX mailboxes exist");
     } else {
       pass("No mailboxes at all");
     }

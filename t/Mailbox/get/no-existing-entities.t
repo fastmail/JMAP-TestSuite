@@ -30,6 +30,6 @@ test {
 
     # Filter out INBOX — most servers auto-create it
     my @non_inbox = grep { ($_->{role} // '') ne 'inbox' } @{ $args->{list} };
-    is(scalar @non_inbox, 0, "No non-INBOX mailboxes exist");
+    is(@non_inbox, 0, "No non-INBOX mailboxes exist");
   };
 };
