@@ -1,5 +1,13 @@
 {
-  "adapter"   : "JMAPProxy",
-  "accountIds": [ "b0b7699c-4474-11e6-b790-f23c91556942" ],
-  "base_uri"  : "http://localhost:9000/"
+  "adapter"                    : "JMAPProxy",
+  "accountIds"                 : [ "user1" ],
+  "base_uri"                   : "http://localhost:9000/",
+  "mgmt_uri"                   : "http://localhost:8081/",
+  "cyrus_host"                 : "localhost",
+  "cyrus_port"                 : 8143,
+  "cyrus_http_url"             : "http://localhost:8080",
+  "cyrus_password"             : "password",
+  "cyrus_admin_user"           : "admin",
+  "cyrus_admin_pass"           : "admin",
+  "cyrus_hierarchy_separator"  : "."
 }

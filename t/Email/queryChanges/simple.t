@@ -29,7 +29,9 @@ test {
   );
 
   # Ugh, squatter needs time to index things
-  sleep 1 if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+  # Squatter needs time to index for full-text search
+  sleep 1 if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus')
+          || $self->server->isa('JMAP::TestSuite::ServerAdapter::JMAPProxy');
 
   # Get our baseline
   my ($baseline_res) = $self->test_query(
@@ -68,7 +70,9 @@ test {
   my $match2 = $mailbox->add_message({ subject => 'aaa 2' });
 
   # Ugh, squatter needs time to index things
-  sleep 1 if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+  # Squatter needs time to index for full-text search
+  sleep 1 if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus')
+          || $self->server->isa('JMAP::TestSuite::ServerAdapter::JMAPProxy');
 
   subtest "added message that matches" => sub {
     my ($res) = $tester->request_ok(
@@ -95,7 +99,9 @@ test {
   my $no_match2 = $mailbox->add_message({ subject => 'bbb 2' });
 
   # Ugh, squatter needs time to index things
-  sleep 1 if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
+  # Squatter needs time to index for full-text search
+  sleep 1 if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus')
+          || $self->server->isa('JMAP::TestSuite::ServerAdapter::JMAPProxy');
 
   subtest "added message that doesn't match" => sub {
     my ($res) = $tester->request_ok(
@@ -110,7 +116,7 @@ test {
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],
-        removed       => [ ],
+        removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
       "expected resposne",
     );
@@ -180,7 +186,7 @@ test {
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],
-        removed       => [ ],
+        removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
       "expected resposne",
     );

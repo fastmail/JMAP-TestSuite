@@ -55,7 +55,7 @@ test {
   ok($id, 'got the id');
 
   my %body = (
-    blobId      => $blob->blobId,
+    blobId      => jstr(), # server may assign a new blobId
     charset     => 'us-ascii',
     cid         => 'fooz',
     disposition => undef,
