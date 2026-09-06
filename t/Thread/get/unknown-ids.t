@@ -9,6 +9,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   my $other_account = $self->pristine_account;
   my $other_mailbox = $other_account->create_mailbox;
   my $other_message = $other_mailbox->add_message;

@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   my $mailbox1 = $account->create_mailbox;
   my $mailbox2 = $account->create_mailbox({
     parentId => $mailbox1->id,
@@ -15,7 +20,7 @@ test {
     my $set_res = $tester->request([[
       "Mailbox/set" => {
         destroy => [ $mailbox1->id ],
-        onDestroyRemoveMessages => JSON::true,
+        onDestroyRemoveEmails => JSON::true,
       },
     ]]);
 
@@ -36,7 +41,7 @@ test {
     my $set_res = $tester->request([[
       "Mailbox/set" => {
         destroy => [ $mailbox1->id ],
-        onDestroyRemoveMessages => JSON::true,
+        onDestroyRemoveEmails => JSON::true,
       },
     ]]);
 

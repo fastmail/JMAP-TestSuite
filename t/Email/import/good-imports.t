@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   subtest "single mailbox import, all values" => sub {
     my $blob = $account->email_blob(generic => {
       body => "My pid is $$",
@@ -32,7 +37,7 @@ test {
         accountId  => jstr($account->accountId),
         oldState => jstr(),
         newState => jstr(),
-        notCreated => {},
+        notCreated => undef,
         created => {
           new => {
             blobId   => jstr(),
@@ -117,7 +122,7 @@ test {
         accountId  => jstr($account->accountId),
         oldState => jstr(),
         newState => jstr(),
-        notCreated => {},
+        notCreated => undef,
         created => {
           new => {
             blobId   => jstr(),
@@ -205,7 +210,7 @@ test {
         accountId  => jstr($account->accountId),
         oldState => jstr(),
         newState => jstr(),
-        notCreated => {},
+        notCreated => undef,
         created => {
           new => {
             blobId   => jstr(),

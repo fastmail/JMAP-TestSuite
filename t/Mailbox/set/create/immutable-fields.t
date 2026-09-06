@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   # First, figure out our defaults. See if they are consistent across
   # at least two creates
   my $mailbox1 = $account->create_mailbox;

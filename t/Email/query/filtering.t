@@ -7,6 +7,12 @@ test {
   my ($self) = @_;
 
   my $account = $self->pristine_account;
+  my $tester  = $account->tester;
+
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
 
   my %mailboxes = (
     aaa => $account->create_mailbox({ name => "aaa" }),

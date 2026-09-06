@@ -6,6 +6,13 @@ my ($account, $tester, $mbox);
 test {
   my ($self) = @_;
 
+  $account = $self->any_account;
+  $tester  = $account->tester;
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   subtest "normal cannot provide a list" => sub {
     $self->create_and_check_header(
       set          => [ "header:foo" => [ qw(cat dog bird) ], ],

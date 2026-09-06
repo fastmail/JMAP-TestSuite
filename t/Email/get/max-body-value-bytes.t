@@ -7,6 +7,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   my $mbox = $account->create_mailbox;
 
   my $body = "1234☃"; # snowman is 3 bytes (E2 98 83)

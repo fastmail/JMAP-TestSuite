@@ -8,6 +8,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   # Create two message so we should have 3 states (start state,
   # new email 1 state, new email 2 state). Then, ask for changes
   # from start state, with a maxChanges set to 1 so we should get
