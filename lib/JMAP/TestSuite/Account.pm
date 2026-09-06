@@ -7,6 +7,7 @@ package JMAP::TestSuite::Account {
   use Scalar::Util qw(blessed);
   use Test::More;
   use List::Util qw(pairkeys);
+  use feature qw(state);
 
   has accountId => (is => 'ro', required => 1);
   has server    => (is => 'ro', isa => 'Object', required => 1);
@@ -165,18 +166,17 @@ package JMAP::TestSuite::Account {
     *$method = $code;
   }
 
-  my $inc = 0;
-
   sub create_mailbox {
     # XXX - This should probably not use Test::* functions and
     #       instead hard fail if something goes wrong.
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     my ($self, $arg) = @_;
+    state $mb_inc = 0;
 
     $arg ||= {};
-    $arg->{name} ||= "Folder $inc at $^T.$$";
-    $inc++;
+    $arg->{name} ||= "Folder $mb_inc at $^T.$$";
+    $mb_inc++;
 
     my $batch = $self->create_batch(mailbox => {
       x => $arg,
@@ -215,6 +215,119 @@ package JMAP::TestSuite::Account {
       $to_pass,
       { ($to_munge ? %$to_munge : ()), account => $self },
     );
+  }
+
+  sub create_calendar {
+    # XXX - This should probably not use Test::* functions and
+    #       instead hard fail if something goes wrong.
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+    state $cal_inc = 0;
+
+    $arg ||= {};
+    $arg->{name} ||= "Calendar $cal_inc at $^T.$$";
+    $arg->{color} ||= '#ffffff';
+    $cal_inc++;
+
+    my $batch = $self->create_batch(calendar => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created a calendar")
+      or diag explain $batch->all_results;
+
+    my $x = $batch->result_for('x');
+
+    if ($ENV{JMTS_TELEMETRY}) {
+      note(
+          "Account " . $self->accountId
+        . " Created calendar '" . $x->name . "' id (" . $x->id . ")"
+      );
+    }
+
+    return $x;
+  }
+
+  sub create_calendar_event {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+    state $event_inc = 0;
+
+    $arg ||= {};
+
+    my $calendar = delete($arg->{calendar}) // $self->create_calendar;
+
+    $arg->{calendarIds} ||= { $calendar->id => \1 };
+    $arg->{title}       ||= "Event $event_inc at $^T.$$";
+    $arg->{start}       ||= '2024-01-15T09:00:00';
+    $arg->{timeZone}    ||= 'Etc/UTC';
+    $arg->{duration}    ||= 'PT1H';
+    $arg->{showWithoutTime} //= \0;
+    # jscalendarbis S3.1.2: an Event outside a Group MUST set "version", and
+    # a JSCalendar 2.0 server rejects one without it.
+    $arg->{version}     ||= '2.0';
+    $event_inc++;
+
+    my $batch = $self->create_batch(calendarEvent => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created a calendar event")
+      or diag explain $batch->all_results;
+
+    return $batch->result_for('x');
+  }
+
+  sub create_address_book {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+    state $ab_inc = 0;
+
+    $arg ||= {};
+    $arg->{name} ||= "AddressBook $ab_inc at $^T.$$";
+    $ab_inc++;
+
+    my $batch = $self->create_batch(addressBook => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created an address book")
+      or diag explain $batch->all_results;
+
+    return $batch->result_for('x');
+  }
+
+  sub create_contact_card {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my ($self, $arg) = @_;
+    state $card_inc = 0;
+
+    $arg ||= {};
+    $arg->{'@type'}  ||= 'Card';
+    $arg->{version}  ||= '1.0';
+    $arg->{name}     ||= { full => "Test Contact $card_inc" };
+    $card_inc++;
+
+    my $batch = $self->create_batch(contactCard => {
+      x => $arg,
+    });
+
+    batch_ok($batch);
+
+    ok($batch->is_entirely_successful, "created a contact card")
+      or diag explain $batch->all_results;
+
+    return $batch->result_for('x');
   }
 
   no Moose::Role;

@@ -6,6 +6,10 @@ use Sub::Exporter -setup => [ qw(
   batch_ok
   email
   mailbox
+  calendar
+  calendar_event
+  address_book
+  contact_card
   thread
   get_parts multipart part parts cmultipart cpart
 ) ];
@@ -17,6 +21,10 @@ use Test::More;
 use JMAP::TestSuite::Comparator::Email qw(email);
 use JMAP::TestSuite::Comparator::Mailbox qw(mailbox);
 use JMAP::TestSuite::Comparator::Thread qw(thread);
+use JMAP::TestSuite::Comparator::Calendar qw(calendar);
+use JMAP::TestSuite::Comparator::CalendarEvent qw(calendar_event);
+use JMAP::TestSuite::Comparator::AddressBook qw(address_book);
+use JMAP::TestSuite::Comparator::ContactCard qw(contact_card);
 
 sub batch_ok {
   my ($batch) = @_;
