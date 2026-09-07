@@ -30,6 +30,17 @@ Tests that require a pristine empty account (tagged `attr pristine => 1`)
 are automatically skipped if the adapter does not implement `pristine_account`.
 Tests that require two shared accounts are skipped without `pool_account_pair`.
 
+Every method call a test makes carries the account's `accountId`: the
+account's tester injects it as a default argument, so tests only spell it out
+when they mean a *different* account (cross-account `/copy`, for instance).
+A test that deliberately wants to omit it passes `accountId => \undef` --
+`t/core/accountId-required.t` does this to check that the server rejects a
+call with no `accountId` (`invalidArguments`) or an unknown one
+(`accountNotFound`), as RFC 8620 §3.6.2 requires. Each type's
+`foreign-account.t` then checks that an account which *does* exist on the
+server but is outside the caller's session gets the same `accountNotFound`
+for every method of that type, so a client cannot tell the two apart.
+
 ### Testing your own server
 
 The adapters below are the ones that ship with the suite. To run it against a

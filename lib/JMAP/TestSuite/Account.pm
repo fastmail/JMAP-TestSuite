@@ -14,11 +14,21 @@ package JMAP::TestSuite::Account {
 
   requires 'authenticated_tester';
 
+  # Every standard method except Core/echo requires accountId, so the tester
+  # sends this account's id unless the test passes accountId => \undef.
   has tester  => (
     is   => 'ro',
     does  => 'JMAP::TestSuite::JMAP::Tester::WithSugarRole',
     lazy => 1,
-    default => sub { $_[0]->authenticated_tester },
+    default => sub {
+      my ($self) = @_;
+      my $tester = $self->authenticated_tester;
+      $tester->default_arguments({
+        %{ $tester->default_arguments },
+        accountId => $self->accountId,
+      });
+      return $tester;
+    },
     clearer => 'clear_tester',
   );
 

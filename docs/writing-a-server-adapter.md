@@ -125,7 +125,9 @@ calls through the tester you returned.
 
 The `accountId` you pass must be the one your server uses in JMAP method
 arguments — normally the value from `primaryAccounts` in the session resource,
-which is not always the username.
+which is not always the username. The account's tester injects it as the
+default `accountId` argument of every method call, so you do not set
+`default_arguments` on the tester yourself.
 
 ## Optional capabilities, and what you lose without them
 
