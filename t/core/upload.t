@@ -10,13 +10,8 @@ test {
     'urn:ietf:params:jmap:core',
   );
 
-  # First, grab our uploadUrl
-  my $res = $tester->ua->lwp->get($tester->api_uri);
-  ok($res->is_success, "GET " . $tester->api_uri);
-
-  my $data = eval { decode_json($res->decoded_content) };
-  ok($data, 'Got JSON response')
-    or diag("Invalid json?: " . $res->decoded_content);
+  # First, grab our uploadUrl from the session resource
+  my $data = fetch_session($tester) or return;
 
   my $upload_url = $data->{uploadUrl};
   ok($upload_url, 'got an upload url');
@@ -45,7 +40,7 @@ test {
 
   my $upload_data = eval { decode_json($upload_res->decoded_content) };
   ok($upload_data, 'Got JSON response')
-    or diag("Invalid json?: " . $res->decoded_content);
+    or diag("Invalid json?: " . $upload_res->decoded_content);
 
   my $typed = JSON::Typist->new->apply_types($upload_data);
 

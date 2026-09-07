@@ -10,13 +10,8 @@ test {
     'urn:ietf:params:jmap:core',
   );
 
-  # First, grab our downloadUrl
-  my $res = $tester->ua->lwp->get($tester->api_uri);
-  ok($res->is_success, "GET " . $tester->api_uri);
-
-  my $data = eval { decode_json($res->decoded_content) };
-  ok($data, 'Got JSON response')
-    or diag("Invalid json?: " . $res->decoded_content);
+  # First, grab our downloadUrl from the session resource
+  my $data = fetch_session($tester) or return;
 
   my $download_url = $data->{downloadUrl};
   ok($download_url, 'got a download url');
@@ -61,6 +56,7 @@ test {
   if (my $cd = $download_res->header('Content-Disposition')){
     note("Got a Content-Disposition header: $cd");
 
-    like($cd, qr/filename="myfile.txt"/, 'filename is correct');
+    # Either the plain quoted form or the RFC 5987 filename*= form is fine.
+    like($cd, qr/filename="myfile\.txt"|filename\*=UTF-8''myfile\.txt/, 'filename is correct');
   }
 };

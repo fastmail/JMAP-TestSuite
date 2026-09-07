@@ -5,12 +5,7 @@ test {
 
   my $account = $self->any_account;
   my $tester  = $account->tester;
-  my $res = $tester->ua->lwp->get($tester->api_uri);
-  ok($res->is_success, "GET " . $tester->api_uri);
-
-  my $data = eval { decode_json($res->decoded_content) };
-  ok($data, 'Got JSON response')
-    or diag("Invalid json?: " . $res->decoded_content);
+  my $data = fetch_session($tester) or return;
 
   my $typed = JSON::Typist->new->apply_types($data);
 
@@ -21,10 +16,11 @@ test {
       accounts => {
         $account->accountId => superhashof({
           name => jstr,
-          isPrimary => jbool,
+          isPersonal => jbool,
           isReadOnly => jbool,
+          # RFC 8620 §2 lists only capabilities with account-scoped methods
+          # here; its own example omits urn:ietf:params:jmap:core.
           accountCapabilities => superhashof({
-            'urn:ietf:params:jmap:core' => {},
             'urn:ietf:params:jmap:mail' => {
               maxMailboxesPerEmail => any(jnum, undef),
               maxMailboxDepth => any(jnum, undef),

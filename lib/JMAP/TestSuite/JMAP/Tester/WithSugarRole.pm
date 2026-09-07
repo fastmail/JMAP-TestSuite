@@ -21,6 +21,15 @@ sub BUILD {
   }
 }
 
+# RFC 8620 §2 requires downloadUrl to carry {type}, and JMAP::Tester dies when
+# a test does not supply one.
+around download_uri_for => sub {
+  my ($orig, $self, $arg) = @_;
+  my %arg = %{ $arg || {} };
+  $arg{type} //= 'application/octet-stream';
+  return $self->$orig(\%arg);
+};
+
 # Skip the running test unless the server advertises every one of @caps, then
 # narrow default_using to exactly @caps so the test sends only what it
 # declared.  plan skip_all inside the Test::Routine subtest ends that subtest
