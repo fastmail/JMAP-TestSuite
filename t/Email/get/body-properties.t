@@ -111,7 +111,7 @@ test {
             cid         => undef,
             language    => any([], undef),
             location    => undef,
-            subParts    => [],
+            subParts    => any([], undef),  # RFC 8621 4.1.4: EmailBodyPart[]|null, null on a leaf part
             headers     => [
               {
                 name  => 'From',
