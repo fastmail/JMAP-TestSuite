@@ -40,10 +40,9 @@ test {
           },
         ]],
         [[
-          "error" => {
+          "error" => superhashof({
             type => 'invalidArguments',
-            arguments => [ 'maxBodyValueBytes' ], # XXX - not to spec
-          },
+          }),
         ]],
         "invalid value '$desc'"
       );

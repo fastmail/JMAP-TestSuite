@@ -33,8 +33,8 @@ test {
       "Mailbox/get response looks good",
     );
 
-    # Filter out INBOX — most servers auto-create it
-    my @non_inbox = grep { ($_->{role} // '') ne 'inbox' } @{ $args->{list} };
-    is(@non_inbox, 0, "No non-INBOX mailboxes exist");
+    # Nothing in RFC 8621 says what a new account contains: servers provision
+    # INBOX and often the role mailboxes. Only well-formedness is checked.
+    note(scalar(@{ $args->{list} }) . " server-provisioned mailbox(es) in a fresh account");
   };
 };

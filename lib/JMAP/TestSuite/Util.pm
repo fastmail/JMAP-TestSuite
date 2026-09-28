@@ -311,7 +311,7 @@ sub multipart {
     location    => undef,
     name        => undef,
     partId      => undef,
-    size        => 0,
+    size        => jnum(),  # RFC 8621 4.1.4 defines size via blobId, which is null for multipart
     type        => "multipart/$type",
     subParts    => $subparts,
   };

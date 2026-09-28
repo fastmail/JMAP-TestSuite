@@ -84,6 +84,9 @@ test {
         ],
       });
 
+      ok($res->is_success, "a bad ResultReference is a method-level error, not an HTTP failure")
+        or do { diag explain $res->response_payload; next };
+
       my $changes = $res->sentence(0);
       my $get = $res->sentence(1);
 

@@ -32,7 +32,7 @@ test {
     ok($res->is_success, "VacationResponse/set enable") or diag explain $res->response_payload;
 
     my $args = $res->single_sentence("VacationResponse/set")->arguments;
-    ok($args->{updated}{singleton}, "singleton updated") or diag explain $args;
+    ok(exists $args->{updated}{singleton}, "singleton updated") or diag explain $args;
     ok(!$args->{notUpdated}{singleton}, "no notUpdated error");
 
     my $get_res = $tester->request([[

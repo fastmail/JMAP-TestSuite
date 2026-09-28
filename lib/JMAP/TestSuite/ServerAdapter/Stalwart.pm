@@ -145,6 +145,25 @@ sub _create_pristine_account {
   my ($account_id) = values %$primary;
   die "No account ID in session for $name\n" unless defined $account_id;
 
+  # Stalwart provisions the role mailboxes of a new account asynchronously.
+  # Wait until two consecutive Mailbox/get calls agree, so a test that reads a
+  # state right after account creation does not see provisioning as changes.
+  my $last = -1;
+  for (1 .. 40) {
+    my $mreq = HTTP::Request->new(POST => "$base/jmap");
+    $mreq->header('Content-Type' => 'application/json');
+    $mreq->content(encode_json({
+      using       => ['urn:ietf:params:jmap:core', 'urn:ietf:params:jmap:mail'],
+      methodCalls => [[ 'Mailbox/get', { accountId => $account_id, properties => ['id'] }, 'm' ]],
+    }));
+    my $mres = $user_lwp->request($mreq);
+    last unless $mres->is_success;
+    my $list = eval { decode_json($mres->decoded_content)->{methodResponses}[0][1]{list} } // [];
+    last if @$list == $last && @$list > 0;
+    $last = @$list;
+    select(undef, undef, undef, 0.1);
+  }
+
   return JMAP::TestSuite::Account::Stalwart->new({
     server    => $self,
     accountId => $account_id,
@@ -191,6 +210,7 @@ package JMAP::TestSuite::Account::Stalwart {
 
     my $tester = JMAP::TestSuite::JMAP::Tester::WithSugar->new({
       api_uri      => $api_uri,
+      authentication_uri => "$base/jmap/session",
       upload_uri   => $upload_uri,
       download_uri => $download_uri,
     });

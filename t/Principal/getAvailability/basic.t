@@ -11,6 +11,7 @@ test {
   $tester->require_capabilities(
     'urn:ietf:params:jmap:core',
     'urn:ietf:params:jmap:principals',
+    'urn:ietf:params:jmap:calendars',
   );
 
   my $prin_res = $tester->request([[

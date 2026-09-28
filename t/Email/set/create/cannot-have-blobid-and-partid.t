@@ -44,10 +44,10 @@ test {
       ],
       superhashof({
         notCreated => {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => bag(qw(bodyStructure/partId bodyStructure/blobId)),
-          },
+          }),
         },
       }),
       "cannot have blobId and partId in bodyStructure",

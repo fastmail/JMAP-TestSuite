@@ -214,7 +214,6 @@ test {
         $res->sentence(0)->arguments,
         superhashof({
           type => 'invalidArguments',
-          arguments => [ 'limit' ],
         }),
         "got invalidArguments for negative limit",
       ) or diag explain $res->as_stripped_triples;

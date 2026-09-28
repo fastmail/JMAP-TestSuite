@@ -46,6 +46,9 @@ test {
       },
     ]]);
 
+    ok($set_res->is_success, "a wrong ifInState is a method-level error, not an HTTP failure")
+      or do { diag explain $set_res->response_payload; return };
+
     jcmp_deeply(
       $set_res->single_sentence('error')->arguments,
       superhashof({ type => 'stateMismatch' }),

@@ -81,10 +81,14 @@ test {
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
 
-    ok(
-         ! exists $changes->{updatedProperties}
-      || ! defined $changes->{updatedProperties},
-      "updatedProperties is null or omitted"
-    );
+    # RFC 8621 Section 2.2: updatedProperties is the list of count properties
+    # when only counts changed on the updated mailboxes, or null when the
+    # server cannot tell. Only the counts changed on $mailbox here, so either
+    # answer is within spec; anything else is not.
+    jcmp_deeply(
+      $changes->{updatedProperties},
+      any(undef, subbagof(qw(totalEmails unreadEmails totalThreads unreadThreads))),
+      "updatedProperties is null or a subset of the count properties"
+    ) or diag explain $changes;
   };
 };

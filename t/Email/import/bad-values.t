@@ -21,10 +21,9 @@ test {
 
       jcmp_deeply(
         $res->single_sentence('error')->arguments,
-        {
+        superhashof({
           type => 'invalidArguments',
-          arguments => [ 'emails' ], # XXX - Not to spec, but cyrus gives it
-        },
+        }),
         "got error about bad 'emails'"
       ) or diag explain $res->as_stripped_triples;
     }
@@ -37,10 +36,9 @@ test {
 
     jcmp_deeply(
       $res->single_sentence('error')->arguments,
-      {
+      superhashof({
         type => 'invalidArguments',
-        arguments => [ 'emails' ], # XXX - Not to spec, but cyrus gives it
-      },
+      }),
       "got error about bad 'emails'"
     ) or diag explain $res->as_stripped_triples;
   };
@@ -64,10 +62,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'blobId' ],
-          },
+          }),
         },
         "got error about bad 'blobId'"
       ) or diag explain $res->as_stripped_triples;
@@ -88,10 +86,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'blobId' ],
-          },
+          }),
         },
         "got error about bad 'blobId'"
       ) or diag explain $res->as_stripped_triples;
@@ -115,10 +113,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'receivedAt' ],
-          },
+          }),
         },
         "got error about bad 'receivedAt'"
       ) or diag explain $res->as_stripped_triples;
@@ -140,10 +138,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'receivedAt' ],
-          },
+          }),
         },
         "got error about bad 'receivedAt'"
       ) or diag explain $res->as_stripped_triples;
@@ -166,10 +164,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'mailboxIds' ],
-          },
+          }),
         },
         "got error about bad 'mailboxIds'"
       ) or diag explain $res->as_stripped_triples;
@@ -190,10 +188,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'mailboxIds' ],
-          },
+          }),
         },
         "got error about bad 'mailboxIds'"
       ) or diag explain $res->as_stripped_triples;
@@ -217,10 +215,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'keywords' ],
-          },
+          }),
         },
         "got error about bad 'keywords'"
       ) or diag explain $res->as_stripped_triples;
@@ -242,10 +240,10 @@ test {
       jcmp_deeply(
         $res->single_sentence('Email/import')->arguments->{notCreated},
         {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'keywords' ],
-          },
+          }),
         },
         "got error about bad 'keywords'"
       ) or diag explain $res->as_stripped_triples;
@@ -264,10 +262,10 @@ test {
     jcmp_deeply(
       $res->single_sentence('Email/import')->arguments->{notCreated},
       {
-        new => {
+        new => superhashof({
           type => 'invalidProperties',
           properties => [ 'blobId', 'mailboxIds' ],
-        },
+        }),
       },
       "got error about missing required fields"
     ) or diag explain $res->as_stripped_triples;

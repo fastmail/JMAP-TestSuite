@@ -42,6 +42,12 @@ sub test_query {
     $args->{filter}{hasAnyRole} = JSON::false;
   }
 
+  # RFC 8620 Section 5.5: "total" MUST be omitted unless calculateTotal is
+  # true, so a test that expects a total asks for one.
+  if (exists $expect->{total} && ! $args->{calculateTotal}) {
+    $args->{calculateTotal} = JSON::true;
+  }
+
   my ($res, $failures);
 
   subtest "$test" => sub {
@@ -75,7 +81,7 @@ sub test_query {
       superhashof({
         accountId  => jstr($account->accountId),
         queryState => jstr(),
-        total      => jnum,
+        ($args->{calculateTotal} ? (total => jnum) : ()),
         position   => jnum(0),
         canCalculateChanges => jbool(),
         %$expect, # can override position

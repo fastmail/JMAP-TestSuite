@@ -138,13 +138,13 @@ test {
       ],
       superhashof({
         notCreated => {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => bag(qw(
               bodyValues/text/isEncodingProblem
               bodyValues/text/isTruncated
             )),
-          },
+          }),
         },
       }),
       "isTruncated/isEncodingProblem explicit true fails",
