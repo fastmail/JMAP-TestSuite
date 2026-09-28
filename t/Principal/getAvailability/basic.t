@@ -17,8 +17,16 @@ test {
   my $prin_res = $tester->request([[
     "Principal/get" => {},
   ]]);
+  # Principal/get with no ids lists every principal the caller may see, so
+  # pick the one whose calendar data lives in this account (draft-ietf-jmap-
+  # calendars: Principal accountId, or the accounts map keyed by accountId).
   my $principal_id = eval {
-    $prin_res->single_sentence("Principal/get")->arguments->{list}[0]{id};
+    my @list = @{ $prin_res->single_sentence("Principal/get")->arguments->{list} };
+    my ($mine) = grep {
+      ($_->{accountId} // q{}) eq $account->accountId
+        || exists(($_->{accounts} // {})->{ $account->accountId })
+    } @list;
+    ($mine // (@list == 1 ? $list[0] : undef))->{id};
   };
   unless ($principal_id) {
     plan skip_all => "Principal/get without ids did not return a principal (server may be non-compliant)";

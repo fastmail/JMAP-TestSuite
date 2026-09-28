@@ -80,6 +80,20 @@ sub any_account {
   return $self->_create_pristine_account;
 }
 
+# Two accounts that can see each other. Stalwart has no account-level
+# sharing, so each shares its inbox with the other, which puts each account
+# in the other's session, and the Account class shares every mailbox,
+# calendar or address book it creates from then on.
+sub pool_account_pair {
+  my ($self) = @_;
+  my $from = $self->_create_pristine_account;
+  my $to   = $self->_create_pristine_account;
+  $from->pool_peer($to);
+  $to->pool_peer($from);
+  $_->share_inbox_with_peer for $from, $to;
+  return ($from, $to);
+}
+
 sub pristine_account {
   my ($self) = @_;
   return $self->_create_pristine_account;
@@ -183,6 +197,67 @@ package JMAP::TestSuite::Account::Stalwart {
 
   has username => (is => 'ro', required => 1);
   has password => (is => 'ro', required => 1);
+  has pool_peer => (is => 'rw');
+
+  my %MAILBOX_RIGHTS = map { $_ => JSON::true } qw(
+    mayReadItems mayAddItems mayRemoveItems maySetSeen maySetKeywords
+    mayCreateChild mayRename mayDelete maySubmit
+  );
+  my %CALENDAR_RIGHTS = map { $_ => JSON::true } qw(
+    mayReadFreeBusy mayReadItems mayWriteAll mayWriteOwn mayUpdatePrivate
+    mayRSVP mayShare mayDelete
+  );
+  my %ADDRESS_BOOK_RIGHTS = map { $_ => JSON::true } qw(mayRead mayWrite mayShare mayDelete);
+
+  # shareWith on the container (RFC 8621 2 Mailbox, draft-ietf-jmap-calendars
+  # Calendar, RFC 9610 AddressBook) grants the pool peer every right, so the
+  # peer can read from and copy into it.
+  sub share_with_peer {
+    my ($self, $type, $id, $rights) = @_;
+    my $peer = $self->pool_peer or return;
+    my $res = $self->tester->request([[
+      "$type/set" => {
+        accountId => $self->accountId,
+        update    => { $id => { shareWith => { $peer->accountId => $rights } } },
+      }, 'share',
+    ]]);
+    my $args = $res->is_success ? $res->sentence(0)->arguments : {};
+    die "could not share $type $id with the pool peer: "
+      . JSON::encode_json($res->is_success ? $args : $res->response_payload) . "\n"
+      unless exists(($args->{updated} // {})->{$id});
+    return;
+  }
+
+  sub share_inbox_with_peer {
+    my ($self) = @_;
+    my $res = $self->tester->request([[
+      'Mailbox/query' => { accountId => $self->accountId, filter => { role => 'inbox' } }, 'q',
+    ]]);
+    my ($inbox) = @{ $res->sentence(0)->arguments->{ids} // [] };
+    die "no inbox to share with the pool peer\n" unless $inbox;
+    $self->share_with_peer(Mailbox => $inbox, \%MAILBOX_RIGHTS);
+  }
+
+  around create_mailbox => sub {
+    my ($orig, $self, @args) = @_;
+    my $mailbox = $self->$orig(@args);
+    $self->share_with_peer(Mailbox => $mailbox->id, \%MAILBOX_RIGHTS) if $self->pool_peer;
+    return $mailbox;
+  };
+
+  around create_calendar => sub {
+    my ($orig, $self, @args) = @_;
+    my $calendar = $self->$orig(@args);
+    $self->share_with_peer(Calendar => $calendar->id, \%CALENDAR_RIGHTS) if $self->pool_peer;
+    return $calendar;
+  };
+
+  around create_address_book => sub {
+    my ($orig, $self, @args) = @_;
+    my $book = $self->$orig(@args);
+    $self->share_with_peer(AddressBook => $book->id, \%ADDRESS_BOOK_RIGHTS) if $self->pool_peer;
+    return $book;
+  };
 
   sub authenticated_tester {
     my ($self) = @_;
