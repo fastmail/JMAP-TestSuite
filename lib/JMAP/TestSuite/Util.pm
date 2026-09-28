@@ -132,6 +132,20 @@ sub foreign_account_not_found_ok {
     my $s = $res->sentence(0);
     is($s->name, 'error', "$desc: is an error")
       or diag explain $res->as_stripped_triples;
+
+    # A method the server does not implement at all is unknownMethod before
+    # any account is looked at. Accept that only when the same call against
+    # the caller's own account is unknownMethod too, so a server cannot hide
+    # a foreign account behind it.
+    if (($s->arguments->{type} // q{}) eq q{unknownMethod}) {
+      my $own = $tester->request([[ $method => { %args, accountId => $mine } ]]);
+      my $own_type = eval { $own->sentence(0)->arguments->{type} } // q{};
+      if ($own_type eq q{unknownMethod}) {
+        note("$method is not implemented by this server; nothing to check");
+        next;
+      }
+    }
+
     jcmp_deeply(
       $s->arguments,
       superhashof({ type => 'accountNotFound' }),
