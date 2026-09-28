@@ -109,6 +109,19 @@ sub foreign_account_not_found_ok {
     }
     $args{accountId} = $foreign unless exists $args{accountId};
 
+    # A state string is opaque, and a server may check its shape before it
+    # looks at accountId. RFC 8620 sets no precedence between the two errors,
+    # so give it a real state from the caller's own account: the test is
+    # about the account, not the state.
+    my ($type) = $method =~ m{^(\w+)/};
+    for my $pair ([sinceState => "$type/get", 'state'], [sinceQueryState => "$type/query", 'queryState']) {
+      my ($arg, $own_method, $prop) = @$pair;
+      next unless exists $args{$arg} && $args{$arg} eq '0';
+      my $own = eval { $tester->request([[ $own_method => { accountId => $mine } ]]) };
+      my $state = eval { $own->single_sentence($own_method)->arguments->{$prop} };
+      $args{$arg} = $state if defined $state;
+    }
+
     my $desc = join ' ', $method, map { "$_=" . ($args{$_} eq $foreign ? 'OTHER' : 'SELF') }
                  grep { exists $args{$_} } qw(fromAccountId accountId);
 
