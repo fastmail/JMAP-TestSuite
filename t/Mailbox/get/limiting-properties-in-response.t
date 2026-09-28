@@ -8,6 +8,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   my $mailbox1 = $account->create_mailbox;
 
   subtest "properties => null gives us all properties" => sub {

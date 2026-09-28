@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   # Put our message in two boxes. It should be removed from the first when
   # we destroy the mailbox but exist in the second.
   my $mailbox1 = $account->create_mailbox;
@@ -21,7 +26,7 @@ test {
   my $set_res = $tester->request([[
     "Mailbox/set" => {
       destroy => [ $mailbox1->id ],
-      onDestroyRemoveMessages => JSON::true,
+      onDestroyRemoveEmails => JSON::true,
     },
   ]]);
 

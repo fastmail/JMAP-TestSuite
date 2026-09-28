@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   my $get_res = $tester->request([[
     "Thread/get" => { ids => [ ] },
   ]]);

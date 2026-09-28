@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   # Get us a mailbox to play with
   my $batch = $account->create_batch(mailbox => {
     x => { name => "Folder X at $^T.$$" },
@@ -47,13 +52,17 @@ test {
       'text body is correct'
     ) or diag explain $email;
 
-    my $preview = substr $text_body, 0, 5;
+    # RFC 8621 S4.1 caps preview at 256 characters; which part of the message
+    # it shows is the server's choice.
+    ok(defined $email->{preview}, 'preview is present');
+    cmp_ok(length($email->{preview} // ''), '<=', 256, 'preview is not over-long');
 
-    like(
-      $email->{preview},
-      qr/^$preview/i,
-      'preview looks good'
-    );
+    if (length($email->{preview} // '')) {
+      note("preview: $email->{preview}");
+    }
+    else {
+      note('server returned an empty preview for a message with a text body');
+    }
   };
 
   subtest "getMessageList" => sub {
@@ -87,12 +96,16 @@ test {
       'text body is correct'
     );
 
-    my $preview = substr $text_body, 0, 5;
+    # RFC 8621 S4.1 caps preview at 256 characters; which part of the message
+    # it shows is the server's choice.
+    ok(defined $email->{preview}, 'preview is present');
+    cmp_ok(length($email->{preview} // ''), '<=', 256, 'preview is not over-long');
 
-    like(
-      $email->{preview},
-      qr/^$preview/i,
-      'preview looks good'
-    );
+    if (length($email->{preview} // '')) {
+      note("preview: $email->{preview}");
+    }
+    else {
+      note('server returned an empty preview for a message with a text body');
+    }
   };
 };

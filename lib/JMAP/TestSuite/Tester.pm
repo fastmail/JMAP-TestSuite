@@ -27,7 +27,7 @@ has server => (
   is      => 'ro',
   does    => 'JMAP::TestSuite::ServerAdapter',
   default => sub { JMAP::TestSuite->get_server },
-  handles => [ qw( any_account pristine_account unshared_account ) ],
+  handles => [ qw( any_account pristine_account unshared_account pool_account_pair ) ],
 );
 
 sub test_query {

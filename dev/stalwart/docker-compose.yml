@@ -1,0 +1,20 @@
+services:
+  stalwart:
+    image: stalwartlabs/stalwart:latest
+    ports:
+      - "${STALWART_HTTP_PORT:-8090}:8080"
+    volumes:
+      - ./:/etc/stalwart/:ro
+      - stalwart_data:/data/
+    user: root
+    environment:
+      STALWART_RECOVERY_ADMIN: "${STALWART_ADMIN_USER:-admin}:${STALWART_ADMIN_PASS:-changeme}"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/jmap/session"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 15s
+
+volumes:
+  stalwart_data:

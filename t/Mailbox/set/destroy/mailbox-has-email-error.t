@@ -6,10 +6,15 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   for my $test (
-    [ 'implicit onDestroyRemoveMessages false' => {} ],
-    [ 'explicit onDestroyRemoveMessages false' => {
-        onDestroyRemoveMessages => JSON::false,
+    [ 'implicit onDestroyRemoveEmails false' => {} ],
+    [ 'explicit onDestroyRemoveEmails false' => {
+        onDestroyRemoveEmails => JSON::false,
       },
     ],
   ) {

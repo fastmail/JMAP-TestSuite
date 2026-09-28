@@ -29,7 +29,7 @@ sub import {
   Test::Abortable->import::into($caller);
   Moose::Meta::Role->create($caller);
 
-  JMAP::TestSuite::Util->import::into($caller, qw(batch_ok));
+  JMAP::TestSuite::Util->import::into($caller, qw(batch_ok fetch_session foreign_account_not_found_ok));
   Moose::Util::apply_all_roles($caller, 'JMAP::TestSuite::Tester');
 
   Sub::Install::install_sub({
@@ -57,7 +57,8 @@ my %attr;
 
 sub testattr {
   my ($name, $value) = @_;
-  Carp::confess(qq{unknown test attribute "$name"}) unless $name eq 'pristine';
+  Carp::confess(qq{unknown test attribute "$name"})
+    unless $name eq 'pristine' || $name eq 'pool_pairs';
   Carp::confess(qq{test attribute "$name" already set}) if exists $attr{$name};
   $attr{$name} = $value;
 }
@@ -91,6 +92,14 @@ sub jmaptest (&) {
     unless ($instance->server->can('pristine_account')) {
       Test::More::plan skip_all =>
         "test requires implementation of pristine_account";
+      exit;
+    }
+  }
+
+  if ($attr{pool_pairs}) {
+    unless ($instance->server->can('pool_account_pair')) {
+      Test::More::plan skip_all =>
+        "test requires implementation of pool_account_pair";
       exit;
     }
   }

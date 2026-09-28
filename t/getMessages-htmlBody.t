@@ -6,6 +6,11 @@ test {
   my $account = $self->any_account;
   my $tester  = $account->tester;
 
+  $tester->require_capabilities(
+    'urn:ietf:params:jmap:core',
+    'urn:ietf:params:jmap:mail',
+  );
+
   # Get us a mailbox to play with
   my $batch = $account->create_batch(mailbox => {
       x => { name => "Folder X at $^T.$$" },

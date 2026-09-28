@@ -4,8 +4,14 @@ package JMAP::TestSuite::Util;
 
 use Sub::Exporter -setup => [ qw(
   batch_ok
+  fetch_session
+  foreign_account_not_found_ok
   email
   mailbox
+  calendar
+  calendar_event
+  address_book
+  contact_card
   thread
   get_parts multipart part parts cmultipart cpart
 ) ];
@@ -13,10 +19,113 @@ use Sub::Exporter -setup => [ qw(
 use Test::Deep ':v1';
 use Test::Deep::JType;
 use Test::More;
+use JSON ();
 
 use JMAP::TestSuite::Comparator::Email qw(email);
 use JMAP::TestSuite::Comparator::Mailbox qw(mailbox);
 use JMAP::TestSuite::Comparator::Thread qw(thread);
+use JMAP::TestSuite::Comparator::Calendar qw(calendar);
+use JMAP::TestSuite::Comparator::CalendarEvent qw(calendar_event);
+use JMAP::TestSuite::Comparator::AddressBook qw(address_book);
+use JMAP::TestSuite::Comparator::ContactCard qw(contact_card);
+
+=head1 FUNCTIONS
+
+=head2 fetch_session
+
+  my $session = fetch_session($tester) or return;
+
+GETs and decodes the session resource (RFC 8620 section 2), from the tester's
+C<authentication_uri> when the adapter set one and otherwise from C<api_uri>.
+Nothing in the RFC makes those the same URL, so a test must not GET
+C<api_uri> itself and call the result the session.
+
+=cut
+
+sub fetch_session {
+  my ($tester) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $uri = $tester->has_authentication_uri
+          ? $tester->authentication_uri
+          : $tester->api_uri;
+  my $res = $tester->ua->lwp->get($uri, $tester->_maybe_auth_header);
+  ok($res->is_success, "GET $uri (session resource)")
+    or diag($res->status_line);
+
+  my $data = eval { JSON->new->decode($res->decoded_content) };
+  ok($data, 'session resource is JSON')
+    or diag("Invalid json?: " . $res->decoded_content);
+
+  return $data;
+}
+
+=head2 foreign_account_not_found_ok
+
+  foreign_account_not_found_ok($account, $other, [
+    [ 'Foo/get'  => { ids => [] } ],
+    [ 'Foo/copy' => { fromAccountId => 'SELF', accountId => 'OTHER' } ],
+  ]);
+
+Asserts that every listed call, made as C<$account> but naming C<$other>'s
+accountId, fails with C<accountNotFound> (RFC 8620 section 3.6.2).  C<$other> exists
+on the server but is outside C<$account>'s session, and must be reported the
+same way as an id that does not exist at all.
+
+Each call is C<[ $method, \%args ]>.  C<accountId> is set to the foreign id
+unless given.  The strings C<'SELF'> and C<'OTHER'> in C<accountId> or
+C<fromAccountId> are replaced with the caller's and the foreign id, so a
+/copy can be tested in both directions.
+
+=cut
+
+sub foreign_account_not_found_ok {
+  my ($account, $other, $calls) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $tester  = $account->tester;
+  my $foreign = $other->accountId;
+  my $mine    = $account->accountId;
+
+  isnt($foreign, $mine, "the other account ($foreign) is not this one ($mine)")
+    or return;
+
+  # Where the tester knows its session's accounts, check the target is outside
+  # them, or the test proves nothing.
+  my %visible = $tester->accounts;
+  if (%visible) {
+    ok(!$visible{$foreign}, "account $foreign is not in this session") or return;
+  }
+
+  for my $call (@$calls) {
+    my ($method, $args) = @$call;
+    my %args = %{ $args || {} };
+    for my $k (qw(accountId fromAccountId)) {
+      next unless exists $args{$k};
+      $args{$k} = $foreign if $args{$k} eq 'OTHER';
+      $args{$k} = $mine    if $args{$k} eq 'SELF';
+    }
+    $args{accountId} = $foreign unless exists $args{accountId};
+
+    my $desc = join ' ', $method, map { "$_=" . ($args{$_} eq $foreign ? 'OTHER' : 'SELF') }
+                 grep { exists $args{$_} } qw(fromAccountId accountId);
+
+    my $res = $tester->request([[ $method => \%args ]]);
+    ok($res->is_success, "$desc: request completed")
+      or diag(explain($res->response_payload)), next;
+
+    my $s = $res->sentence(0);
+    is($s->name, 'error', "$desc: is an error")
+      or diag explain $res->as_stripped_triples;
+    jcmp_deeply(
+      $s->arguments,
+      superhashof({ type => 'accountNotFound' }),
+      "$desc: accountNotFound",
+    ) or diag explain $res->as_stripped_triples;
+  }
+}
 
 sub batch_ok {
   my ($batch) = @_;

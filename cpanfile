@@ -26,6 +26,7 @@ requires 'LWP::UserAgent'                                        =>    '6.56';
 requires 'List::Util'                                            =>       '0';
 requires 'MIME::Base64'                                          =>       '0';
 requires 'Mail::IMAPClient'                                      =>       '0';
+requires 'Mail::IMAPTalk'                                        =>       '0';
 requires 'Module::Runtime'                                       =>       '0';
 requires 'Moo'                                                   =>       '0';
 requires 'Moo::Role'                                             =>       '0';
