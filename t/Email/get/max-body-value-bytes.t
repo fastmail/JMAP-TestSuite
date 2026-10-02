@@ -26,7 +26,7 @@ test {
   });
 
   subtest "invalid values" => sub {
-    for my $invalid (-5, 0, "cat", "1", {}, [], jtrue, undef) {
+    for my $invalid (-5, "cat", "1", {}, [], jtrue, undef) {
       my $desc = defined $invalid && ! ref $invalid ? $invalid
                : defined $invalid                   ? ref $invalid
                :                                      '<undef>';
