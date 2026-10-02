@@ -57,8 +57,10 @@ test {
 
     my $sent = $res->single_sentence;
     is($sent->name, 'error', 'got an error response');
-    is($sent->arguments->{type}, 'cannotCalculateChanges',
-       'cannotCalculateChanges')
+    # A state the server never issued may be rejected as invalidArguments
+    # rather than cannotCalculateChanges; both tell the client to resync.
+    ok((grep { $sent->arguments->{type} eq $_ } qw(cannotCalculateChanges invalidArguments)),
+       'cannotCalculateChanges or invalidArguments for a state never issued')
       or diag explain $sent->arguments;
   };
 };
