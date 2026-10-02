@@ -55,10 +55,10 @@ test {
     ],
     superhashof({
       notCreated => {
-        new => {
+        new => superhashof({
           type  => 'invalidProperties',
           properties => [ 'textBody' ],
-        },
+        }),
       },
     }),
     "cannot have more than one part in text body"

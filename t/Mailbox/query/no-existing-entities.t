@@ -35,17 +35,8 @@ test {
       "Mailbox/query response looks good",
     ) or diag explain $res->as_stripped_triples;
 
-    # Filter out INBOX from results — most servers auto-create it
-    my @ids = @{ $args->{ids} };
-    if (@ids) {
-      my $get_res = $tester->request([[
-        "Mailbox/get" => { ids => \@ids },
-      ]]);
-      my @non_inbox = grep { ($_->{role} // '') ne 'inbox' }
-        @{ $get_res->single_sentence("Mailbox/get")->arguments->{list} };
-      is(@non_inbox, 0, "No non-INBOX mailboxes exist");
-    } else {
-      pass("No mailboxes at all");
-    }
+    # Nothing in RFC 8621 says what a new account contains: servers provision
+    # INBOX and often the role mailboxes. Only well-formedness is checked.
+    note(scalar(@{ $args->{ids} }) . " server-provisioned mailbox(es) in a fresh account");
   };
 };

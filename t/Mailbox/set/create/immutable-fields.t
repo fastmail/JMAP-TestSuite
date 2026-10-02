@@ -53,11 +53,8 @@ test {
   delete($mb->{id});
 
   subtest "immutable properties with correct values is okay" => sub {
-    TODO: {
+    {
       $mb->{name} .= " a change";
-
-      local $TODO = "https://github.com/cyrusimap/cyrus-imapd/issues/2315"
-        if $self->server->isa('JMAP::TestSuite::ServerAdapter::Cyrus');
 
       my $res = $tester->request({
         methodCalls => [[
@@ -74,9 +71,14 @@ test {
 
       my $sentence = $res->sentence(0);
       is($sentence->name, "Mailbox/set", 'got correct sentence');
+      # RFC 8620 Section 5.3: the client MUST NOT send server-set properties
+      # on create, so a server may either accept values identical to what it
+      # would set, or reject them with invalidProperties. Both are in spec.
+      my $args = $sentence->arguments;
       ok(
-        $sentence->arguments->{created}{new},
-        "created our mailbox passing in immutable params!"
+        $args->{created}{new}
+          || ($args->{notCreated}{new}{type} // q{}) eq q{invalidProperties},
+        "server-set properties on create are accepted when identical, or rejected as invalidProperties"
       ) or diag explain $res->as_stripped_triples;
     }
   };
@@ -86,7 +88,7 @@ test {
     $mb->{id} = $mailbox1->id;
 
     my %rights = map {;
-      $_ => $mailbox1->$_ ? JSON::false : JSON::true
+      $_ => $mailbox1->myRights->{$_} ? JSON::false : JSON::true
     } keys %{ $mailbox1->myRights };
 
     $mb->{myRights} = \%rights;
@@ -113,7 +115,7 @@ test {
 
       jcmp_deeply(
         $set_res->single_sentence('Mailbox/set')->arguments->{notCreated}{new},
-        {
+        superhashof({
           type => 'invalidProperties',
           properties => bag(
             qw(
@@ -125,7 +127,7 @@ test {
             ),
             map {; "myRights/$_" } keys %rights,
           ),
-        },
+        }),
         'got errors for immutable properties'
       ) or diag explain $set_res->as_stripped_triples;
     }

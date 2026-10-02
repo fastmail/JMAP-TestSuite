@@ -109,6 +109,19 @@ sub foreign_account_not_found_ok {
     }
     $args{accountId} = $foreign unless exists $args{accountId};
 
+    # A state string is opaque, and a server may check its shape before it
+    # looks at accountId. RFC 8620 sets no precedence between the two errors,
+    # so give it a real state from the caller's own account: the test is
+    # about the account, not the state.
+    my ($type) = $method =~ m{^(\w+)/};
+    for my $pair ([sinceState => "$type/get", 'state'], [sinceQueryState => "$type/query", 'queryState']) {
+      my ($arg, $own_method, $prop) = @$pair;
+      next unless exists $args{$arg} && $args{$arg} eq '0';
+      my $own = eval { $tester->request([[ $own_method => { accountId => $mine } ]]) };
+      my $state = eval { $own->single_sentence($own_method)->arguments->{$prop} };
+      $args{$arg} = $state if defined $state;
+    }
+
     my $desc = join ' ', $method, map { "$_=" . ($args{$_} eq $foreign ? 'OTHER' : 'SELF') }
                  grep { exists $args{$_} } qw(fromAccountId accountId);
 
@@ -119,6 +132,20 @@ sub foreign_account_not_found_ok {
     my $s = $res->sentence(0);
     is($s->name, 'error', "$desc: is an error")
       or diag explain $res->as_stripped_triples;
+
+    # A method the server does not implement at all is unknownMethod before
+    # any account is looked at. Accept that only when the same call against
+    # the caller's own account is unknownMethod too, so a server cannot hide
+    # a foreign account behind it.
+    if (($s->arguments->{type} // q{}) eq q{unknownMethod}) {
+      my $own = $tester->request([[ $method => { %args, accountId => $mine } ]]);
+      my $own_type = eval { $own->sentence(0)->arguments->{type} } // q{};
+      if ($own_type eq q{unknownMethod}) {
+        note("$method is not implemented by this server; nothing to check");
+        next;
+      }
+    }
+
     jcmp_deeply(
       $s->arguments,
       superhashof({ type => 'accountNotFound' }),
@@ -311,7 +338,7 @@ sub multipart {
     location    => undef,
     name        => undef,
     partId      => undef,
-    size        => 0,
+    size        => jnum(),  # RFC 8621 4.1.4 defines size via blobId, which is null for multipart
     type        => "multipart/$type",
     subParts    => $subparts,
   };

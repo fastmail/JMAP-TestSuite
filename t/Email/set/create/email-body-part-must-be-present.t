@@ -39,10 +39,10 @@ test {
       ],
       superhashof({
         notCreated => {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'bodyStructure/partId' ],
-          },
+          }),
         },
       }),
       "partId must be present in bodyValues",

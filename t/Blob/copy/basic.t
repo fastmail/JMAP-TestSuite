@@ -13,6 +13,7 @@ test {
   $from_tester->require_capabilities(
     'urn:ietf:params:jmap:core',
     'urn:ietf:params:jmap:mail',
+    'urn:ietf:params:jmap:blob',  # RFC 9404: Blob/* methods live under this capability
   );
 
   my $upload = $from_tester->upload({

@@ -91,7 +91,8 @@ test {
     cmp_ok(scalar @ours, '>=', 3,
       'at least 3 returned events belong to the master event');
 
-    # canCalculateChanges must be false when expanding
-    ok(!$args->{canCalculateChanges}, 'canCalculateChanges is false');
+    # draft-ietf-jmap-calendars places no requirement on canCalculateChanges
+    # for an expanded query; it just has to be there.
+    ok(defined $args->{canCalculateChanges}, 'canCalculateChanges is present');
   };
 };

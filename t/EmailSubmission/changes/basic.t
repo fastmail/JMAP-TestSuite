@@ -53,7 +53,7 @@ test {
         oldQueryState => jstr($query_state),
         newQueryState => jstr($query_state),
         added         => [],
-        destroyed     => [],
+        removed       => [],
       }),
       "no changes from current state",
     ) or diag explain $res->as_stripped_triples;

@@ -20,7 +20,7 @@ test {
 
   my %args = (
     filter => { inAddressBook => $ab->id },
-    sort   => [{ property => 'name', isAscending => jtrue() }],
+    sort   => [{ property => 'created', isAscending => jtrue() }],  # RFC 9610 3.3.2: created MUST be supported; name is not a sort property
   );
 
   my $res = $tester->request([[

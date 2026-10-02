@@ -15,7 +15,7 @@ test {
 
   subtest "No arguments" => sub {
     my $res = $tester->request([[
-      "Email/query" => {},
+      "Email/query" => { calculateTotal => JSON::true },
     ]]);
     ok($res->is_success, "Email/query")
       or diag explain $res->response_payload;

@@ -326,7 +326,14 @@ package JMAP::TestSuite::Account {
     $arg->{'@type'}  ||= 'Card';
     $arg->{version}  ||= '1.0';
     $arg->{name}     ||= { full => "Test Contact $card_inc" };
+    # RFC 9553 Section 2.1.9: uid is a mandatory Card property; RFC 9610 does
+    # not promise the server will supply one.
+    $arg->{uid} ||= join q{-}, map { sprintf q{%04x%04x}, rand(0x10000), rand(0x10000) } 1 .. 3;
     $card_inc++;
+
+    # RFC 9610 Section 2.2: a card MUST belong to at least one AddressBook.
+    my $ab = delete($arg->{address_book}) // $self->create_address_book;
+    $arg->{addressBookIds} ||= { $ab->id => \1 };
 
     my $batch = $self->create_batch(contactCard => {
       x => $arg,

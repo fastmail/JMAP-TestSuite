@@ -114,10 +114,10 @@ test {
         ],
         superhashof({
           notCreated => {
-            new => {
+            new => superhashof({
               type => 'invalidProperties',
               properties => any([$hdr], ["header:$raw"]), # either is fine
-            },
+            }),
           },
         }),
         "Could not provide $hdr and header:$raw"

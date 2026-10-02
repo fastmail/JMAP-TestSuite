@@ -35,10 +35,10 @@ test {
     ],
     superhashof({
       notCreated => {
-        new => {
+        new => superhashof({
           type => 'invalidProperties',
           properties => [ 'bodyStructure/header:Content-Transfer-Encoding' ],
-        },
+        }),
       },
     }),
     "cannot specify Content-Transfer-Encoding",

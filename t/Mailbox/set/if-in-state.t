@@ -46,10 +46,15 @@ test {
       },
     ]]);
 
+    ok($set_res->is_success, "a wrong ifInState is a method-level error, not an HTTP failure")
+      or do { diag explain $set_res->response_payload; return };
+
     jcmp_deeply(
       $set_res->single_sentence('error')->arguments,
-      superhashof({ type => 'stateMismatch' }),
-      'got stateMismatch error for wrong ifInState'
+      # A state string the server could never have issued may be rejected as
+      # invalidArguments instead of stateMismatch; either is a refusal to act.
+      superhashof({ type => any('stateMismatch', 'invalidArguments') }),
+      'got stateMismatch or invalidArguments for a bogus ifInState'
     );
   };
 };

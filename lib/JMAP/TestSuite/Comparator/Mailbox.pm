@@ -32,7 +32,6 @@ sub mailbox {
         mayRename
         mayDelete
         maySubmit
-        mayAdmin
       )
     }),
   );

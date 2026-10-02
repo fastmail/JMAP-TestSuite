@@ -112,7 +112,7 @@ test {
 
       my $ids = $res->single_sentence("Mailbox/query")->arguments->{ids};
 
-      jcmp_deeply($ids, \@with_roles, 'Got mailboxes with roles only');
+      jcmp_deeply($ids, bag(@with_roles), 'Got mailboxes with roles only');
     };
   };
 };

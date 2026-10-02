@@ -14,7 +14,7 @@ test {
   );
 
   my $res = $tester->request([[
-    "EmailSubmission/query" => {},
+    "EmailSubmission/query" => { calculateTotal => JSON::true },
   ]]);
   ok($res->is_success, "EmailSubmission/query") or diag explain $res->response_payload;
 

@@ -42,10 +42,10 @@ test {
       ],
       superhashof({
         notCreated => {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'bodyStructure/charset' ],
-          },
+          }),
         },
       }),
       "cannot have charset with partId",

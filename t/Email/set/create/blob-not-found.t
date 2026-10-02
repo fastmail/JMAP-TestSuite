@@ -30,10 +30,10 @@ test {
     ],
     superhashof({
       notCreated => {
-        new => {
+        new => superhashof({
           type => 'blobNotFound',
           notFound => [ 'cat' ],
-        },
+        }),
       },
     }),
     "minimum required properties provided gives good response",

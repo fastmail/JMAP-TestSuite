@@ -17,7 +17,7 @@ test {
   );
 
   my $res = $tester->request([[
-    "Quota/query" => {},
+    "Quota/query" => { calculateTotal => JSON::true },
   ]]);
   ok($res->is_success, "Quota/query") or diag explain $res->response_payload;
 

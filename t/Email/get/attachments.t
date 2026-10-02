@@ -197,7 +197,9 @@ test {
 
     jcmp_deeply(
       $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      [ ],
+      # RFC 8621 Section 4.1.4: a server MAY leave inline media that is already
+      # in textBody/htmlBody out of attachments, or list it; both are correct.
+      any([], bag(part("image/jpeg"), part("audio/mp3"), part("video/avi"))),
       "attachments are correct"
     );
   };

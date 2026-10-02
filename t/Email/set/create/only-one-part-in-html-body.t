@@ -55,10 +55,10 @@ test {
     ],
     superhashof({
       notCreated => {
-        new => {
+        new => superhashof({
           type  => 'invalidProperties',
           properties => [ 'htmlBody' ],
-        },
+        }),
       },
     }),
     "cannot have more than one part in html body"

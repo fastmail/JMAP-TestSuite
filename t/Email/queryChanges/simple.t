@@ -62,7 +62,6 @@ test {
         },
       ],
       superhashof({
-        %args,
         oldQueryState => $query_state,
         newQueryState => $query_state,
         added         => [ ],
@@ -88,7 +87,6 @@ test {
         },
       ],
       superhashof({
-        %args,
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ { id => $match2->id, index => 1 }, ],
@@ -117,7 +115,6 @@ test {
         },
       ],
       superhashof({
-        %args,
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],
@@ -152,7 +149,6 @@ test {
         },
       ],
       superhashof({
-        %args,
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],
@@ -187,7 +183,6 @@ test {
         },
       ],
       superhashof({
-        %args,
         oldQueryState => $query_state,
         newQueryState => none($query_state),
         added         => [ ],

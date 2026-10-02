@@ -168,12 +168,12 @@ sub create_and_check_header {
   if ($expect_error) {
     $want = superhashof({
       notCreated => {
-        new => {
+        new => superhashof({
           type => 'invalidProperties',
           properties => [
             "header:$header_name",
           ],
-        },
+        }),
       },
     });
   } else {

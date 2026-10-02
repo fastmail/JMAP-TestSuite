@@ -29,7 +29,6 @@ for my $f (qw(
   mayRename
   mayDelete
   maySubmit
-  mayAdmin
 )) {
   no strict 'refs';
 

@@ -33,20 +33,6 @@ test {
     ok($args->{notCreated}{new1}, "new1 in notCreated");
   };
 
-  subtest "cannot destroy identity" => sub {
-    my $res = $tester->request([[
-      "Identity/set" => {
-        destroy => [$id],
-      },
-    ]]);
-    ok($res->is_success, "Identity/set destroy");
-
-    my $args = $res->single_sentence("Identity/set")->arguments;
-    ok(!$args->{destroyed} || !grep { $_ eq $id } @{ $args->{destroyed} // [] },
-       "identity not destroyed");
-    ok($args->{notDestroyed}{$id}, "identity in notDestroyed");
-  };
-
   subtest "update name" => sub {
     my $orig_res = $tester->request([[
       "Identity/get" => { ids => [$id] },
@@ -65,7 +51,8 @@ test {
     ok($res->is_success, "Identity/set update");
 
     my $args = $res->single_sentence("Identity/set")->arguments;
-    ok($args->{updated}{$id}, "identity updated") or diag explain $args;
+    # RFC 8620 Section 5.3: the value under updated may be null.
+    ok(exists $args->{updated}{$id}, "identity updated") or diag explain $args;
 
     my $get_res = $tester->request([[
       "Identity/get" => { ids => [$id] },
@@ -76,5 +63,35 @@ test {
     $tester->request([[
       "Identity/set" => { update => { $id => { name => $orig_name } } },
     ]]);
+  };
+
+  subtest "destroy identity follows mayDelete" => sub {
+    my $get_res = $tester->request([[
+      "Identity/get" => { ids => [$id] },
+    ]]);
+    my $identity = $get_res->single_sentence("Identity/get")->arguments->{list}[0];
+
+    my $res = $tester->request([[
+      "Identity/set" => {
+        destroy => [$id],
+      },
+    ]]);
+    ok($res->is_success, "Identity/set destroy");
+
+    my $args = $res->single_sentence("Identity/set")->arguments;
+    if ($identity->{mayDelete}) {
+      # The server said this one may go; nothing more is promised.
+      ok(
+        (grep { $_ eq $id } @{ $args->{destroyed} // [] }) || $args->{notDestroyed}{$id},
+        "server accounted for the destroy of a deletable identity"
+      ) or diag explain $args;
+    }
+    else {
+      # RFC 8621 Section 6: an Identity with mayDelete false is rejected with
+      # a standard forbidden SetError.
+      ok(!grep({ $_ eq $id } @{ $args->{destroyed} // [] }), "identity not destroyed");
+      is($args->{notDestroyed}{$id}{type}, q{forbidden}, "notDestroyed with forbidden")
+        or diag explain $args;
+    }
   };
 };

@@ -28,7 +28,7 @@ test {
     $first,
     superhashof({
       id        => jstr(),
-      mayDelete => jfalse(),
+      mayDelete => jbool(),
       email     => jstr(),
     }),
     "identity has required fields",

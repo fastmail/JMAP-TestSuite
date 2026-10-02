@@ -88,7 +88,7 @@ test {
   subtest "cannot change immutable fields" => sub {
     # Flop all the values
     my %rights = map {;
-      $_ => $mailbox2->$_ ? JSON::false : JSON::true
+      $_ => $mailbox2->myRights->{$_} ? JSON::false : JSON::true
     } keys %{ $mailbox2->myRights };
 
     my $set_res = $tester->request([[
@@ -113,7 +113,7 @@ test {
       jcmp_deeply(
         $set_res->single_sentence('Mailbox/set')->arguments->{notUpdated},
         {
-          $mailbox2->id => {
+          $mailbox2->id => superhashof({
             type => 'invalidProperties',
             properties => bag(
               qw(
@@ -125,7 +125,7 @@ test {
               ),
               map {; "myRights/$_" } keys %rights,
             ),
-          },
+          }),
         },
         'got errors for immutable properties'
       ) or diag explain $set_res->as_stripped_triples;

@@ -39,10 +39,10 @@ test {
     ],
     superhashof({
       notCreated => {
-        new => {
+        new => superhashof({
           type => 'invalidProperties',
           properties => [ 'bodyStructure/size' ],
-        },
+        }),
       },
     }),
     "cannot have size with partId",

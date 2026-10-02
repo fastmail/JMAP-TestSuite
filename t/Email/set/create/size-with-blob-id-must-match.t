@@ -63,10 +63,10 @@ test {
         ],
         superhashof({
           notCreated => {
-            new => {
+            new => superhashof({
               type => 'invalidProperties',
               properties => [ 'bodyStructure/size' ],
-            },
+            }),
           },
         }),
         "cannot have mismatched size with blobId",

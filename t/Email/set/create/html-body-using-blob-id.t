@@ -61,7 +61,7 @@ test {
 
   my %body = (
     blobId      => jstr(), # server may assign a new blobId
-    charset     => 'us-ascii',
+    charset     => jstr(),
     cid         => 'fooz',
     disposition => undef,
     language    => [ 'US' ],

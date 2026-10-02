@@ -38,10 +38,10 @@ test {
       ],
       superhashof({
         notCreated => {
-          new => {
+          new => superhashof({
             type => 'invalidProperties',
             properties => [ 'bodyStructure/header:foo' ],
-          },
+          }),
         },
       }),
       "got invalidProperties error",
