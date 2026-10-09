@@ -45,9 +45,11 @@ sub contact_card {
     }
   }
 
+  # RFC 9553 S1.7.4: implementations "MUST preserve" unknown properties.
   return hashrec({
     required => \%required,
     optional => \%optional,
+    allow_unknown => 1,
   });
 }
 
