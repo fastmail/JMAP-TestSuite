@@ -54,7 +54,13 @@ test {
     ]]);
     ok($res->is_success, "request succeeded");
     my $args = $res->single_sentence("VacationResponse/set")->arguments;
-    ok($args->{notCreated}{new1}, "create is forbidden");
+    # RFC 8620 S5.3: "singleton" is the SetError for a type where "you
+    # cannot create another one or destroy the existing one".
+    jcmp_deeply(
+      $args->{notCreated}{new1},
+      superhashof({ type => 'singleton' }),
+      "create is rejected with singleton",
+    ) or diag explain $args;
   };
 
   subtest "cannot destroy vacation response" => sub {
@@ -65,7 +71,11 @@ test {
     ]]);
     ok($res->is_success, "request succeeded");
     my $args = $res->single_sentence("VacationResponse/set")->arguments;
-    ok($args->{notDestroyed}{singleton}, "destroy is forbidden");
+    jcmp_deeply(
+      $args->{notDestroyed}{singleton},
+      superhashof({ type => 'singleton' }),
+      "destroy is rejected with singleton",
+    ) or diag explain $args;
   };
 
   $tester->request([[
