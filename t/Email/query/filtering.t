@@ -22,7 +22,10 @@ test {
   );
 
   my %in_aaa = (
-    aaa_1      => $mailboxes{aaa}->add_message({ subject => 'aaa_1', }),
+    aaa_1      => $mailboxes{aaa}->add_message({
+      subject    => 'aaa_1',
+      receivedAt => '2020-01-01T00:00:01Z',
+    }),
     aaa_old    => $mailboxes{aaa}->add_message({
       subject    => 'aaa_old',
       receivedAt => '2017-08-08T05:04:03Z',
@@ -37,6 +40,7 @@ test {
     }),
     aaa_large  => $mailboxes{aaa}->add_message({
       subject    => 'aaa_large',
+      receivedAt => '2020-01-01T00:00:02Z',
       body       => 'x' x (1000 * 500), # .5mb, roughly
       headers    => [
         cc => 'cctest@example.com',
@@ -45,6 +49,7 @@ test {
     }),
     aaa_keyword_some => $mailboxes{aaa}->add_message({
       subject  => 'aaa_keyword_some',
+      receivedAt => '2020-01-01T00:00:03Z',
       keywords => { some => jtrue() },
       headers    => [
         bcc => 'b.c.ctest@example.com',
@@ -54,43 +59,58 @@ test {
     }),
     aaa_keyword_all => $mailboxes{aaa}->add_message({
       subject  => 'aaa_keyword_all',
+      receivedAt => '2020-01-01T00:00:04Z',
       keywords => { all => jtrue() },
     }),
     aaa_with_attachment => $mailboxes{aaa}->add_message({
       subject    => 'aaa_with_attachment',
+      receivedAt => '2020-01-01T00:00:05Z',
       email_type => 'with_attachment',
     }),
   );
 
   $in_aaa{aaa_keyword_some_reply_1} = $in_aaa{aaa_keyword_some}->reply({
     subject => 'aaa_keyword_some_reply_1',
+    receivedAt => '2020-01-01T00:00:06Z',
   });
 
   $in_aaa{aaa_keyword_some_reply_2} = $in_aaa{aaa_keyword_some_reply_1}->reply({
     subject => 'aaa_keyword_some_reply_2',
+    receivedAt => '2020-01-01T00:00:07Z',
     keywords => { some => jtrue() },
   });
 
   $in_aaa{aaa_keyword_all_reply_1} = $in_aaa{aaa_keyword_all}->reply({
     subject => 'aaa_keyword_all_reply_1',
+    receivedAt => '2020-01-01T00:00:08Z',
     keywords => { all => jtrue() },
   });
 
   $in_aaa{aaa_keyword_all_reply_2} = $in_aaa{aaa_keyword_all_reply_1}->reply({
     subject => 'aaa_keyword_all_reply_2',
+    receivedAt => '2020-01-01T00:00:09Z',
     keywords => { all => jtrue() },
   });
 
   my %in_bbb = (
-    bbb_1 => $mailboxes{bbb}->add_message({ subject => 'bbb_1', }),
+    bbb_1 => $mailboxes{bbb}->add_message({
+      subject    => 'bbb_1',
+      receivedAt => '2020-01-01T00:00:10Z',
+    }),
   );
 
   my %in_ccc = (
-    ccc_1 => $mailboxes{ccc}->add_message({ subject => 'ccc_1', }),
+    ccc_1 => $mailboxes{ccc}->add_message({
+      subject    => 'ccc_1',
+      receivedAt => '2020-01-01T00:00:11Z',
+    }),
   );
 
   my %in_ddd = (
-    ddd_1 => $mailboxes{ddd}->add_message({ subject => 'ddd_1', }),
+    ddd_1 => $mailboxes{ddd}->add_message({
+      subject    => 'ddd_1',
+      receivedAt => '2020-01-01T00:00:12Z',
+    }),
   );
 
   my %emails = (%in_aaa, %in_bbb, %in_ccc, %in_ddd);
@@ -105,7 +125,7 @@ test {
     "Email/query",
     {
       filter => { inMailbox => $mailboxes{aaa}->id },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     { ids => ids_for(%in_aaa), },
     $describer_sub,
@@ -118,7 +138,7 @@ test {
     "Email/query",
     {
       filter => { inMailboxOtherThan => [ $mailboxes{aaa}->id ] },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     { ids => ids_for(%in_bbb, %in_ccc, %in_ddd), },
     $describer_sub,
@@ -132,7 +152,7 @@ test {
       filter => {
         inMailboxOtherThan => [ $mailboxes{aaa}->id, $mailboxes{bbb}->id ]
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     { ids => ids_for(%in_ccc, %in_ddd), },
     $describer_sub,
@@ -147,7 +167,7 @@ test {
       filter => {
         before => '2017-10-10T05:05:05Z',
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     { ids => [ $emails{aaa_old}->id, ], },
     $describer_sub,
@@ -162,7 +182,7 @@ test {
       filter => {
         after => '2040-02-02T05:04:03Z',
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     { ids => [ $emails{aaa_future}->id, ], },
     $describer_sub,
@@ -177,7 +197,7 @@ test {
       filter => {
         minSize => 1000 * 450, # < .5mb
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     { ids => [ $emails{aaa_large}->id, ], },
     $describer_sub,
@@ -192,7 +212,7 @@ test {
       filter => {
         maxSize => 1000 * 450, # < .5mb
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [
@@ -215,7 +235,7 @@ test {
         filter => {
           allInThreadHaveKeyword => 'some',
         },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+        sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
       },
       {
         ids => [], # Only some have this keyword
@@ -231,7 +251,7 @@ test {
         filter => {
           allInThreadHaveKeyword => 'all',
         },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+        sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
       },
       {
         ids => ids_for(
@@ -255,7 +275,7 @@ test {
         filter => {
           someInThreadHaveKeyword => 'nope',
         },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+        sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
       },
       {
         ids => [],
@@ -271,7 +291,7 @@ test {
         filter => {
           someInThreadHaveKeyword => 'some',
         },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+        sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
       },
       {
         ids => ids_for(
@@ -295,7 +315,7 @@ test {
         filter => {
           noneInThreadHaveKeyword => 'nope',
         },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+        sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
       },
       {
         ids => ids_for(%emails),
@@ -311,7 +331,7 @@ test {
         filter => {
           noneInThreadHaveKeyword => 'some',
         },
-        sort   => [{ property => 'subject', isAscending => jtrue()  }],
+        sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
       },
       {
         ids => ids_for(
@@ -331,7 +351,7 @@ test {
       filter => {
         hasKeyword => 'some',
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [
@@ -351,7 +371,7 @@ test {
       filter => {
         notKeyword => 'some',
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => ids_for(
@@ -373,7 +393,7 @@ test {
       filter => {
         hasAttachment => jfalse(),
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [
@@ -391,7 +411,7 @@ test {
       filter => {
         hasAttachment => jtrue(),
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_with_attachment}->id ],
@@ -408,7 +428,7 @@ test {
       filter => {
         text => "here",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_future}->id ],
@@ -425,7 +445,7 @@ test {
       filter => {
         from => "fromtest",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_old}->id ],
@@ -442,7 +462,7 @@ test {
       filter => {
         to => "totest",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_future}->id ],
@@ -459,7 +479,7 @@ test {
       filter => {
         cc => "cctest",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_large}->id ],
@@ -476,7 +496,7 @@ test {
       filter => {
         bcc => "b.c.ctest",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_keyword_some}->id ],
@@ -493,7 +513,7 @@ test {
       filter => {
         subject => "aaa_future",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_future}->id ],
@@ -510,7 +530,7 @@ test {
       filter => {
         body => "test body thing",
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_old}->id ],
@@ -527,10 +547,10 @@ test {
       filter => {
         header => [ 'x-foo' ],
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
-      ids => [ $emails{aaa_keyword_some}->id, $emails{aaa_large}->id ],
+      ids => [ $emails{aaa_large}->id, $emails{aaa_keyword_some}->id ],
     },
     $describer_sub,
     "header exists search",
@@ -544,7 +564,7 @@ test {
       filter => {
         header => [ 'x-foo', 'bar' ],
       },
-      sort   => [{ property => 'subject', isAscending => jtrue()  }],
+      sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
     {
       ids => [ $emails{aaa_large}->id ],
@@ -560,7 +580,7 @@ sub ids_for {
 
   return [
     map  {; $_->id }
-    sort { $a->subject cmp $b->subject }
+    sort { $a->receivedAt cmp $b->receivedAt }
     grep {; ref($_) }
     values @list,
   ];
