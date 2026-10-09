@@ -26,7 +26,7 @@ test {
 
   my $end_state = $account->get_state('mailbox');
 
-  my $middle_state;
+  my ($middle_state, $first);
 
   subtest "changes from start state" => sub {
     my $res = $tester->request([[
@@ -38,6 +38,14 @@ test {
     ok($res->is_success, "Mailbox/changes")
       or diag explain $res->response_payload;
 
+    # RFC 8620 S5.2: a server unable to split the changes "MUST return a
+    # cannotCalculateChanges error".
+    my $s = $res->single_sentence;
+    if ($s->name eq 'error') {
+      is($s->arguments->{type}, 'cannotCalculateChanges', "can't split: cannotCalculateChanges");
+      return;
+    }
+
     jcmp_deeply(
       $res->single_sentence("Mailbox/changes")->arguments,
       superhashof({
@@ -45,7 +53,7 @@ test {
         oldState       => jstr($start_state),
         newState       => all(jstr, none($start_state, $end_state)),
         hasMoreChanges => jtrue,
-        created        => [ $mailbox1->id ],
+        created        => [ any($mailbox1->id, $mailbox2->id) ],
         updated        => [],
         destroyed      => [],
       }),
@@ -53,10 +61,13 @@ test {
     ) or diag explain $res->as_stripped_triples;
 
     $middle_state = $res->single_sentence->arguments->{newState};
+    $first        = $res->single_sentence->arguments->{created}[0];
     ok($middle_state, 'grabbed middle state');
   };
 
   subtest "changes from middle state to final state" => sub {
+    plan skip_all => "the server could not split the changes" unless defined $middle_state;
+
     my $res = $tester->request([[
       "Mailbox/changes" => {
         sinceState => $middle_state,
@@ -73,7 +84,7 @@ test {
         oldState       => jstr($middle_state),
         newState       => jstr($end_state),
         hasMoreChanges => jfalse,
-        created        => [ $mailbox2->id ],
+        created        => [ ($first // q{}) eq $mailbox1->id ? $mailbox2->id : $mailbox1->id ],
         updated        => [],
         destroyed      => [],
       }),
