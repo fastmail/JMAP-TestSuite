@@ -1,5 +1,7 @@
 use jmaptest;
 
+use JMAP::TestSuite::Util qw(fetch_session);
+
 test {
   my ($self) = @_;
 
@@ -89,6 +91,48 @@ test {
       my $get_args = $get_res->single_sentence("CalendarEvent/get")->arguments;
       ok(grep { $_ eq $event->id } @{$get_args->{notFound}}, 'event in notFound after calendar destroy');
     };
+  };
+
+  subtest "Event in a second calendar survives" => sub {
+    # draft-ietf-jmap-calendars S1.5.1: maxCalendarsPerEvent is null or >= 1.
+    my $session = fetch_session($tester) or return;
+    my $max = $session->{accounts}{ $account->accountId }{accountCapabilities}
+                {'urn:ietf:params:jmap:calendars'}{maxCalendarsPerEvent};
+    if (defined $max && $max < 2) {
+      note("maxCalendarsPerEvent is $max; skipping");
+      return;
+    }
+
+    my $cal1  = $account->create_calendar;
+    my $cal2  = $account->create_calendar;
+    my $event = $account->create_calendar_event({
+      calendar    => $cal1,
+      calendarIds => { $cal1->id => \1, $cal2->id => \1 },
+    });
+
+    my $res = $tester->request([[
+      "Calendar/set" => {
+        destroy               => [$cal1->id],
+        onDestroyRemoveEvents => \1,
+      },
+    ]]);
+    ok((grep { $_ eq $cal1->id }
+          @{ $res->single_sentence("Calendar/set")->arguments->{destroyed} // [] }),
+       'first calendar destroyed')
+      or diag explain $res->as_stripped_triples;
+
+    # S4.3: events are removed from the calendar, and destroyed only "if in
+    # no other Calendars".
+    my $get_res = $tester->request([[
+      "CalendarEvent/get" => { ids => [$event->id], properties => ['calendarIds'] },
+    ]]);
+    my $list = $get_res->single_sentence("CalendarEvent/get")->arguments->{list};
+    is(scalar @$list, 1, 'event still exists') or return diag explain $get_res->as_stripped_triples;
+    jcmp_deeply(
+      $list->[0]{calendarIds},
+      { $cal2->id => jtrue },
+      'event now belongs only to the surviving calendar',
+    ) or diag explain $list;
   };
 
   subtest "Destroy unknown id returns notFound" => sub {
