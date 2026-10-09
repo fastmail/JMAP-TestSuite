@@ -50,6 +50,7 @@ test {
     ok($res->is_success, "ContactCard/query empty");
 
     my $args = $res->single_sentence("ContactCard/query")->arguments;
-    is(scalar @{ $args->{ids} // [] }, 0, 'no results for empty address book');
+    jcmp_deeply($args->{ids}, [], "no results for empty address book")
+      or diag explain $args;
   };
 };
