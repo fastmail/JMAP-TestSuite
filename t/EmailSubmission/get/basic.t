@@ -27,7 +27,8 @@ test {
     $tester->request([[ "Identity/get" => {} ]])
       ->single_sentence("Identity/get")->arguments->{list} // []
   };
-  ok($identity && $identity->{id}, "got an identity to submit as") or return;
+  # RFC 8621 S6 doesn't require an account to have any Identity.
+  plan skip_all => "account has no identity to submit as" unless $identity;
 
   # RFC 8621 S6: Identity email is "The 'From' email address the client
   # MUST use"; a "*" mailbox part allows any address in that domain.

@@ -15,8 +15,8 @@ test {
     "Identity/get" => {},
   ]]);
   my $list = $get_res->single_sentence("Identity/get")->arguments->{list};
-  ok(@$list >= 1, "at least one identity exists");
-  my $id = $list->[0]{id};
+  # RFC 8621 S6 doesn't require an account to have any Identity.
+  my $id = @$list ? $list->[0]{id} : undef;
 
   subtest "create identity" => sub {
     my $res = $tester->request([[
@@ -50,6 +50,8 @@ test {
   };
 
   subtest "update name" => sub {
+    plan skip_all => "account has no identities" unless defined $id;
+
     my $orig_res = $tester->request([[
       "Identity/get" => { ids => [$id] },
     ]]);
@@ -82,6 +84,8 @@ test {
   };
 
   subtest "destroy identity follows mayDelete" => sub {
+    plan skip_all => "account has no identities" unless defined $id;
+
     my $get_res = $tester->request([[
       "Identity/get" => { ids => [$id] },
     ]]);
