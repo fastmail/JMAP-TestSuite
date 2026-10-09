@@ -92,4 +92,26 @@ test {
         or diag explain { old => $old->{ids}, new => $new->{ids}, changes => $got };
     };
   }
+
+  # S5.6: three Mailboxes were added, and each added item is one change.
+  subtest "more changes than maxChanges" => sub {
+    my $res = $tester->request([[
+      "Mailbox/queryChanges" => {
+        %args,
+        sinceQueryState => $old->{queryState},
+        maxChanges      => 2,
+      },
+    ]]);
+    ok($res->is_success, "the request completed")
+      or return diag explain $res->response_payload;
+
+    my $s = $res->single_sentence;
+    is($s->name, "error", "Mailbox/queryChanges is rejected")
+      or return diag explain $s->arguments;
+    jcmp_deeply(
+      $s->arguments,
+      superhashof({ type => "tooManyChanges" }),
+      "with tooManyChanges",
+    ) or diag explain $s->arguments;
+  };
 };
