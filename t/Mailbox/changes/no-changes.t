@@ -28,7 +28,7 @@ test {
     superhashof({
       accountId      => jstr($account->accountId),
       oldState       => jstr($state),
-      newState       => jstr($state),
+      newState       => jstr,
       hasMoreChanges => jfalse,
       created        => [],
       updated        => [],
@@ -36,6 +36,10 @@ test {
     }),
     "Response looks good",
   ) or diag explain $res->as_stripped_triples;
+
+  # RFC 8620 S5.1: servers SHOULD return the same state if nothing changed.
+  note("newState differs from oldState though nothing changed (a SHOULD)")
+    if ($changes->{newState} // q{}) ne $state;
 
   ok(
        ! exists $changes->{updatedProperties}

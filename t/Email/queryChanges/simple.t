@@ -64,7 +64,7 @@ test {
   }
 
   subtest "no changes" => sub {
-    $tester->request_ok(
+    my ($res) = $tester->request_ok(
       [
         "Email/queryChanges" => {
           %args,
@@ -73,12 +73,17 @@ test {
       ],
       superhashof({
         oldQueryState => $query_state,
-        newQueryState => $query_state,
+        newQueryState => ignore,
         added         => [ ],
-        removed       => [ ],
+        # RFC 8620 S5.6: removed MAY hold extra ids, but not ones still in
+        # the results.
+        removed       => array_each(none($match->id)),
       }),
       "expected resposne",
     );
+
+    note("queryState changed though nothing did (RFC 8620 S5.5 permits this)")
+      if ($res->sentence(0)->arguments->{newQueryState} // q{}) ne $query_state;
   };
 
   my $match2 = $mailbox->add_message({ subject => 'aaa 2' });

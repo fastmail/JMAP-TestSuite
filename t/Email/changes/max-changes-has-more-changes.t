@@ -103,12 +103,14 @@ test {
     ok($res->is_success, "Email/changes")
       or diag explain $res->response_payload;
 
+    my $changes = $res->single_sentence->arguments;
+
     jcmp_deeply(
       $res->single_sentence("Email/changes")->arguments,
       {
         accountId      => jstr($account->accountId),
         oldState       => jstr($end_state),
-        newState       => jstr($end_state),
+        newState       => jstr,
         hasMoreChanges => jfalse,
         created        => [],
         updated        => [],
@@ -116,5 +118,9 @@ test {
       },
       "Response looks good",
     );
+
+    # RFC 8620 S5.1: servers SHOULD return the same state if nothing changed.
+    note("newState differs from oldState though nothing changed (a SHOULD)")
+      if ($changes->{newState} // q{}) ne $end_state;
   };
 };
