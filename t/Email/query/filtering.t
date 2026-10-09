@@ -70,24 +70,24 @@ test {
   );
 
   $in_aaa{aaa_keyword_some_reply_1} = $in_aaa{aaa_keyword_some}->reply({
-    subject => 'aaa_keyword_some_reply_1',
+    subject => 'Re: aaa_keyword_some',
     receivedAt => '2020-01-01T00:00:06Z',
   });
 
   $in_aaa{aaa_keyword_some_reply_2} = $in_aaa{aaa_keyword_some_reply_1}->reply({
-    subject => 'aaa_keyword_some_reply_2',
+    subject => 'Re: aaa_keyword_some',
     receivedAt => '2020-01-01T00:00:07Z',
     keywords => { some => jtrue() },
   });
 
   $in_aaa{aaa_keyword_all_reply_1} = $in_aaa{aaa_keyword_all}->reply({
-    subject => 'aaa_keyword_all_reply_1',
+    subject => 'Re: aaa_keyword_all',
     receivedAt => '2020-01-01T00:00:08Z',
     keywords => { all => jtrue() },
   });
 
   $in_aaa{aaa_keyword_all_reply_2} = $in_aaa{aaa_keyword_all_reply_1}->reply({
-    subject => 'aaa_keyword_all_reply_2',
+    subject => 'Re: aaa_keyword_all',
     receivedAt => '2020-01-01T00:00:09Z',
     keywords => { all => jtrue() },
   });
@@ -255,7 +255,7 @@ test {
       },
       {
         ids => ids_for(
-          grep {; $_->subject =~ /^aaa_keyword_all/ } values %emails,
+          @emails{ grep {; /^aaa_keyword_all/ } keys %emails },
         ),
       },
       $describer_sub,
@@ -295,7 +295,7 @@ test {
       },
       {
         ids => ids_for(
-          grep {; $_->subject =~ /^aaa_keyword_some/ } values %emails,
+          @emails{ grep {; /^aaa_keyword_some/ } keys %emails },
         ),
       },
       $describer_sub,
@@ -335,7 +335,7 @@ test {
       },
       {
         ids => ids_for(
-          grep {; $_->subject !~ /^aaa_keyword_some/ } values %emails,
+          @emails{ grep {; ! /^aaa_keyword_some/ } keys %emails },
         )
       },
       $describer_sub,
@@ -375,10 +375,10 @@ test {
     },
     {
       ids => ids_for(
-        grep {;
-             $_->subject ne 'aaa_keyword_some'
-          && $_->subject ne 'aaa_keyword_some_reply_2'
-        } values %emails,
+        @emails{
+          grep {; $_ ne 'aaa_keyword_some' && $_ ne 'aaa_keyword_some_reply_2' }
+          keys %emails
+        },
       ),
     },
     $describer_sub,
