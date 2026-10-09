@@ -223,4 +223,48 @@ test {
     is($s->arguments->{type}, 'tooLarge', "a range over $max is tooLarge")
       or diag explain $s->arguments;
   };
+
+  subtest "free, cancelled and secret events are not busy" => sub {
+    # S2.2: relevant events are busy, not "cancelled", and not "secret".
+    my %ignored = (
+      '2025-07-03T09:00:00' => { freeBusyStatus => 'free' },
+      '2025-07-03T11:00:00' => { status => 'cancelled' },
+      '2025-07-03T13:00:00' => { privacy => 'secret' },
+    );
+    for my $start (sort keys %ignored) {
+      $account->create_calendar_event({
+        %{ $ignored{$start} },
+        start       => $start,
+        timeZone    => 'Etc/UTC',
+        duration    => 'PT1H',
+        calendar    => $calendar,
+      });
+    }
+    $account->create_calendar_event({
+      start       => '2025-07-03T15:00:00',
+      timeZone    => 'Etc/UTC',
+      duration    => 'PT1H',
+      calendar    => $calendar,
+    });
+
+    my $res = $tester->request([[
+      "Principal/getAvailability" => {
+        id       => $principal_id,
+        utcStart => '2025-07-03T00:00:00Z',
+        utcEnd   => '2025-07-04T00:00:00Z',
+      },
+    ]]);
+    my $list = eval { $res->single_sentence("Principal/getAvailability")->arguments->{list} };
+    ok($list, 'got a list') or return diag explain $res->as_stripped_triples;
+
+    ok((grep { $_->{utcStart} eq '2025-07-03T15:00:00Z' } @$list), 'the busy event is listed')
+      or diag explain $list;
+    for my $start (sort keys %ignored) {
+      my ($key) = keys %{ $ignored{$start} };
+      my ($from, $to) = ("${start}Z", substr($start, 0, 11) . sprintf('%02d:00:00Z', substr($start, 11, 2) + 1));
+      ok(!(grep { $_->{utcStart} lt $to && $_->{utcEnd} gt $from } @$list),
+         "$key $ignored{$start}{$key}: no busy period")
+        or diag explain $list;
+    }
+  };
 };
