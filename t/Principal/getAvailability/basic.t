@@ -132,4 +132,63 @@ test {
     is($sent->arguments->{type}, 'notFound', "error is notFound")
       or diag explain $sent->arguments;
   };
+
+  subtest "showDetails and eventProperties" => sub {
+    my $detailed = $account->create_calendar_event({
+      title       => 'Detailed Meeting',
+      start       => '2025-07-02T10:00:00',
+      timeZone    => 'Etc/UTC',
+      duration    => 'PT1H',
+      calendar    => $calendar,
+    });
+
+    my $ours = sub {
+      my (%arg) = @_;
+      my $res = $tester->request([[
+        "Principal/getAvailability" => {
+          id       => $principal_id,
+          utcStart => '2025-07-02T00:00:00Z',
+          utcEnd   => '2025-07-03T00:00:00Z',
+          %arg,
+        },
+      ]]);
+      my $list = eval { $res->single_sentence("Principal/getAvailability")->arguments->{list} };
+      my ($bp) = grep { $_->{utcStart} eq '2025-07-02T10:00:00Z' } @{ $list // [] };
+      ok($bp, 'found the busy period') or diag explain $res->as_stripped_triples;
+      return $bp // {};
+    };
+
+    # S2.2: event is null and accountId "null if the event property is null"
+    # when "The showDetails argument is false".
+    my $bp = $ours->(showDetails => \0);
+    jcmp_deeply(
+      $bp,
+      superhashof({ event => undef, accountId => undef }),
+      'showDetails false: event and accountId are null',
+    ) or diag explain $bp;
+
+    $bp = $ours->(showDetails => \1);
+    jcmp_deeply(
+      $bp,
+      superhashof({
+        accountId => jstr($account->accountId),
+        event     => superhashof({ title => jstr('Detailed Meeting') }),
+      }),
+      'showDetails true: the event and its account are returned',
+    ) or diag explain $bp;
+
+    # S2.2: properties "not in the eventProperties list are removed".
+    $bp = $ours->(showDetails => \1, eventProperties => [qw(id title)]);
+    jcmp_deeply(
+      $bp->{event},
+      all(
+        superhashof({ title => jstr('Detailed Meeting') }),
+        code(sub {
+          my @extra = grep { $_ ne 'id' && $_ ne 'title' } keys %{ $_[0] };
+          @extra ? (0, "unrequested properties: @extra") : 1;
+        }),
+      ),
+      'eventProperties limits the event to the listed properties',
+    ) or diag explain $bp;
+  };
 };
