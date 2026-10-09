@@ -18,7 +18,7 @@ test {
   ok(@$list >= 1, "at least one identity exists");
   my $id = $list->[0]{id};
 
-  subtest "cannot create identity" => sub {
+  subtest "create identity" => sub {
     my $res = $tester->request([[
       "Identity/set" => {
         create => {
@@ -28,9 +28,25 @@ test {
     ]]);
     ok($res->is_success, "Identity/set create");
 
-    my $args = $res->single_sentence("Identity/set")->arguments;
-    ok(!$args->{created} || !$args->{created}{new1}, "new identity not created");
-    ok($args->{notCreated}{new1}, "new1 in notCreated");
+    # RFC 8621 S6.3: a standard /set, whose only extra create error is
+    # forbiddenFrom; a server may also refuse with a standard forbidden.
+    my $args    = $res->single_sentence("Identity/set")->arguments;
+    my $created = $args->{created}{new1};
+
+    if ($created) {
+      jcmp_deeply($created, superhashof({ id => jstr }), "identity created")
+        or diag explain $args;
+
+      $tester->request([[
+        "Identity/set" => { destroy => [ $created->{id} ] },
+      ]]);
+    } else {
+      jcmp_deeply(
+        $args->{notCreated}{new1},
+        superhashof({ type => any(qw(forbiddenFrom forbidden)) }),
+        "identity refused with forbiddenFrom or forbidden",
+      ) or diag explain $args;
+    }
   };
 
   subtest "update name" => sub {
