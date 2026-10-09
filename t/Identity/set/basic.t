@@ -84,16 +84,28 @@ test {
   };
 
   subtest "destroy identity follows mayDelete" => sub {
-    plan skip_all => "account has no identities" unless defined $id;
+    # Destroy only an identity of our own, never a pre-existing one; RFC 8621
+    # S6: "Multiple identities with the same email address MAY exist".
+    my $email = @$list ? $list->[0]{email} : 'test@example.com';
+    my $create_res = $tester->request([[
+      "Identity/set" => {
+        create => {
+          new1 => { email => $email, name => 'Test Destroy' },
+        },
+      },
+    ]]);
+    my $created = $create_res->single_sentence("Identity/set")->arguments->{created}{new1};
+    plan skip_all => "server refused to create an identity" unless $created;
+    my $new_id = $created->{id};
 
     my $get_res = $tester->request([[
-      "Identity/get" => { ids => [$id] },
+      "Identity/get" => { ids => [$new_id] },
     ]]);
     my $identity = $get_res->single_sentence("Identity/get")->arguments->{list}[0];
 
     my $res = $tester->request([[
       "Identity/set" => {
-        destroy => [$id],
+        destroy => [$new_id],
       },
     ]]);
     ok($res->is_success, "Identity/set destroy");
@@ -102,15 +114,15 @@ test {
     if ($identity->{mayDelete}) {
       # The server said this one may go; nothing more is promised.
       ok(
-        (grep { $_ eq $id } @{ $args->{destroyed} // [] }) || $args->{notDestroyed}{$id},
+        (grep { $_ eq $new_id } @{ $args->{destroyed} // [] }) || $args->{notDestroyed}{$new_id},
         "server accounted for the destroy of a deletable identity"
       ) or diag explain $args;
     }
     else {
       # RFC 8621 Section 6: an Identity with mayDelete false is rejected with
       # a standard forbidden SetError.
-      ok(!grep({ $_ eq $id } @{ $args->{destroyed} // [] }), "identity not destroyed");
-      is($args->{notDestroyed}{$id}{type}, q{forbidden}, "notDestroyed with forbidden")
+      ok(!grep({ $_ eq $new_id } @{ $args->{destroyed} // [] }), "identity not destroyed");
+      is($args->{notDestroyed}{$new_id}{type}, q{forbidden}, "notDestroyed with forbidden")
         or diag explain $args;
     }
   };
