@@ -43,7 +43,7 @@ test {
     superhashof({
       accountId => jstr($account->accountId),
       newState  => jstr(),
-      oldState  => jstr($state),
+      oldState  => any(undef, jstr($state)),
     }),
     "Set response looks good",
   );

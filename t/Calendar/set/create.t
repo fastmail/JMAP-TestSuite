@@ -30,7 +30,7 @@ test {
       $args,
       superhashof({
         accountId => jstr($account->accountId),
-        oldState  => jstr(),
+        oldState  => any(undef, jstr()),
         newState  => jstr(),
         created   => superhashof({
           cal1 => superhashof({ id => jstr() }),

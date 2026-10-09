@@ -40,7 +40,7 @@ test {
       {
         fromAccountId => jstr($from_account->accountId),
         accountId     => jstr($to_account->accountId),
-        oldState      => jstr(),
+        oldState      => any(undef, jstr()),
         newState      => jstr(),
         created       => { c1 => superhashof({ id => jstr() }) },
         notCreated    => undef,

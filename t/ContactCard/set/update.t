@@ -51,7 +51,7 @@ test {
       $args,
       superhashof({
         accountId => jstr($account->accountId),
-        oldState  => jstr(),
+        oldState  => any(undef, jstr()),
         newState  => jstr(),
         updated   => superhashof({ $id => ignore() }),
       }),

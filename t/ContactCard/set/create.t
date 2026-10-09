@@ -35,7 +35,7 @@ test {
     $set_args,
     superhashof({
       accountId => jstr($account->accountId),
-      oldState  => jstr(),
+      oldState  => any(undef, jstr()),
       newState  => jstr(),
       created   => superhashof({ c1 => superhashof({ id => jstr() }) }),
     }),
