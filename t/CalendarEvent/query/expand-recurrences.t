@@ -68,8 +68,14 @@ test {
     my $args = $qres->single_sentence("CalendarEvent/query")->arguments;
     my $ids  = $args->{ids} // [];
 
-    # 3 weekly occurrences: Apr 1, Apr 8, Apr 15
-    cmp_ok(scalar @$ids, '>=', 3, 'got at least 3 occurrences');
+    # draft-ietf-jmap-calendars S5.11.1: an instance matches if it ends after
+    # "after" and starts before "before", so Apr 1, 8 and 15 but not Apr 22.
+    is(scalar @$ids, 3, 'got exactly 3 occurrences') or diag explain $ids;
+
+    # S5.11: "a separate id will be returned for each instance".
+    my %distinct = map {; $_ => 1 } @$ids;
+    is(scalar keys %distinct, 3, 'occurrence ids are distinct');
+    ok(!$distinct{$master_id}, 'master id is not an occurrence id');
 
     # Instance ids are opaque; baseEventId is what marks a synthetic instance.
     my $gres = $tester->request([[
@@ -85,11 +91,10 @@ test {
     is(scalar @$list, scalar @$ids, 'every queried id was fetchable');
 
     my @ours = grep {
-      $_->{id} eq $master_id
-        || (defined $_->{baseEventId} && $_->{baseEventId} eq $master_id)
+      defined $_->{baseEventId} && $_->{baseEventId} eq $master_id
     } @$list;
-    cmp_ok(scalar @ours, '>=', 3,
-      'at least 3 returned events belong to the master event');
+    is(scalar @ours, 3, 'all 3 returned events are instances of the master')
+      or diag explain $list;
 
     # draft-ietf-jmap-calendars places no requirement on canCalculateChanges
     # for an expanded query; it just has to be there.
