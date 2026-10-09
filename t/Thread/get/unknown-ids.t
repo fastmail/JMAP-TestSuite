@@ -1,8 +1,5 @@
 use jmaptest;
 
-attr pristine => 1;
-
-# We use ->pristine_account directly so we must support pristine
 test {
   my ($self) = @_;
 
@@ -14,14 +11,12 @@ test {
     'urn:ietf:params:jmap:mail',
   );
 
-  my $other_account = $self->pristine_account;
-  my $other_mailbox = $other_account->create_mailbox;
-  my $other_message = $other_mailbox->add_message;
+  # RFC 8620 S1.2: ids are unique only per type per account, so another
+  # account's threadId could also exist here.
+  my $unknown_id = 'jmts-no-such-thread-' . time . '-' . $$;
 
-  # Thread is in another account so we shouldn't see it, therefore
-  # notFound!
   my $get_res = $tester->request([[
-    "Thread/get" => { ids => [ $other_message->threadId ] },
+    "Thread/get" => { ids => [ $unknown_id ] },
   ]]);
 
   jcmp_deeply(
@@ -30,8 +25,8 @@ test {
       accountId => jstr($account->accountId),
       state => jstr(),
       list => [],
-      notFound => [ jstr($other_message->threadId) ],
+      notFound => [ jstr($unknown_id) ],
     },
-    "Thread/get fills in notFound for messages in another account",
+    "Thread/get fills in notFound for unknown ids",
   );
 };
