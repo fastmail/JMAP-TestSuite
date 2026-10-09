@@ -18,22 +18,28 @@ test {
     'urn:ietf:params:jmap:principals:availability',
   );
 
-  my $prin_res = $tester->request([[
-    "Principal/get" => {},
+  # RFC 8620 S5.1 lets Principal/get answer requestTooLarge to a null "ids",
+  # so find the principals owning this account through Principal/query.
+  my $qres = $tester->request([[
+    "Principal/query" => { filter => { accountIds => [ $account->accountId ] } },
   ]]);
-  # Principal/get with no ids lists every principal the caller may see, so
-  # pick the one whose calendar data lives in this account (draft-ietf-jmap-
-  # calendars: Principal accountId, or the accounts map keyed by accountId).
+  my $prin_ids = eval { $qres->single_sentence("Principal/query")->arguments->{ids} };
+  my $prin_res = $tester->request([[
+    "Principal/get" => { ids => $prin_ids // [] },
+  ]]);
+  # draft-ietf-jmap-calendars S2.1: the calendars capability of a Principal
+  # names the account holding its calendar data; failing that, a lone owner
+  # of this account (RFC 9670 S2.4 accountIds filter) is the one.
   my $principal_id = eval {
     my @list = @{ $prin_res->single_sentence("Principal/get")->arguments->{list} };
     my ($mine) = grep {
-      ($_->{accountId} // q{}) eq $account->accountId
-        || exists(($_->{accounts} // {})->{ $account->accountId })
+      my $cal = ($_->{capabilities} // {})->{'urn:ietf:params:jmap:calendars'};
+      ($cal && $cal->{accountId} // q{}) eq $account->accountId
     } @list;
     ($mine // (@list == 1 ? $list[0] : undef))->{id};
   };
   unless ($principal_id) {
-    plan skip_all => "Principal/get without ids did not return a principal (server may be non-compliant)";
+    plan skip_all => "no Principal has its calendar data in this account";
     return;
   }
 
