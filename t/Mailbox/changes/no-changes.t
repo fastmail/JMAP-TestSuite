@@ -41,9 +41,11 @@ test {
   note("newState differs from oldState though nothing changed (a SHOULD)")
     if ($changes->{newState} // q{}) ne $state;
 
-  ok(
-       ! exists $changes->{updatedProperties}
-    || ! defined $changes->{updatedProperties},
-    "updatedProperties is null or omitted"
-  );
+  # RFC 8621 S2.2: with nothing changed, "only" counts changed, so a
+  # (possibly empty) list of counts is as valid as null.
+  jcmp_deeply(
+    $changes->{updatedProperties},
+    any(undef, subbagof(qw(totalEmails unreadEmails totalThreads unreadThreads))),
+    "updatedProperties is null or a subset of the count properties"
+  ) or diag explain $changes;
 };
