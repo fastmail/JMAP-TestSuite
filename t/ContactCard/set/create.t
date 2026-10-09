@@ -1,4 +1,5 @@
 use jmaptest;
+use Data::GUID qw(guid_string);
 
 test {
   my ($self) = @_;
@@ -19,6 +20,7 @@ test {
         c1 => {
           q(@type)       => 'Card',
           version        => '1.0',
+          uid            => "urn:uuid:" . lc guid_string(),
           name           => { full => "Alice Example" },
           addressBookIds => { $ab->id => \1 },
           emails         => { e1 => { contexts => { work => \1 }, address => 'alice@example.com' } },

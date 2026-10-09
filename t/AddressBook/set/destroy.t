@@ -1,4 +1,5 @@
 use jmaptest;
+use Data::GUID qw(guid_string);
 
 # RFC 9610 S2.3: destroying an address book with contents is refused with
 # "addressBookHasContents" unless "onDestroyRemoveContents" is set.
@@ -111,6 +112,7 @@ test {
           multi => {
             '@type'        => 'Card',
             version        => '1.0',
+            uid            => "urn:uuid:" . lc guid_string(),
             name           => { full => "Multi-book contact $^T.$$" },
             addressBookIds => { $book1->id => \1, $book2->id => \1 },
           },
