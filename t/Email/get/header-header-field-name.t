@@ -470,7 +470,7 @@ test {
     my $url1 = "http://example.net";
     my $url2 = "http://example.org/" . ("a" x 35);
 
-    my $value = "<$url1> <$url2>";
+    my $value = "<$url1>, <$url2>";
 
     my $message = $mbox->add_message({
       raw_headers => [
@@ -509,7 +509,7 @@ test {
         list      => [{
           id => $message->id,
           ( map {;
-            "header:$_:asRaw" => " <$url1>\r\n <$url2>",
+            "header:$_:asRaw" => " <$url1>,\r\n <$url2>",
           } @hlist, ),
           ( map {;
             "header:$_:asURLs" => [ $url1, $url2 ],
