@@ -1,7 +1,7 @@
 use jmaptest;
 
-# A quota has to exist to be tested, and the shared account may have none;
-# pristine accounts are provisioned with one.
+# A quota has to exist to be tested. Only the CyrusDirect adapter provisions
+# pristine accounts with one, so a server reporting none is not a failure.
 attr pristine => 1;
 
 test {
