@@ -353,6 +353,9 @@ test {
         } @hlist, ),
         References => $long_value,
       ],
+      raw_headers => [
+        'X-Broken' => 'not a message id',
+      ],
     });
 
     my $res = $tester->request([[
@@ -368,6 +371,7 @@ test {
           qw(
             header:References:asRaw
             header:References:asMessageIds
+            header:X-Broken:asMessageIds
           ),
         ],
       },
@@ -390,6 +394,8 @@ test {
           } @hlist, ),
           'header:References:asRaw' => " <$mid2>\r\n <$mid3>",
           'header:References:asMessageIds' => [ $mid2, $mid3 ],
+          # RFC 8621 S4.1.2.5: "If parsing fails, the value is null."
+          'header:X-Broken:asMessageIds' => undef,
         }],
       }),
       "Response looks good",
