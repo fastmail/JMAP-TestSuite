@@ -1,5 +1,7 @@
 use jmaptest;
 
+use JMAP::TestSuite::Util qw(fetch_session);
+
 attr pristine => 1;
 
 test {
@@ -190,5 +192,35 @@ test {
       ),
       'eventProperties limits the event to the listed properties',
     ) or diag explain $bp;
+  };
+
+  subtest "tooLarge" => sub {
+    my $session = fetch_session($tester) or return;
+    my $max = $session->{accounts}{ $account->accountId }{accountCapabilities}
+                {'urn:ietf:params:jmap:principals:availability'}{maxAvailabilityDuration};
+
+    # jscalendarbis S1.5.6: only weeks and days carry the calendar part.
+    my ($w, $d) = (defined $max ? $max : '') =~ /\AP(?:(\d+)W)?(?:(\d+)D)?/;
+    my $days = ($w // 0) * 7 + ($d // 0) + 1;
+    if (!defined $max || $days > 30 * 365) {
+      note('no usable maxAvailabilityDuration; skipping');
+      return;
+    }
+
+    my $res = $tester->request([[
+      "Principal/getAvailability" => {
+        id       => $principal_id,
+        utcStart => '2000-01-01T00:00:00Z',
+        utcEnd   => '2031-01-01T00:00:00Z',
+      },
+    ]]);
+    # S2.2 lists tooLarge among the errors that "may be returned".
+    my $s = $res->single_sentence;
+    if ($s->name ne 'error') {
+      note("server calculated a range over its maxAvailabilityDuration $max");
+      return;
+    }
+    is($s->arguments->{type}, 'tooLarge', "a range over $max is tooLarge")
+      or diag explain $s->arguments;
   };
 };
