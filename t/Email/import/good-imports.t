@@ -92,7 +92,8 @@ test {
           }),
         }),
         receivedAt => jstr('2017-08-08T05:04:03Z'),
-        keywords   => any(superhashof({ foo => JSON::true }), superhashof({ Foo => JSON::true })),  # RFC 8621 4.1.1: keywords are case-insensitive; the server may keep the case it was given
+        # RFC 8621 S4.1.1: "servers MUST return keywords in lowercase".
+        keywords   => { foo => JSON::true },
       }),
       'email looks good',
     );
