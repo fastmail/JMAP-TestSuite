@@ -138,12 +138,14 @@ test {
     is($got->{recurrenceRule}{count},     3,          'count updated');
   };
 
+  # The monthly rule above recurs on 2024-05-06, 06-06 and 07-06 at 14:30;
+  # override keys must name one of those to patch a real occurrence.
   subtest "Patch recurrenceOverrides — add an override for one occurrence" => sub {
     my $res = $tester->request([[
       "CalendarEvent/set" => {
         update => {
           $id => {
-            'recurrenceOverrides/2024-05-13T14:30:00' => {
+            'recurrenceOverrides/2024-06-06T14:30:00' => {
               title => 'Board Meeting (Special)',
             },
           },
@@ -158,8 +160,8 @@ test {
       "CalendarEvent/get" => { ids => [$id], properties => ['recurrenceOverrides'] },
     ]])->single_sentence("CalendarEvent/get")->arguments->{list}[0];
     my $overrides = $got->{recurrenceOverrides} // {};
-    ok(exists $overrides->{'2024-05-13T14:30:00'}, 'override key present');
-    is($overrides->{'2024-05-13T14:30:00'}{title}, 'Board Meeting (Special)', 'override title set');
+    ok(exists $overrides->{'2024-06-06T14:30:00'}, 'override key present');
+    is($overrides->{'2024-06-06T14:30:00'}{title}, 'Board Meeting (Special)', 'override title set');
   };
 
   subtest "Patch recurrenceOverrides — exclude an occurrence" => sub {
@@ -167,7 +169,7 @@ test {
       "CalendarEvent/set" => {
         update => {
           $id => {
-            'recurrenceOverrides/2024-05-20T14:30:00' => {
+            'recurrenceOverrides/2024-07-06T14:30:00' => {
               excluded => \1,
             },
           },
@@ -182,8 +184,8 @@ test {
       "CalendarEvent/query" => {
         filter => {
           inCalendar => $calendar->id,
-          after      => '2024-05-20T00:00:00',
-          before     => '2024-05-21T00:00:00',
+          after      => '2024-07-06T00:00:00',
+          before     => '2024-07-07T00:00:00',
         },
         expandRecurrences => \1,
       },
@@ -194,7 +196,7 @@ test {
     my $got = $tester->request([[
       "CalendarEvent/get" => { ids => [$id], properties => ['recurrenceOverrides'] },
     ]])->single_sentence("CalendarEvent/get")->arguments->{list}[0];
-    ok(exists($got->{recurrenceOverrides}{'2024-05-13T14:30:00'}),
+    ok(exists($got->{recurrenceOverrides}{'2024-06-06T14:30:00'}),
        'earlier override still present');
   };
 
