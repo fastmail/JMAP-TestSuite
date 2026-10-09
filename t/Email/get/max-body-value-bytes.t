@@ -95,6 +95,35 @@ test {
     ) or diag explain $res->as_stripped_triples;
   };
 
+  subtest "zero means no truncation" => sub {
+    my $res = $tester->request([[
+      "Email/get" => {
+        ids                => [ $message->id ],
+        properties         => [ 'bodyStructure', 'bodyValues' ],
+        fetchAllBodyValues => jtrue(),
+        maxBodyValueBytes  => 0,
+      },
+    ]]);
+    ok($res->is_success, "Email/get")
+      or diag explain $res->response_payload;
+
+    my $arg = $res->single_sentence("Email/get")->arguments;
+
+    my $part_id = $arg->{list}[0]{bodyStructure}{partId};
+    ok(defined $part_id, 'we have a part id');
+
+    # RFC 8621 S4.2: maxBodyValueBytes "If 0 (the default), no truncation
+    # occurs."
+    jcmp_deeply(
+      $arg->{list}[0]{bodyValues}{$part_id},
+      superhashof({
+        value => $body,
+        isTruncated => jfalse(),
+      }),
+      'body value not truncated',
+    ) or diag explain $res->as_stripped_triples;
+  };
+
   subtest "truncate between single-byte characters" => sub {
     my $res = $tester->request([[
       "Email/get" => {
