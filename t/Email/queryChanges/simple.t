@@ -126,7 +126,9 @@ test {
       ],
       superhashof({
         oldQueryState => $query_state,
-        newQueryState => none($query_state),
+        # RFC 8620 S5.5: queryState MAY change here, but need not, as the
+        # results are unaffected.
+        newQueryState => ignore,
         added         => [ ],
         removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
@@ -194,7 +196,9 @@ test {
       ],
       superhashof({
         oldQueryState => $query_state,
-        newQueryState => none($query_state),
+        # RFC 8620 S5.5: queryState MAY change here, but need not, as the
+        # results are unaffected.
+        newQueryState => ignore,
         added         => [ ],
         removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
