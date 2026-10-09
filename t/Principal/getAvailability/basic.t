@@ -81,15 +81,19 @@ test {
     ok($found, "found our busy event") or diag explain \@busy;
 
     for my $bp (@busy) {
+      # draft-ietf-jmap-calendars S2.2: busyStatus is optional, default
+      # "unavailable", and if present MUST be one of the three values.
       jcmp_deeply(
         $bp,
         superhashof({
-          utcStart   => jstr(),
-          utcEnd     => jstr(),
-          busyStatus => jstr(),
+          utcStart => jstr(),
+          utcEnd   => jstr(),
+          (exists $bp->{busyStatus}
+            ? (busyStatus => any(map {; jstr($_) } qw(confirmed tentative unavailable)))
+            : ()),
         }),
         "busy period has required fields",
-      );
+      ) or diag explain $bp;
     }
   };
 
