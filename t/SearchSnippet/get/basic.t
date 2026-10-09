@@ -40,6 +40,13 @@ test {
     return;
   };
 
+  # RFC 8621 S5: "If the server is unable to determine search snippets, it
+  # MUST return null for both the "subject" and "preview" properties."
+  my $no_snippets = sub {
+    my ($snip) = @_;
+    return ! defined $snip->{subject} && ! defined $snip->{preview};
+  };
+
   subtest "snippet with subject match" => sub {
     my $res = $tester->request([[
       "SearchSnippet/get" => {
@@ -55,8 +62,13 @@ test {
 
     my $snip = $list[0];
     is($snip->{emailId}, $email->id, "correct emailId");
-    like($snip->{subject}, qr{<mark>}, "subject contains <mark> tag")
-      or diag explain $snip;
+
+    if ($no_snippets->($snip)) {
+      note("server returned no snippets");
+    } else {
+      like($snip->{subject}, qr{<mark>}, "subject contains <mark> tag")
+        or diag explain $snip;
+    }
   };
 
   subtest "snippet with body match" => sub {
@@ -70,8 +82,12 @@ test {
 
     my $args = $res->single_sentence("SearchSnippet/get")->arguments;
     my $snip = $args->{list}[0];
-    like($snip->{preview}, qr{<mark>}, "preview contains <mark> tag")
-      or diag explain $snip;
+    if ($no_snippets->($snip)) {
+      note("server returned no snippets");
+    } else {
+      like($snip->{preview}, qr{<mark>}, "preview contains <mark> tag")
+        or diag explain $snip;
+    }
   };
 
   subtest "no filter terms means no highlights" => sub {
