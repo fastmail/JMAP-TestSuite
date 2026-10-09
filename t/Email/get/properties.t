@@ -17,8 +17,12 @@ test {
   my $to      = "recip$$\@example.net";
   my $subject = "A subject for $$";
 
-  my $message = $mbox->add_message;
+  my $em_msg_id    = "orig-$$-" . time . "\@example.net";
+  my $reply_msg_id = "reply-$$-" . time . "\@example.net";
+
+  my $message = $mbox->add_message({ message_id => "<$em_msg_id>" });
   my $reply = $message->reply({
+    message_id => "<$reply_msg_id>",
     from    => $from,
     to      => $to,
     subject => $subject,
@@ -29,9 +33,6 @@ test {
       'Reply-To' => "rt$from",
     ],
   });
-
-  my $em_msg_id = $message->messageId->[0];
-  my $reply_msg_id = $reply->messageId->[0];
 
   my $empty = any([], undef);
 
