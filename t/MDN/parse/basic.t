@@ -32,7 +32,7 @@ test {
     'Reporting-UA: Test Client',
     'Final-Recipient: rfc822;tester@example.com',
     'Original-Message-ID: <original@example.com>',
-    'Disposition: manual-action/mdn-sent-manually;displayed',
+    'Disposition: Manual-Action/MDN-Sent-Manually;Displayed',
     '',
     '--=_mdn_boundary--',
     '',
@@ -66,10 +66,12 @@ test {
       $mdn,
       superhashof({
         subject     => jstr(),
+        # RFC 9007 S2: these fields "MUST be converted to lowercase by
+        # MDN/parse".
         disposition => superhashof({
-          actionMode  => jstr(),
-          sendingMode => jstr(),
-          type        => jstr(),
+          actionMode  => jstr('manual-action'),
+          sendingMode => jstr('mdn-sent-manually'),
+          type        => jstr('displayed'),
         }),
       }),
       "parsed MDN has required fields",
