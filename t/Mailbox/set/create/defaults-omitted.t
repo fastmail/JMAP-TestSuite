@@ -45,11 +45,35 @@ test {
   my $id = $res->single_sentence("Mailbox/set")->as_set->created_id('new');
   ok($id, 'got a new id');
 
-  # Server does not have to return fields, but does need to return id
+  # RFC 8620 S5.3: created holds "all server-set properties" and any
+  # "omitted by the client and thus set to a default by the server".
   jcmp_deeply(
     $created,
     superhashof({
-      id => jstr(),
+      id            => jstr(),
+      parentId      => any(jstr, undef),
+      role          => any(jstr, undef),
+      sortOrder     => jnum,
+      isSubscribed  => jbool,
+      totalEmails   => jnum(0),
+      unreadEmails  => jnum(0),
+      totalThreads  => jnum(0),
+      unreadThreads => jnum(0),
+      myRights      => superhashof({
+        map {
+          $_ => jbool(),
+        } qw(
+          mayReadItems
+          mayAddItems
+          mayRemoveItems
+          maySetSeen
+          maySetKeywords
+          mayCreateChild
+          mayRename
+          mayDelete
+          maySubmit
+        )
+      }),
     }),
     "Our mailbox looks good"
   ) or diag explain $res->as_stripped_triples;
