@@ -46,7 +46,9 @@ test {
       list => [
         {
           id     => $created_id,
-          sentAt => jstr, # Really Date header
+          # RFC 8621 S4.6: the server MUST generate a Date header field "in
+          # conformance with" RFC 5322 S3.6.1, so header:Date:asDate parses.
+          sentAt => re(qr/\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?(?:Z|[+-]\d\d:\d\d)\z/),
         },
       ],
     }),
