@@ -45,7 +45,7 @@ test {
         "Calendar/get" => { ids => [$id] },
       ]]);
       my $get_args = $get_res->single_sentence("Calendar/get")->arguments;
-      ok(grep { $_ eq $id } @{$get_args->{notFound}}, 'id in notFound after destroy');
+      ok((grep { $_ eq $id } @{$get_args->{notFound}}), 'id in notFound after destroy');
       is(scalar @{$get_args->{list}}, 0, 'list is empty');
     };
   };
@@ -81,7 +81,7 @@ test {
       or diag explain $res->response_payload;
 
     my $args = $res->single_sentence("Calendar/set")->arguments;
-    ok(grep { $_ eq $calendar->id } @{$args->{destroyed} // []}, 'calendar destroyed');
+    ok((grep { $_ eq $calendar->id } @{$args->{destroyed} // []}), 'calendar destroyed');
     ok(!$args->{notDestroyed}{ $calendar->id }, 'not in notDestroyed');
 
     subtest "Events also gone" => sub {
@@ -89,7 +89,7 @@ test {
         "CalendarEvent/get" => { ids => [$event->id] },
       ]]);
       my $get_args = $get_res->single_sentence("CalendarEvent/get")->arguments;
-      ok(grep { $_ eq $event->id } @{$get_args->{notFound}}, 'event in notFound after calendar destroy');
+      ok((grep { $_ eq $event->id } @{$get_args->{notFound}}), 'event in notFound after calendar destroy');
     };
   };
 

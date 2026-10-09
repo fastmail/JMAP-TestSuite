@@ -49,7 +49,7 @@ test {
         "AddressBook/get" => { ids => [$id] },
       ]]);
       my $get_args = $get_res->single_sentence("AddressBook/get")->arguments;
-      ok(grep { $_ eq $id } @{$get_args->{notFound}}, 'id in notFound after destroy');
+      ok((grep { $_ eq $id } @{$get_args->{notFound}}), 'id in notFound after destroy');
       is(scalar @{$get_args->{list}}, 0, 'list is empty');
     };
   };
@@ -86,7 +86,7 @@ test {
       or diag explain $res->response_payload;
 
     my $args = $res->single_sentence("AddressBook/set")->arguments;
-    ok(grep { $_ eq $book->id } @{$args->{destroyed} // []}, 'address book destroyed');
+    ok((grep { $_ eq $book->id } @{$args->{destroyed} // []}), 'address book destroyed');
     ok(!$args->{notDestroyed}{ $book->id }, 'not in notDestroyed');
 
     subtest "Card also gone" => sub {
@@ -95,7 +95,7 @@ test {
         "ContactCard/get" => { ids => [$card->id] },
       ]]);
       my $get_args = $get_res->single_sentence("ContactCard/get")->arguments;
-      ok(grep { $_ eq $card->id } @{$get_args->{notFound}},
+      ok((grep { $_ eq $card->id } @{$get_args->{notFound}}),
          'card in notFound after address book destroy');
     };
   };
@@ -144,8 +144,8 @@ test {
     ok($res->is_success, "AddressBook/set destroy one of two books")
       or diag explain $res->response_payload;
 
-    ok(grep { $_ eq $book1->id }
-         @{ $res->single_sentence("AddressBook/set")->arguments->{destroyed} // [] },
+    ok((grep { $_ eq $book1->id }
+         @{ $res->single_sentence("AddressBook/set")->arguments->{destroyed} // [] }),
        'first address book destroyed');
 
     my $get_res = $tester->request([[

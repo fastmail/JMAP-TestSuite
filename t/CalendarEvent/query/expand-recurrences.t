@@ -48,7 +48,7 @@ test {
     ok($qres->is_success, "CalendarEvent/query");
 
     my $ids = $qres->single_sentence("CalendarEvent/query")->arguments->{ids} // [];
-    ok(grep { $_ eq $master_id } @$ids, 'master id in results');
+    ok((grep { $_ eq $master_id } @$ids), 'master id in results');
   };
 
   subtest "Query with expandRecurrences returns occurrences" => sub {

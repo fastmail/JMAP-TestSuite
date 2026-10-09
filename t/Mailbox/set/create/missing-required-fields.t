@@ -37,7 +37,7 @@ test {
     ok($err->{type}, 'the SetError has a type') or return;
 
     if ($err->{type} eq 'invalidProperties') {
-      ok(grep { $_ eq 'name' } @{ $err->{properties} // [] },
+      ok((grep { $_ eq 'name' } @{ $err->{properties} // [] }),
          'properties names "name" as the problem')
         or diag explain $err;
     }

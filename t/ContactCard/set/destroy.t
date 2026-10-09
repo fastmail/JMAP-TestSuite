@@ -24,7 +24,7 @@ test {
 
   my $set_args = $res->single_sentence("ContactCard/set")->arguments;
 
-  ok(grep { $_ eq $card->id } @{ $set_args->{destroyed} // [] },
+  ok((grep { $_ eq $card->id } @{ $set_args->{destroyed} // [] }),
     'card id appears in destroyed list');
 
   ok(!$set_args->{notDestroyed}{ $card->id }, 'no notDestroyed entry');
@@ -37,6 +37,6 @@ test {
 
     my $args = $get_res->single_sentence("ContactCard/get")->arguments;
     is(scalar @{ $args->{list} }, 0, 'no cards returned');
-    ok(grep { $_ eq $card->id } @{ $args->{notFound} // [] }, 'card is in notFound');
+    ok((grep { $_ eq $card->id } @{ $args->{notFound} // [] }), 'card is in notFound');
   };
 };

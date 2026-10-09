@@ -68,7 +68,7 @@ test {
 
     is($args->{notDestroyed}{$missing}{type}, 'notFound',
        'the bad id is rejected');
-    ok(grep { $_ eq $email->id } @{ $args->{destroyed} // [] },
+    ok((grep { $_ eq $email->id } @{ $args->{destroyed} // [] }),
        'the good id is still destroyed');
   };
 };
