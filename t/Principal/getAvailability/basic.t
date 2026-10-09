@@ -267,4 +267,46 @@ test {
         or diag explain $list;
     }
   };
+
+  subtest "event-less periods are merged" => sub {
+    # 10:00-11:00 abuts 11:00-12:00; 14:00-15:30 overlaps 15:00-16:00.
+    for my $slot (['10:00', 'PT1H'], ['11:00', 'PT1H'], ['14:00', 'PT1H30M'], ['15:00', 'PT1H']) {
+      $account->create_calendar_event({
+        start       => "2025-07-04T$slot->[0]:00",
+        timeZone    => 'Etc/UTC',
+        duration    => $slot->[1],
+        calendar    => $calendar,
+      });
+    }
+
+    my $res = $tester->request([[
+      "Principal/getAvailability" => {
+        id          => $principal_id,
+        utcStart    => '2025-07-04T00:00:00Z',
+        utcEnd      => '2025-07-05T00:00:00Z',
+        showDetails => \0,
+      },
+    ]]);
+    my $list = eval { $res->single_sentence("Principal/getAvailability")->arguments->{list} };
+    ok($list, 'got a list') or return diag explain $res->as_stripped_triples;
+
+    # S2.2: event-less periods MUST NOT overlap, and touching ones MUST differ
+    # in busyStatus (default "unavailable").
+    my @null = sort { $a->{utcStart} cmp $b->{utcStart} } grep { !defined $_->{event} } @$list;
+    for my $i (1 .. $#null) {
+      my ($p, $q) = @null[ $i - 1, $i ];
+      ok(
+        $p->{utcEnd} lt $q->{utcStart}
+          || ($p->{utcEnd} eq $q->{utcStart}
+              && ($p->{busyStatus} // 'unavailable') ne ($q->{busyStatus} // 'unavailable')),
+        "$p->{utcStart}..$p->{utcEnd} and $q->{utcStart}..$q->{utcEnd} are separate",
+      ) or diag explain \@null;
+    }
+
+    my %span = map {; "$_->{utcStart}/$_->{utcEnd}" => 1 } @null;
+    ok($span{'2025-07-04T10:00:00Z/2025-07-04T12:00:00Z'}, 'adjacent events merged into one period')
+      or diag explain \@null;
+    ok($span{'2025-07-04T14:00:00Z/2025-07-04T16:00:00Z'}, 'overlapping events merged into one period')
+      or diag explain \@null;
+  };
 };
