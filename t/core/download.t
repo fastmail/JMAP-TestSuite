@@ -62,7 +62,8 @@ test {
   if (my $cd = $download_res->header('Content-Disposition')){
     note("Got a Content-Disposition header: $cd");
 
-    # Either the plain quoted form or the RFC 5987 filename*= form is fine.
-    like($cd, qr/filename="myfile\.txt"|filename\*=UTF-8''myfile\.txt/, 'filename is correct');
+    # RFC 6266 S4.1: filename is a token or a quoted-string, and filename*
+    # is the extended form.
+    like($cd, qr/filename="myfile\.txt"|filename=myfile\.txt(?:\s*;|\s*\z)|filename\*=UTF-8''myfile\.txt/, 'filename is correct');
   }
 };
