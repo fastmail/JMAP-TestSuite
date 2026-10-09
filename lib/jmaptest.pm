@@ -29,7 +29,7 @@ sub import {
   Test::Abortable->import::into($caller);
   Moose::Meta::Role->create($caller);
 
-  JMAP::TestSuite::Util->import::into($caller, qw(batch_ok fetch_session foreign_account_not_found_ok));
+  JMAP::TestSuite::Util->import::into($caller, qw(batch_ok fetch_session foreign_account_not_found_ok invalid_properties));
   Moose::Util::apply_all_roles($caller, 'JMAP::TestSuite::Tester');
 
   Sub::Install::install_sub({

@@ -113,19 +113,14 @@ test {
       jcmp_deeply(
         $set_res->single_sentence('Mailbox/set')->arguments->{notUpdated},
         {
-          $mailbox2->id => superhashof({
-            type => 'invalidProperties',
-            properties => bag(
-              qw(
+          $mailbox2->id => invalid_properties(qw(
                 id
                 totalEmails
                 unreadEmails
                 totalThreads
                 unreadThreads
               ),
-              map {; "myRights/$_" } keys %rights,
-            ),
-          }),
+              map {; "myRights/$_" } keys %rights),
         },
         'got errors for immutable properties'
       ) or diag explain $set_res->as_stripped_triples;

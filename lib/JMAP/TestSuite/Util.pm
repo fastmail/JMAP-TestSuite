@@ -6,7 +6,7 @@ use Sub::Exporter -setup => [ qw(
   batch_ok
   fetch_session
   foreign_account_not_found_ok
-  email_create_invalid_or_repaired
+  invalid_properties
   email
   client_keywords
   mailbox
@@ -161,46 +161,38 @@ sub foreign_account_not_found_ok {
   }
 }
 
-=head2 email_create_invalid_or_repaired
+=head2 invalid_properties
 
-  email_create_invalid_or_repaired($tester, \%email, \%get_args, sub {
-    my ($email) = @_;
-    ...
-  }, $desc);
+  jcmp_deeply($err, invalid_properties(qw(mailboxIds keywords)));
 
-Creates C<\%email>, which breaks one of the RFC 8621 section 4.6 creation
-rules.  The server "SHOULD" reject it with C<invalidProperties>, but "MAY
-choose to modify the Email ... to comply with its requirements instead", so
-either passes: a rejection must be C<invalidProperties>, and a created Email
-is fetched with C<\%get_args> and handed to the callback, which asserts the
-repair does comply.
+A comparator for an C<invalidProperties> SetError.  RFC 8620 section 5.3 says
+the error "SHOULD also have a property called C<properties>" listing the
+invalid ones, so it may be absent; when present it must name each given
+property, as itself, as a path inside it (C<myRights/mayDelete> for
+C<myRights>), or as a path containing it.  Order and extra entries do not
+matter.
 
 =cut
 
-sub email_create_invalid_or_repaired {
-  my ($tester, $email, $get_args, $check, $desc) = @_;
+sub invalid_properties {
+  my @want = @_;
 
-  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  return code(sub {
+    my ($err) = @_;
+    return (0, "not a SetError object") unless ref $err eq 'HASH';
+    my $type = $err->{type} // 'undef';
+    return (0, "type is $type, not invalidProperties") unless $type eq 'invalidProperties';
 
-  my $res = $tester->request([[ 'Email/set' => { create => { new => $email } } ]]);
-  my $set = $res->single_sentence('Email/set')->arguments;
+    my $got = $err->{properties};
+    return 1 unless defined $got;
+    return (0, "properties is not an array") unless ref $got eq 'ARRAY';
 
-  if (my $err = $set->{notCreated}{new}) {
-    is($err->{type}, 'invalidProperties', "$desc: rejected with invalidProperties")
-      or diag explain $err;
-    return;
-  }
-
-  my $id = $set->{created}{new}{id};
-  ok($id, "$desc: created, so the server repaired it")
-    or return diag explain $res->as_stripped_triples;
-
-  my $get = $tester->request([[ 'Email/get' => { ids => [ $id ], %$get_args } ]]);
-  my $got = $get->single_sentence('Email/get')->arguments->{list}[0];
-  ok($got, "$desc: the repaired Email can be fetched")
-    or return diag explain $get->as_stripped_triples;
-
-  subtest "$desc: the repaired Email complies" => sub { $check->($got) };
+    for my $w (@want) {
+      next if grep {; $_ eq $w || index($_, "$w/") == 0 || index($w, "$_/") == 0 } @$got;
+      return (0, "properties [@$got] does not name $w");
+    }
+    return 1;
+  });
 }
 
 sub batch_ok {

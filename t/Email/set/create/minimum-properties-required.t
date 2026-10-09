@@ -26,10 +26,7 @@ test {
       ],
       superhashof({
         notCreated => {
-          new => superhashof({
-            type => 'invalidProperties',
-            properties => [ 'mailboxIds' ],
-          }),
+          new => invalid_properties('mailboxIds'),
         },
       }),
       "required properties not provided gives correct error",

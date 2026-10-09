@@ -42,10 +42,7 @@ test {
       oldState => any(undef, jstr()),
       newState => jstr(),
       notCreated => {
-        new2 => superhashof({
-          type => 'invalidProperties',
-          properties => [ 'mailboxIds' ],
-        }),
+        new2 => invalid_properties('mailboxIds'),
       },
       created => {
         new => {
