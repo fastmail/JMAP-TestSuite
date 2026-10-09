@@ -19,7 +19,7 @@ test {
   my $message = $mbox->add_message({
     attributes => {
       content_type => 'text/plain',
-      charset      => 'utf8',
+      charset      => 'UTF-8',
       encoding     => 'quoted-printable',
     },
     body_str => $body,
