@@ -178,6 +178,28 @@ test {
         "got error about bad 'mailboxIds'"
       ) or diag explain $res->as_stripped_triples;
     };
+
+    subtest "empty mailboxIds" => sub {
+      # RFC 8621 S4.8: "At least one Mailbox MUST be given."
+      my $res = $tester->request([[
+        "Email/import" => {
+          emails => {
+            new => {
+              mailboxIds => {},
+              blobId     => $blob->blobId,
+            },
+          },
+        },
+      ]]);
+
+      jcmp_deeply(
+        $res->single_sentence('Email/import')->arguments->{notCreated},
+        {
+          new => invalid_properties('mailboxIds'),
+        },
+        "got error about empty 'mailboxIds'"
+      ) or diag explain $res->as_stripped_triples;
+    };
   };
 
   subtest "keywords" => sub {
