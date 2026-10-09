@@ -16,15 +16,16 @@ test {
   my $download_url = $data->{downloadUrl};
   ok($download_url, 'got a download url');
 
+  # RFC 8620 S2: downloadUrl "MUST contain variables called accountId,
+  # blobId, type, and name".
+  for my $var (qw(accountId blobId type name)) {
+    like($download_url, qr/\{$var\}/, "downloadUrl has {$var}");
+  }
+
   my $account_id = $account->accountId;
 
-  if ($download_url =~ s/{accountId}/$account_id/) {
-    note("downloadUrl included {accountId} variable. Using $download_url");
-  }
-
-  if ($download_url =~ s/{name}/myfile.txt/) {
-    note("downloadUrl included {name} variable. Using $download_url");
-  }
+  $download_url =~ s/{accountId}/$account_id/;
+  $download_url =~ s/{name}/myfile.txt/;
 
   my $blob = $tester->upload({
     accountId => $account->accountId,
@@ -33,9 +34,8 @@ test {
   });
   my $id = $blob->blobId;
 
-  ok($download_url =~ s/{blobId}/$id/, 'downloadUrl included a blobId');
-
-  ok($download_url =~ s:{type}:text/plain:, 'downloadUrl included a blobId');
+  $download_url =~ s/{blobId}/$id/;
+  $download_url =~ s:{type}:text/plain:;
 
   # XXX - downloadUrl should probably be required to be an absolute url
   unless ($download_url =~ /^http/i) {

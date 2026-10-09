@@ -18,9 +18,9 @@ test {
 
   my $account_id = $account->accountId;
 
-  if ($upload_url =~ s/{accountId}/$account_id/) {
-    note("uploadUrl included {accountId} variable. Using $upload_url");
-  }
+  # RFC 8620 S2: uploadUrl "MUST contain a variable called accountId".
+  like($upload_url, qr/\{accountId\}/, "uploadUrl has {accountId}");
+  $upload_url =~ s/{accountId}/$account_id/;
 
   # XXX - uploadUrl should probably be required to be an absolute url
   unless ($upload_url =~ /^http/i) {
