@@ -90,19 +90,25 @@ test {
       ]]);
       ok($res->is_success, "EmailSubmission/get") or diag explain $res->response_payload;
 
-      my $args = $res->single_sentence("EmailSubmission/get")->arguments;
-      is(scalar @{ $args->{list} },     1, "one result");
-      is(scalar @{ $args->{notFound} }, 0, "nothing not found");
-
+      # RFC 8621 S7: a server "MAY destroy EmailSubmission objects at any
+      # time after the message is successfully sent", even immediately.
       jcmp_deeply(
-        $args->{list}[0],
-        superhashof({
-          id         => jstr($sub_id),
-          emailId    => jstr($email_id),
-          identityId => jstr(),
-        }),
-        "submission has required fields",
-      ) or diag explain $args->{list}[0];
+        $res->single_sentence("EmailSubmission/get")->arguments,
+        any(
+          superhashof({
+            list     => [
+              superhashof({
+                id         => jstr($sub_id),
+                emailId    => jstr($email_id),
+                identityId => jstr(),
+              }),
+            ],
+            notFound => [],
+          }),
+          superhashof({ list => [], notFound => [ jstr($sub_id) ] }),
+        ),
+        "submission found with required fields, or already destroyed",
+      ) or diag explain $res->as_stripped_triples;
     };
   };
 
