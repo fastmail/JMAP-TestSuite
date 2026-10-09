@@ -111,6 +111,8 @@ test {
               email => 'test@example.org',
             },
           ],
+          # RFC 8621 S4.1.4 only says SHOULD, but ignoring a named, non-inline
+          # attachment with content would be clearly wrong.
           hasAttachment => jtrue(),
           htmlBody    => [ \%body ],
           id          => $id,
