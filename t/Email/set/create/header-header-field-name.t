@@ -23,7 +23,9 @@ test {
   subtest ":all suffix can provide a list" => sub {
     $self->create_and_check_header(
       set    => [ "header:foo:all" => [ qw(cat dog mouse) ], ],
-      expect => [ ' cat', ' dog', ' mouse' ],
+      get    => "header:foo:asRaw:all",
+      # RFC 8621 S4.1.2.1: Raw "will typically have a leading space".
+      expect => [ map {; re(qr/\A\s*\Q$_\E\z/) } qw(cat dog mouse) ],
     );
   };
 
@@ -38,7 +40,7 @@ test {
     for my $header (@hlist) {
       $self->create_and_check_header(
         set    => [ "header:$header:asText" => "howdy" ],
-        expect => [ ' howdy' ],
+        expect => [ 'howdy' ],
       );
     }
   };
@@ -50,8 +52,6 @@ test {
 
       my $name = "Foo bar";
       my $email = "foos$$\@example.net";
-
-      my $to_value = qq{"$name" <$email>};
 
       my $as_addresses = {
         name  => $name,
@@ -75,7 +75,7 @@ test {
       for my $header (@hlist) {
         $self->create_and_check_header(
           set    => [ "header:$header:asAddresses" => [ $as_addresses ] ],
-          expect => [ " $to_value" ],
+          expect => [ [ $as_addresses ] ],
         );
       }
     }
@@ -90,12 +90,11 @@ test {
     );
 
     my $mid1 = 'foo@example.com';
-    my $to_value = "<$mid1>";
 
     for my $header (@hlist) {
       $self->create_and_check_header(
         set    => [ "header:$header:asMessageIds" => [ "$mid1" ], ],
-        expect => [ " $to_value" ],
+        expect => [ [ $mid1 ] ],
       );
     }
   };
@@ -103,11 +102,11 @@ test {
   subtest "asDate" => sub {
     my $value = "1969-02-14T12:02:00Z";
 
-    my @allowed = (
-      re('^\s+Sat, 15 Feb 1969'),
-      re('^\s+Fri, 14 Feb 1969'),
-      re('^\s+Thu, 13 Feb 1969'),
-   );
+    # RFC 8620 S1.4: a Date may carry any offset, so compare the instant.
+    my $same_instant = code(sub {
+      my $got = rfc3339_epoch($_[0]);
+      return defined $got && $got == rfc3339_epoch($value);
+    });
 
     my @hlist = qw(
       Date
@@ -118,7 +117,7 @@ test {
     for my $header (@hlist) {
       $self->create_and_check_header(
         set    => [ "header:$header:asDate" => $value, ],
-        expect => [ any(@allowed) ],
+        expect => [ $same_instant ],
       );
     }
   };
@@ -126,8 +125,6 @@ test {
   subtest "asURLs" => sub {
     my $url1 = "http://example.net";
     my $url2 = "http://example.org/" . ("a" x 35);
-
-    my $to_value = "<$url1>,\r\n <$url2>";
 
     my @hlist = qw(
       List-Help
@@ -142,7 +139,7 @@ test {
     for my $header (@hlist) {
       $self->create_and_check_header(
         set    => [ "header:$header:asURLs" => [ $url1, $url2 ], ],
-        expect => [ " $to_value" ],
+        expect => [ [ $url1, $url2 ] ],
       );
     }
   };
@@ -160,6 +157,7 @@ sub create_and_check_header {
   $mbox    ||= $account->create_mailbox;
 
   my ($header_name) = $header =~ /^header:(.*?)(:|$)/;
+  my $get_prop = $arg{get} // ($header =~ /:all\z/ ? $header : "$header:all");
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
@@ -219,16 +217,29 @@ sub create_and_check_header {
     [
       "Email/get" => {
         ids => [ $id ],
-        properties => [ "header:$header_name:asRaw:all" ],
+        properties => [ $get_prop ],
       },
     ],
     superhashof({
       list => [
         superhashof({
-          "header:$header_name:asRaw:all" => $expect,
+          $get_prop => $expect,
         }),
       ],
     }),
     "Email/set create with $header works as expected"
   );
+}
+
+sub rfc3339_epoch {
+  my ($date) = @_;
+  return undef unless defined $date && $date =~ /\A
+    (\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:\.\d+)?
+    (?: Z | ([+-])(\d\d):(\d\d) )
+  \z/x;
+
+  require Time::Local;
+  my $epoch = Time::Local::timegm($6, $5, $4, $3, $2 - 1, $1);
+  my $offset = defined $7 ? ($8 * 3600 + $9 * 60) * ($7 eq '-' ? -1 : 1) : 0;
+  return $epoch - $offset;
 }
