@@ -1,5 +1,7 @@
 use jmaptest;
 
+use JMAP::TestSuite::Comparator::CalendarEvent qw(jduration);
+
 test {
   my ($self) = @_;
 
@@ -107,11 +109,9 @@ test {
     my $got = $tester->request([[
       "CalendarEvent/get" => { ids => [$id], properties => ['duration'] },
     ]])->single_sentence("CalendarEvent/get")->arguments->{list}[0];
-    # Server may normalise PT90M → PT1H30M; accept either
-    ok(
-      ($got->{duration} // '') =~ /^PT(90M|1H30M)$/,
-      "duration round-trips (got " . ($got->{duration} // 'undef') . ")"
-    );
+    # jscalendarbis S1.5.6: any equivalent Duration form is the same value.
+    jcmp_deeply($got->{duration}, jduration('PT90M'), 'duration round-trips')
+      or diag explain $got;
   };
 
   subtest "Replace recurrenceRule (whole object)" => sub {

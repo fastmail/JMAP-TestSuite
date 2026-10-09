@@ -1,6 +1,7 @@
 use jmaptest;
 
 use Data::GUID qw(guid_string);
+use JMAP::TestSuite::Comparator::CalendarEvent qw(jduration);
 
 test {
   my ($self) = @_;
@@ -75,7 +76,7 @@ test {
         title    => jstr($title),
         start    => jstr('2024-06-01T10:00:00'),
         timeZone => jstr('America/New_York'),
-        duration => jstr('PT2H'),
+        duration => jduration('PT2H'),
       }),
       "Event properties look good",
     ) or diag explain $get_res->as_stripped_triples;
