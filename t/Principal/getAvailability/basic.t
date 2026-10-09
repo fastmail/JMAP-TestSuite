@@ -11,6 +11,7 @@ test {
   $tester->require_capabilities(
     'urn:ietf:params:jmap:core',
     'urn:ietf:params:jmap:principals',
+    'urn:ietf:params:jmap:principals:availability',
     'urn:ietf:params:jmap:calendars',
     # draft-ietf-jmap-calendars section 1.5.2: this capability "represents
     # support for the Principal/getAvailability method", so a server may
