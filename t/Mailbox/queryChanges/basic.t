@@ -26,7 +26,14 @@ test {
   ok($res->is_success, "Mailbox/query baseline") or diag explain $res->response_payload;
 
   my $base = $res->single_sentence("Mailbox/query")->arguments;
-  ok($base->{canCalculateChanges}, "canCalculateChanges is true");
+  # RFC 8620 S5.5 lets a server answer canCalculateChanges false for a given
+  # filter/sort; nothing to test then.
+  ok(defined $base->{canCalculateChanges}, "has canCalculateChanges");
+  unless ($base->{canCalculateChanges}) {
+    note("server does not support Mailbox/queryChanges for this "
+       . "filter/sort, so the rest of this file does not apply");
+    return;
+  }
 
   my $query_state = $base->{queryState};
   ok(defined $query_state, "got queryState");
