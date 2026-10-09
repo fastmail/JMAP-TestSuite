@@ -12,15 +12,15 @@ sub email {
 
   $overrides ||= {};
 
-  my $mailbox = any(
-    [],
-    array_each({
-      name => any(undef, jstr),
-      email => any(undef, jstr),
-    }),
-  );
+  # RFC 8621 S4.1.2.3: an EmailAddress has "name" (String|null) and "email"
+  # (String); address properties are EmailAddress[]|null.
+  my $mailboxes = array_each({
+    name  => any(undef, jstr),
+    email => jstr,
+  });
 
-  my $mailboxes = any([], array_each($mailbox));
+  # RFC 8621 S4.1.3: message id properties are String[]|null.
+  my $message_ids = any(undef, array_each(jstr));
 
   my %required = (
     id            => jstr,
@@ -38,9 +38,9 @@ sub email {
 
   my %optional = (
     keywords      => any({}, hash_each(jtrue)),
-    messageId     => any([], hash_each(jstr)),
-    inReplyTo     => any([], hash_each(jstr)),
-    references    => any([], hash_each(jstr)),
+    messageId     => $message_ids,
+    inReplyTo     => $message_ids,
+    references    => $message_ids,
     sender        => any(undef, $mailboxes),
     from          => any(undef, $mailboxes),
     to            => any(undef, $mailboxes),
@@ -49,7 +49,8 @@ sub email {
     replyTo       => any(undef, $mailboxes),
     subject       => any(undef, jstr),
     receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z'),
-    sentAt        => any(undef, re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ')),
+    # RFC 8621 S4.1.3: sentAt is a Date, so any offset is allowed.
+    sentAt        => any(undef, re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?(?:Z|[+-]\d\d:\d\d)\z')),
   );
 
   for my $k (keys %$overrides) {
