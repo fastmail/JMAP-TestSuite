@@ -124,7 +124,11 @@ test {
     ]]);
     ok($res->is_success, "request succeeded");
 
+    # draft-ietf-jmap-calendars S2.2: notFound when "No Principal with this
+    # id exists".
     my $sent = $res->single_sentence;
     is($sent->name, 'error', "got error for unknown principal");
+    is($sent->arguments->{type}, 'notFound', "error is notFound")
+      or diag explain $sent->arguments;
   };
 };
