@@ -100,14 +100,23 @@ test {
       },
     ]]);
     ok($res->is_success, "Email/copy with onSuccessDestroyOriginal")
-      or diag explain $res->response_payload;
+      or return diag explain $res->response_payload;
 
-    my $args = $res->sentence_named("Email/copy")->arguments;
-    ok($args->{created}{c2}, "email was copied");
-
-    my $set_args = $res->sentence_named("Email/set")->arguments;
-    ok(grep { $_ eq $msg2->id } @{$set_args->{destroyed} // []},
-       "Email/set response shows original destroyed");
+    # RFC 8620 S5.4: "after emitting the "Foo/copy" response ... the server
+    # MUST make a single call to "Foo/set" to destroy the original", and
+    # S3.2: all responses to a call "get the same method call id".
+    my $cid = $res->as_stripped_triples->[0][2];
+    jcmp_deeply(
+      $res->as_stripped_triples,
+      [
+        [ 'Email/copy', superhashof({ created => { c2 => superhashof({ id => ignore() }) } }), $cid ],
+        [ 'Email/set', superhashof({
+            accountId => $from_account->accountId,
+            destroyed => [ $msg2->id ],
+          }), $cid ],
+      ],
+      "Email/copy response is followed by an Email/set destroying the original",
+    ) or diag explain $res->as_stripped_triples;
 
     my $check = $from_tester->request([[
       "Email/get" => {
