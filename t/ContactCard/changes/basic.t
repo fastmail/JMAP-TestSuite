@@ -51,7 +51,9 @@ test {
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
         created        => [ $card->id ],
-        updated        => [],
+        # RFC 8620 S5.2: a record created AND updated since the old state
+        # "MAY" also be returned in "updated".
+        updated        => any([], [ $card->id ]),
         destroyed      => [],
       }),
       "created response looks good",
