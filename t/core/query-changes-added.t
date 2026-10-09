@@ -44,6 +44,8 @@ test {
 
   for my $case (
     [ "without upToId", {} ],
+    # S5.6: name is mutable, so upToId "is ignored".
+    [ "with upToId on a mutable sort", { upToId => $old->{ids}[0] } ],
   ) {
     my ($desc, $extra) = @$case;
 
