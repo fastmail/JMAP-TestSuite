@@ -1,4 +1,5 @@
 use jmaptest;
+use URI::Escape qw(uri_escape);
 
 test {
   my ($self) = @_;
@@ -22,11 +23,6 @@ test {
     like($download_url, qr/\{$var\}/, "downloadUrl has {$var}");
   }
 
-  my $account_id = $account->accountId;
-
-  $download_url =~ s/{accountId}/$account_id/;
-  $download_url =~ s/{name}/myfile.txt/;
-
   my $blob = $tester->upload({
     accountId => $account->accountId,
     type      => 'text/plain',
@@ -34,8 +30,15 @@ test {
   });
   my $id = $blob->blobId;
 
-  $download_url =~ s/{blobId}/$id/;
-  $download_url =~ s:{type}:text/plain:;
+  # RFC 8620 S6.2: a level 1 URI Template (RFC 6570 S3.2.2), whose simple
+  # expansion percent-encodes everything but unreserved characters.
+  my %vars = (
+    accountId => $account->accountId,
+    blobId    => $id,
+    type      => "text/plain",
+    name      => "myfile.txt",
+  );
+  $download_url =~ s/\{(accountId|blobId|type|name)\}/uri_escape($vars{$1})/ge;
 
   # XXX - downloadUrl should probably be required to be an absolute url
   unless ($download_url =~ /^http/i) {
