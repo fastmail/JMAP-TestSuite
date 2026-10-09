@@ -46,7 +46,6 @@ test {
         name          => jstr($mailbox1->name),
         # RFC 8621 S2: a user-created Mailbox only "SHOULD default" isSubscribed to true.
         isSubscribed  => jbool,
-        isSeenShared  => jfalse,
         totalEmails   => jnum(0),
         unreadEmails  => jnum(0),
         totalThreads  => jnum(0),
