@@ -43,7 +43,12 @@ test {
     return;
   }
 
-  my $calendar = $account->create_calendar;
+  # draft-ietf-jmap-calendars S2.2 counts only subscribed calendars whose
+  # includeInAvailability is "all" or "attending"; S4 only says SHOULD default.
+  my $calendar = $account->create_calendar({
+    isSubscribed          => \1,
+    includeInAvailability => 'all',
+  });
 
   my $event = $account->create_calendar_event({
     title      => 'Busy Meeting',
