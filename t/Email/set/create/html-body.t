@@ -110,7 +110,9 @@ test {
           sentAt      => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(Z|([+-]\d\d:\d\d))\z'),
           size        => jnum(),
           subject     => 'a test subject',
-          textBody    => [ \%body ],
+          # RFC 8621 S4.6 doesn't fix the generated structure; the server may add a
+          # text/plain alternative, which S4.1.4 then puts in textBody.
+          textBody    => [ any(\%body, superhashof({ type => 'text/plain' })) ],
           threadId    => $new->{threadId},
           to          => undef,
         },
