@@ -101,8 +101,15 @@ test {
   };
 
   subtest "Card in a second address book survives" => sub {
-    # RFC 9610 S2.1 requires a card to be in at least one address book but not
-    # that a server support several, so skip if this create is refused.
+    # RFC 9610 S1.4.1: maxAddressBooksPerCard is null for no limit, else >= 1.
+    my $session = fetch_session($tester) or return;
+    my $max = $session->{accounts}{ $account->accountId }{accountCapabilities}
+                {"urn:ietf:params:jmap:contacts"}{maxAddressBooksPerCard};
+    if (defined $max && $max < 2) {
+      note("maxAddressBooksPerCard is $max; skipping");
+      return;
+    }
+
     my $book1 = $account->create_address_book;
     my $book2 = $account->create_address_book;
 
@@ -123,14 +130,10 @@ test {
 
     my $cargs = $cres->single_sentence("ContactCard/set")->arguments;
 
-    unless ($cargs->{created}{multi}) {
-      note('server will not put one card in two address books ('
-         . ($cargs->{notCreated}{multi}{type} // 'unknown error')
-         . '); RFC 9610 does not require it, so skipping');
-      return;
-    }
+    ok($cargs->{created}{multi}, "card created in two address books")
+      or diag explain $cargs;
 
-    my $card = $cargs->{created}{multi};
+    my $card = $cargs->{created}{multi} or return;
 
     my $res = $tester->request([[
       "AddressBook/set" => {
