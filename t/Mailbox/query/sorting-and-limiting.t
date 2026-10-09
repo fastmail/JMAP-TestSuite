@@ -183,7 +183,9 @@ test {
       sort => [{ property => 'name', isAscending => JSON::true, }],
       position => $#name_asc + 5,
     },
-    { ids => [], position => 0, },
+    # RFC 8620 S5.5: ids "will be empty, but this is not an error"; with no
+    # first result, the response position is not pinned to any value.
+    { ids => [], position => jnum, },
     $describer_sub,
     "sort by name, explicit ascending order, explicit position too high"
   );
