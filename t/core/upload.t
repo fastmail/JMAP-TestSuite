@@ -54,4 +54,18 @@ test {
     }),
     'upload response looks good',
   );
+
+  # RFC 8620 S2: maxSizeUpload is the largest file "the server will accept".
+  my $max = $data->{capabilities}{'urn:ietf:params:jmap:core'}{maxSizeUpload};
+  if (defined $max && $max < 2_000_000) {
+    my $big_res = $tester->ua->lwp->post($upload_url,
+      'Content-Type' => 'application/octet-stream',
+      $tester->_maybe_auth_header,
+      Content => 'x' x ($max + 1),
+    );
+    ok(!$big_res->is_success, 'upload over maxSizeUpload is an HTTP error')
+      or diag $big_res->status_line;
+  } else {
+    note("maxSizeUpload is too large to exceed cheaply; skipping");
+  }
 };
