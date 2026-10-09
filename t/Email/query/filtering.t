@@ -35,7 +35,7 @@ test {
     aaa_future => $mailboxes{aaa}->add_message({
       subject    => 'aaa_future',
       receivedAt => '2040-08-08T05:04:03Z',
-      body       => "the future is here",
+      body       => "the future is zorptastic",
       to         => 'totest@example.com',
     }),
     aaa_large  => $mailboxes{aaa}->add_message({
@@ -426,7 +426,7 @@ test {
     "Email/query",
     {
       filter => {
-        text => "here",
+        text => "zorptastic",
       },
       sort   => [{ property => 'receivedAt', isAscending => jtrue() }],
     },
