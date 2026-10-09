@@ -105,7 +105,7 @@ test {
           },
           messageId   => [ $mid, ],
           preview     => jstr(),
-          receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+          receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z'),
           references  => undef,
           replyTo     => undef,
           sender      => undef,

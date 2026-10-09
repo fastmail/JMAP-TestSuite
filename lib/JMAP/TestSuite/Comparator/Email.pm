@@ -48,7 +48,7 @@ sub email {
     bcc           => any(undef, $mailboxes),
     replyTo       => any(undef, $mailboxes),
     subject       => any(undef, jstr),
-    receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
+    receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z'),
     sentAt        => any(undef, re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ')),
   );
 
