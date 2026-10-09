@@ -1,6 +1,8 @@
 use jmaptest;
 use utf8;
 
+use Encode ();
+
 test {
   my ($self) = @_;
 
@@ -24,6 +26,23 @@ test {
     },
     body_str => $body,
   });
+
+  # RFC 8621 S4.2: a truncated value "does not exceed this number of octets"
+  # and is valid UTF-8; any such prefix of the body is acceptable.
+  my $truncated_to = sub {
+    my ($max) = @_;
+    return superhashof({
+      value => code(sub {
+        my ($got) = @_;
+        return (0, "value is not a prefix of the body")
+          unless defined $got && index($body, $got) == 0;
+        return (0, "value exceeds $max octets")
+          if length(Encode::encode('UTF-8', $got)) > $max;
+        return 1;
+      }),
+      isTruncated => jtrue(),
+    });
+  };
 
   subtest "invalid values" => sub {
     for my $invalid (-5, "cat", "1", {}, [], jtrue, undef) {
@@ -95,10 +114,7 @@ test {
 
     jcmp_deeply(
       $arg->{list}[0]{bodyValues}{$part_id},
-      superhashof({
-        value => '123',
-        isTruncated => jtrue(),
-      }),
+      $truncated_to->(3),
       'body value truncated correctly',
     ) or diag explain $res->as_stripped_triples;
   };
@@ -121,15 +137,9 @@ test {
       my $part_id = $arg->{list}[0]{bodyStructure}{partId};
       ok(defined $part_id, 'we have a part id');
 
-      # Since we're asking for < 7 bytes and the snowman accounts for
-      # bytes 5 and 6, and 7, the server MUST NOT EXCEED our request and so
-      # must return everything before the snowman but not include it.
       jcmp_deeply(
         $arg->{list}[0]{bodyValues}{$part_id},
-        superhashof({
-          value => '1234',
-          isTruncated => jtrue(),
-        }),
+        $truncated_to->($mid_snowman),
         'body value truncated correctly',
       ) or diag explain $res->as_stripped_triples;
     }
