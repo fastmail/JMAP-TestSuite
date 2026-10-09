@@ -92,6 +92,10 @@ test {
     "card is in the destination address book",
   ) or diag explain $got_card;
 
+  # RFC 8620 S5.4: properties not given in the copy keep the original's values.
+  is($got_card->{uid}, $src_card->uid, "copied card keeps the uid");
+  is($got_card->{name}{full}, "Copy Test Contact $$", "copied card keeps the name");
+
   my $orig = $from_tester->request([[
     "ContactCard/get" => {
       accountId => $from_account->accountId,
