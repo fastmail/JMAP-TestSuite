@@ -174,12 +174,12 @@ sub create_and_check_header {
   } else {
     $want = superhashof({
       created => {
-        new => {
+        new => superhashof({
           id       => jstr(),
           size     => jnum(),
           blobId   => jstr(),
           threadId => jstr(),
-        },
+        }),
       },
     });
   }

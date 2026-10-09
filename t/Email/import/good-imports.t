@@ -39,12 +39,12 @@ test {
         newState => jstr(),
         notCreated => undef,
         created => {
-          new => {
+          new => superhashof({
             blobId   => jstr(),
             id       => jstr(),
             size     => jnum(),
             threadId => jstr(),
-          },
+          }),
         },
       },
     ) or diag explain $res->as_stripped_triples;
@@ -124,12 +124,12 @@ test {
         newState => jstr(),
         notCreated => undef,
         created => {
-          new => {
+          new => superhashof({
             blobId   => jstr(),
             id       => jstr(),
             size     => jnum(),
             threadId => jstr(),
-          },
+          }),
         },
       },
     ) or diag explain $res->as_stripped_triples;
@@ -212,12 +212,12 @@ test {
         newState => jstr(),
         notCreated => undef,
         created => {
-          new => {
+          new => superhashof({
             blobId   => jstr(),
             id       => jstr(),
             size     => jnum(),
             threadId => jstr(),
-          },
+          }),
         },
       },
     ) or diag explain $res->as_stripped_triples;

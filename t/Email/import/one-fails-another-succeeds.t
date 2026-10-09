@@ -45,12 +45,12 @@ test {
         new2 => invalid_properties('mailboxIds'),
       },
       created => {
-        new => {
+        new => superhashof({
           blobId   => jstr(),
           id       => jstr(),
           size     => jnum(),
           threadId => jstr(),
-        },
+        }),
       },
     },
   ) or diag explain $res->as_stripped_triples;
