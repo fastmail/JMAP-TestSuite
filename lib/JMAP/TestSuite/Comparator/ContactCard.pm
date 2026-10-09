@@ -25,7 +25,7 @@ sub contact_card {
     kind           => ignore(),
     emails         => ignore(),
     phones         => ignore(),
-    online         => ignore(),
+    onlineServices => ignore(),
     addresses      => ignore(),
     notes          => ignore(),
     anniversaries  => ignore(),
