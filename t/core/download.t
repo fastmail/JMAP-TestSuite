@@ -54,7 +54,10 @@ test {
 
   ok($download_res->is_success, 'downloaded a file');
 
-  is($download_res->header('Content-Type'), 'text/plain', 'good Content-Type');
+  # RFC 9110 S8.3.1: the media type is case-insensitive and may be followed
+  # by parameters such as charset.
+  my ($media_type) = split /\s*;/, $download_res->header('Content-Type') // '';
+  is(lc $media_type, 'text/plain', 'good Content-Type');
   is($download_res->decoded_content, 'foo', 'download looks good');
   if (my $cd = $download_res->header('Content-Disposition')){
     note("Got a Content-Disposition header: $cd");
