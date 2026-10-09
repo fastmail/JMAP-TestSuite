@@ -42,7 +42,15 @@ test {
         accountId     => jstr($to_account->accountId),
         oldState      => any(undef, jstr()),
         newState      => jstr(),
-        created       => { c1 => superhashof({ id => jstr() }) },
+        # RFC 8621 S4.7: "created" contains "id", "blobId", "threadId", and "size".
+        created       => {
+          c1 => superhashof({
+            id       => jstr(),
+            blobId   => jstr(),
+            threadId => jstr(),
+            size     => jnum(),
+          }),
+        },
         notCreated    => undef,
       },
       "Email/copy response looks right",
