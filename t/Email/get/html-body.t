@@ -1,8 +1,9 @@
 use jmaptest;
 
-use JMAP::TestSuite::Util qw(get_parts multipart);
+use JMAP::TestSuite::Util qw(body_lists_ok get_parts multipart);
 use Path::Tiny qw(path);
 use Email::MIME;
+use Digest::MD5 qw(md5_hex);
 
 my %PART = get_parts();
 
@@ -27,49 +28,57 @@ test {
   my $res = $tester->request([[
     "Email/get" => {
       ids        => [ $message->id ],
-      properties => [ 'htmlBody', 'bodyValues', ],
+      properties => [ qw(bodyStructure textBody htmlBody attachments bodyValues) ],
       fetchHTMLBodyValues => jtrue(),
     },
   ]]);
   ok($res->is_success, "Email/get")
     or diag explain $res->response_payload;
 
-  my $get = $res->sentence_named("Email/get");
-  my $html_body = $get->arguments->{list}[0]{htmlBody};
-  my $body_values = $get->arguments->{list}[0]{bodyValues};
+  my $email = $res->sentence_named("Email/get")->arguments->{list}[0];
+  my $html_body = $email->{htmlBody};
+  my $body_values = $email->{bodyValues};
 
   ok($html_body, 'got our htmlBody');
 
-  is(@$html_body, 3, 'got 3 parts');
+  my $label_for = body_lists_ok($email, {
+    leaves    => [ map {; $_ => $PART{$_} } qw(A B C D E F G H J K) ],
+    suggested => {
+      textBody    => [qw(A B C D K)],
+      htmlBody    => [qw(A E K)],
+      attachments => [qw(C F G H J)],
+    },
+  });
 
-  subtest "order of parts is correct and includes expected parts" => sub {
-    # Ensure we got parts A, E, and K
-    my @got;
+  subtest "htmlBody parts have the right content" => sub {
+    my %content = (
+      A => "This is text part A\n",
+      B => "This is text part B\n",
+      C => "63d6f41df41023f615ceaabc4ed0db69", # md5sum of c.jpg
+      D => "This is text part D\n",
+      E => "<html><body> This is html part E </body></html>\n",
+      F => "0d37cbbda972721297f2085af3366ee8", # md5sum of f.jpg
+      G => "6c5fd754d128a276b704bbcd4b83799b", # md5sum of g.jpg
+      K => "This is text part K\n",
+    );
 
     for my $part (@$html_body) {
-      if ($part->{type} eq 'text/plain' || $part->{type} eq 'text/html') {
-        push @got, $body_values->{$part->{partId}}->{value};
+      my $label = $label_for->{ $part->{partId} // '' } // next;
+
+      my $got;
+      if ($part->{type} =~ m{\Atext/}i) {
+        $got = $body_values->{ $part->{partId} }{value};
       } else {
-        fail("Unknown type?! $part->{type}");
+        my $download_res = $tester->download({
+          blobId    => $part->{blobId},
+          accountId => $account->accountId,
+          name      => "part.bin",
+        });
+        ok($download_res->is_success, "downloaded part $label") or next;
+        $got = md5_hex(${ $download_res->bytes_ref });
       }
+
+      is($got, $content{$label}, "htmlBody part $label has the right content");
     }
-
-    jcmp_deeply(
-      \@got,
-      [
-        "This is text part A\n",
-        "<html><body> This is html part E </body></html>\n",
-        "This is text part K\n",
-      ],
-      "htmlBody gives us correct parts in order"
-    ) or diag explain $res->as_stripped_triples;
-  };
-
-  subtest "htmlBody attributes are as expected" => sub {
-    jcmp_deeply(
-      $html_body,
-      [ @PART{ qw(A E K) } ],
-      "htmlBody parts look right"
-    ) or diag explain $res->as_stripped_triples;
   };
 };

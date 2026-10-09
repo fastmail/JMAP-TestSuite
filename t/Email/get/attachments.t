@@ -1,6 +1,6 @@
 use jmaptest;
 
-use JMAP::TestSuite::Util qw(part multipart parts cpart cmultipart);
+use JMAP::TestSuite::Util qw(body_lists_ok part multipart cpart cmultipart);
 use Email::MIME;
 
 test {
@@ -60,20 +60,20 @@ test {
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
 
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0],
-      superhashof({
-        textBody => [ map { part($_) } qw(text/plain image/jpeg audio/mp3 video/avi) ],
-        htmlBody => [ part('text/html') ],
-      }),
-      "textBody and htmlBody are correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      [ parts(qw(image/jpeg audio/mp3 video/avi)) ],
-      "attachments are correct"
-    );
+    body_lists_ok($res->sentence_named("Email/get")->arguments->{list}[0], {
+      leaves    => [
+        a => part('text/plain'),
+        b => part('image/jpeg'),
+        c => part('audio/mp3'),
+        d => part('video/avi'),
+        e => part('text/html'),
+      ],
+      suggested => {
+        textBody    => [qw(a b c d)],
+        htmlBody    => [qw(e)],
+        attachments => [qw(b c d)],
+      },
+    });
   };
 
   subtest "image/audio/video in html only, attached" => sub {
@@ -120,20 +120,20 @@ test {
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
 
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0],
-      superhashof({
-        textBody => [ part('text/plain')],
-        htmlBody => [ map { part($_) } qw(text/html image/jpeg audio/mp3 video/avi) ],
-      }),
-      "textBody and htmlBody are correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      [ parts(qw(image/jpeg audio/mp3 video/avi)) ],
-      "attachments are correct"
-    );
+    body_lists_ok($res->sentence_named("Email/get")->arguments->{list}[0], {
+      leaves    => [
+        a => part('text/plain'),
+        b => part('text/html'),
+        c => part('image/jpeg'),
+        d => part('audio/mp3'),
+        e => part('video/avi'),
+      ],
+      suggested => {
+        textBody    => [qw(a)],
+        htmlBody    => [qw(b c d e)],
+        attachments => [qw(c d e)],
+      },
+    });
   };
 
   subtest "image/audio/video in text and html, not attached" => sub {
@@ -180,28 +180,20 @@ test {
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
 
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0],
-      superhashof({
-        textBody => [ map { part($_) } qw(text/plain image/jpeg audio/mp3 video/avi) ],
-        htmlBody => [ map { part($_) } qw(text/html image/jpeg audio/mp3 video/avi) ],
-      }),
-      "textBody and htmlBody are correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{textBody},
-      [ map { part($_) } qw(text/plain image/jpeg audio/mp3 video/avi) ],
-      "textBody is correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      # RFC 8621 S4.1.4: media already in both textBody and htmlBody is not an
-      # attachment.
-      [],
-      "attachments are correct"
-    );
+    body_lists_ok($res->sentence_named("Email/get")->arguments->{list}[0], {
+      leaves    => [
+        a => part('text/plain'),
+        b => part('text/html'),
+        c => part('image/jpeg'),
+        d => part('audio/mp3'),
+        e => part('video/avi'),
+      ],
+      suggested => {
+        textBody    => [qw(a c d e)],
+        htmlBody    => [qw(b c d e)],
+        attachments => [],
+      },
+    });
   };
 
   subtest "no attachments" => sub {

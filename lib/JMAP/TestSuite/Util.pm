@@ -15,6 +15,7 @@ use Sub::Exporter -setup => [ qw(
   address_book
   contact_card
   thread
+  body_lists_ok
   get_parts multipart part parts cmultipart cpart
 ) ];
 
@@ -194,6 +195,111 @@ sub invalid_properties {
     return 1;
   });
 }
+
+=head2 body_lists_ok
+
+  my $label_for = body_lists_ok($email, {
+    leaves    => [ A => $PART{A}, B => $PART{B}, ... ],
+    suggested => {
+      textBody    => [qw(A B C D K)],
+      htmlBody    => [qw(A E K)],
+      attachments => [qw(C F G H J)],
+    },
+  });
+
+Checks, as one subtest, the textBody, htmlBody and attachments of C<$email>
+(an Email/get result that includes bodyStructure and all three lists) against
+RFC 8621 section 4.1.4.  C<leaves> labels the non-multipart parts of
+bodyStructure in depth-first order and gives each one's expectation.
+
+The section says the decomposition "is not mandated", so what is checked is:
+every textBody and htmlBody part is a leaf of bodyStructure of type
+text/plain, text/html, image/*, audio/* or video/*; attachments is exactly the
+depth-first list of leaves that are in neither list, or are image/audio/video
+and not in both; and every listed part matches its leaf's expectation.
+Whether the lists equal C<suggested>, the result of the section's suggested
+algorithm, is only reported with C<note>.
+
+Returns a hashref from partId to label.
+
+=cut
+
+sub body_lists_ok {
+  my ($email, $arg) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my %label_for;
+
+  subtest "textBody, htmlBody and attachments" => sub {
+    my @leaves;
+    my $walk;
+    $walk = sub {
+      my ($part) = @_;
+      return push @leaves, $part unless ($part->{type} // '') =~ m{\Amultipart/}i;
+      $walk->($_) for @{ $part->{subParts} || [] };
+    };
+    $walk->($email->{bodyStructure} || {});
+
+    my @pairs = @{ $arg->{leaves} };
+    is(@leaves, @pairs / 2, "bodyStructure has the expected number of leaf parts")
+      or return diag explain $email->{bodyStructure};
+
+    my (@order, %expect_for, %is_media);
+    for my $i (0 .. $#leaves) {
+      my ($label, $expect) = @pairs[ 2 * $i, 2 * $i + 1 ];
+      push @order, $label;
+      $label_for{ $leaves[$i]{partId} // '' } = $label;
+      $expect_for{$label} = $expect;
+      $is_media{$label} = ($leaves[$i]{type} // '') =~ m{\A(?:image|audio|video)/}i;
+    }
+
+    my %got;
+    for my $list (qw(textBody htmlBody attachments)) {
+      for my $part (@{ $email->{$list} || [] }) {
+        my $label = $label_for{ $part->{partId} // '' };
+        ok(defined $label, "$list part is a leaf of bodyStructure")
+          or diag(explain($part)), next;
+        push @{ $got{$list} }, $label;
+
+        jcmp_deeply($part, $expect_for{$label}, "$list part $label looks right");
+        next if $list eq 'attachments';
+
+        like(
+          $part->{type},
+          qr{\A(?:text/plain|text/html|image/.+|audio/.+|video/.+)\z}i,
+          "$list part $label is of a type allowed in $list",
+        );
+      }
+    }
+
+    my %in = map {; my $l = $_; $l => { map {; $_ => 1 } @{ $got{$l} || [] } } }
+             qw(textBody htmlBody);
+    my @want = grep {;
+         (! $in{textBody}{$_} && ! $in{htmlBody}{$_})
+      || ($is_media{$_} && ! ($in{textBody}{$_} && $in{htmlBody}{$_}))
+    } @order;
+
+    is(
+      "@{ $got{attachments} || [] }",
+      "@want",
+      "attachments are the leaves not in textBody or htmlBody, plus media not in both",
+    );
+
+    for my $list (qw(textBody htmlBody attachments)) {
+      my $want = $arg->{suggested}{$list} // next;
+      my $have = "@{ $got{$list} || [] }";
+      note(
+        $have eq "@$want"
+          ? "$list matches the RFC 8621 S4.1.4 suggested algorithm"
+          : "$list is [$have]; the RFC 8621 S4.1.4 suggested algorithm gives [@$want]"
+      );
+    }
+  };
+
+  return \%label_for;
+}
+
 
 sub batch_ok {
   my ($batch) = @_;
