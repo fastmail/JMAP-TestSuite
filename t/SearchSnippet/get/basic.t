@@ -70,11 +70,8 @@ test {
 
     my $args = $res->single_sentence("SearchSnippet/get")->arguments;
     my $snip = $args->{list}[0];
-    ok(defined $snip->{preview} || defined $snip->{body}, "has preview or body snippet")
+    like($snip->{preview}, qr{<mark>}, "preview contains <mark> tag")
       or diag explain $snip;
-    if (defined $snip->{preview}) {
-      like($snip->{preview}, qr{<mark>}, "preview contains <mark> tag");
-    }
   };
 
   subtest "no filter terms means no highlights" => sub {
