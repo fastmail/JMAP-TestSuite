@@ -66,4 +66,18 @@ test {
     # is the extended form.
     like($cd, qr/filename="myfile\.txt"|filename=myfile\.txt(?:\s*;|\s*\z)|filename\*=UTF-8''myfile\.txt/, 'filename is correct');
   }
+
+  # RFC 8620 S6.2: there is no data to return for a blobId that does not
+  # exist, so the GET must fail.
+  my $missing_res = $tester->ua->lwp->get(
+    $tester->download_uri_for({
+      accountId => $account->accountId,
+      blobId    => "no-such-blob-$^T-$$",
+      type      => 'text/plain',
+      name      => 'missing.txt',
+    }),
+    $tester->_maybe_auth_header,
+  );
+  ok($missing_res->is_client_error, 'unknown blobId is an HTTP client error')
+    or diag $missing_res->status_line;
 };
