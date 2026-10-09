@@ -42,7 +42,9 @@ test {
         hardLimit    => jnum(),
         scope        => jstr(),
         name         => jstr(),
-        types        => array_each(jstr()),
+        # RFC 9425 S4.1: "MUST NOT return Quota objects for which there are no
+        # types recognized by the client".
+        types        => all(array_each(jstr()), superbagof(jstr())),
       }),
       "quota $q->{id} has required fields",
     ) or diag explain $q;
