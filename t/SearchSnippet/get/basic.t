@@ -81,7 +81,11 @@ test {
     ok($res->is_success, "SearchSnippet/get body") or diag explain $res->response_payload;
 
     my $args = $res->single_sentence("SearchSnippet/get")->arguments;
+    is(scalar @{ $args->{list} }, 1, "one snippet");
+
     my $snip = $args->{list}[0];
+    is($snip->{emailId}, $email->id, "correct emailId");
+
     if ($no_snippets->($snip)) {
       note("server returned no snippets");
     } else {
@@ -99,9 +103,15 @@ test {
     ]]);
     ok($res->is_success, "SearchSnippet/get no terms");
 
-    my $snip = $res->single_sentence("SearchSnippet/get")->arguments->{list}[0];
-    ok(!defined $snip->{subject}, "subject is undef with no filter terms");
-    ok(!defined $snip->{preview}, "preview is undef with no filter terms");
+    jcmp_deeply(
+      $res->single_sentence("SearchSnippet/get")->arguments->{list},
+      [ superhashof({
+        emailId => jstr($email->id),
+        subject => undef,
+        preview => undef,
+      }) ],
+      "one snippet, with no subject or preview",
+    ) or diag explain $res->as_stripped_triples;
   };
 
   subtest "multiple emailIds returned" => sub {
