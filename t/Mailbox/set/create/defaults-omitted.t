@@ -76,10 +76,10 @@ test {
         parentId     => undef, # XXX - Maybe decided by server
         role         => undef,
         sortOrder    => jnum(0),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
-        totalEmails  => jnum(0),
-        unreadEmails => jnum(0),
+        totalEmails   => jnum(0),
+        unreadEmails  => jnum(0),
+        totalThreads  => jnum(0),
+        unreadThreads => jnum(0),
         myRights     => superhashof({
           map {
             $_ => jbool(),
