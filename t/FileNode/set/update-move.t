@@ -56,7 +56,9 @@ test {
     my $deep  = $inner->add_node({ name => 'deep' });
     # draft S3.2.3: "an attempt to move a node to a parent for which this
     # node is also an ancestor is an error, and an invalidProperties error
-    # will be returned"
+    # will be returned".  A node as its own parent is the degenerate case,
+    # and in any event an invalid parentId: RFC 8620 S5.3 invalidProperties,
+    # "The record given is invalid in some way"
     for my $case ([ 'its own child', $inner->id ], [ 'its grandchild', $deep->id ], [ 'itself', $a->id ]) {
       my ($what, $target) = @$case;
       my $args = $update->({ $a->id => { parentId => $target } });

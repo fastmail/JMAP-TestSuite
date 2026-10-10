@@ -1,8 +1,9 @@
 use jmaptest;
 
-# draft-ietf-jmap-filenode-15 (the draft) S3.1 blobId: "MUST be non-null for
-# file nodes (including zero byte files)", and size is "The size in bytes of
-# the associated blob data".
+# draft-ietf-jmap-filenode-15 (the draft) presumes zero-byte files exist: S3.1
+# blobId "MUST be non-null for file nodes (including zero byte files)", and
+# size is "The size in bytes of the associated blob data".  So a file node
+# with empty content can be created, and its size is 0.
 attr pristine => 1;
 
 test {

@@ -46,7 +46,10 @@ test {
     # draft S3.2.5 parentId: "A node must have a parentId equal to this"
     $is->({ parentId => $D->id }, [qw(a b sub)], "parentId", bare => 1);
     # draft S3.2.5 depth: "The number of levels of subdirectories to recurse
-    # into.  If absent, null, or zero, do not recurse."
+    # into.  If absent, null, or zero, do not recurse."  Recursion only means
+    # something relative to a parentId condition (ancestorId is recursive
+    # already), so depth 1 adds the children of parentId's subdirectories.
+    # The draft could say outright that depth widens parentId.
     $is->({ parentId => $D->id }, [qw(a b sub c)], "parentId with depth 1", bare => 1, args => { depth => 1 });
     $is->({ parentId => $D->id }, [qw(a b sub)], "parentId with depth 0", bare => 1, args => { depth => 0 });
     # draft S3.2.5 ancestorId: "an ancestor (parent, parent of parent, etc.)"

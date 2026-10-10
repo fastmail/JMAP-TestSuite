@@ -106,11 +106,14 @@ test {
     # same parent and the same name", so a pair in one call cannot both be
     # created
     $args = $create->({ p1 => { parentId => $dir->id, name => 'pair' }, p2 => { parentId => $dir->id, name => 'pair' } });
-    is(scalar(grep { $args->{created}{$_} } qw(p1 p2)), 1, "exactly one of a same-named pair is created")
-      or diag explain $args;
-    my ($lost) = grep { !$args->{created}{$_} } qw(p1 p2);
-    jcmp_deeply($args->{notCreated}{$lost}, superhashof({ type => 'alreadyExists' }), "the other is alreadyExists")
-      if $lost;
+    my @won = grep { $args->{created}{$_} } qw(p1 p2);
+    cmp_ok(scalar(@won), '<=', 1, "at most one of a same-named pair is created") or diag explain $args;
+    # a loser whose sibling was created clashes with it: alreadyExists
+    if (@won == 1) {
+      my ($lost) = grep { !$args->{created}{$_} } qw(p1 p2);
+      jcmp_deeply($args->{notCreated}{$lost}, superhashof({ type => 'alreadyExists' }), "the other is alreadyExists")
+        or diag explain $args;
+    }
   };
 
   subtest "a child created by reference" => sub {

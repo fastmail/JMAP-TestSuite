@@ -80,25 +80,40 @@ test {
   };
 
   subtest "since the start" => sub {
-    # RFC 8620 S5.2: a node created and destroyed since sinceState may be
-    # left out, or listed as destroyed, but never as created or updated
+    # RFC 8620 S5.2: "If a record has been created AND destroyed since the
+    # old state, the server SHOULD remove the id from the response entirely.
+    # However, it MAY include it in just the "destroyed" list or in both the
+    # "destroyed" and "created" lists."  The file was also updated, and an
+    # updated and destroyed record "MAY" be in "updated" as well, so where
+    # the file shows up is not checked; only the surviving directory is.
     my $args = $changes->($s0);
-    jcmp_deeply($args->{created}, [ $did ], "the directory is created") or diag explain $args;
-    ok(!grep({ $_ eq $fid } @{ $args->{created} }, @{ $args->{updated} }), "the destroyed file is not created or updated")
+    jcmp_deeply([ grep { $_ ne $fid } @{ $args->{created} } ], [ $did ], "the directory is created")
       or diag explain $args;
+    ok(!grep({ $_ eq $did } @{ $args->{destroyed} }), "the directory is not destroyed") or diag explain $args;
   };
 
   subtest "maxChanges" => sub {
-    # RFC 8620 S5.2: no more than maxChanges ids; hasMoreChanges when cut short
-    my $args = $tester->request([[ 'FileNode/changes' => { sinceState => $s0, maxChanges => 1 } ]])
-                      ->single_sentence->arguments;
-    if (($args->{type} // '') eq 'cannotCalculateChanges') {
-      pass("cannotCalculateChanges is allowed");
+    # two changes that survive: a fresh state, then two creations kept
+    my $from = $state->();
+    my $two = $set->({ create => {
+      m1 => { parentId => $D->id, name => 'm1' },
+      m2 => { parentId => $D->id, name => 'm2' },
+    } });
+    ok($two->{created}{m1} && $two->{created}{m2}, "two more nodes") or diag explain $two;
+    # RFC 8620 S5.2: "the server MUST ensure the number of ids returned
+    # across "created", "updated", and "destroyed" does not exceed this
+    # limit"; cut short, the response is an intermediate state with
+    # hasMoreChanges, or (if it cannot) cannotCalculateChanges
+    my $res = $tester->request([[ 'FileNode/changes' => { sinceState => $from, maxChanges => 1 } ]]);
+    my $s = $res->single_sentence;
+    if ($s->name eq 'error') {
+      is($s->arguments->{type}, 'cannotCalculateChanges', "an error is cannotCalculateChanges");
       return;
     }
+    my $args = $s->arguments;
     my $n = @{ $args->{created} } + @{ $args->{updated} } + @{ $args->{destroyed} };
     cmp_ok($n, '<=', 1, "at most one change") or diag explain $args;
-    ok($args->{hasMoreChanges}, "hasMoreChanges") or diag explain $args;
+    ok($args->{hasMoreChanges}, "hasMoreChanges, with two changes to report") or diag explain $args;
   };
 
   subtest "bad state" => sub {
