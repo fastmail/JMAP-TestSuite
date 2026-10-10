@@ -43,6 +43,15 @@ test {
 
     # draft S2.1 maxSizeFileNodeName: "This MUST be at least 100"
     cmp_ok($cap->{maxSizeFileNodeName}, '>=', 100, "maxSizeFileNodeName is at least 100");
+
+    # draft S2.1 webUrlTemplate and webWriteUrlTemplate: "A URI Template
+    # (level 1) ... The available variable is {id}" -- a client can expand
+    # nothing else, so a template names {id} and no other variable
+    for my $key (qw(webUrlTemplate webWriteUrlTemplate)) {
+      next unless defined $cap->{$key};
+      my @vars = $cap->{$key} =~ /\{([^}]*)\}/g;
+      is_deeply([ sort @vars ], ['id'], "$key has {id} and no other variable") or diag $cap->{$key};
+    }
   };
 
   # draft S3.1: the FileNode object's properties and their types
