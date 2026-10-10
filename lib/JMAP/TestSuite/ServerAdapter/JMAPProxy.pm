@@ -269,6 +269,8 @@ sub _create_pristine_account {
       imapSSL    => 1,
       caldavURL  => $self->cyrus_http_url,
       carddavURL => $self->cyrus_http_url,
+      # FileNode: the user's Cyrus #drive (served when httpmodules has webdav)
+      webdavURL  => $self->cyrus_http_url . "/dav/drive/user/$user/",
       %extra,
     });
   }

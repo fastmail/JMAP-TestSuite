@@ -12,6 +12,7 @@ use JMAP::TestSuite::Entity::CalendarEvent;
 use JMAP::TestSuite::Entity::AddressBook;
 use JMAP::TestSuite::Entity::ContactCard;
 use JMAP::TestSuite::Entity::Email;
+use JMAP::TestSuite::Entity::FileNode;
 use JMAP::TestSuite::Entity::Mailbox;
 use JMAP::TestSuite::Entity::Thread;
 
