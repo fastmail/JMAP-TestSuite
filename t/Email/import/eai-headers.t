@@ -56,7 +56,7 @@ test {
         subject => $subject,
         from    => [ {
           name  => 'Jörg Müller',
-          email => any('jörg@bücher.example', 'jörg@xn--bcher-lka2c.example'),
+          email => any('jörg@bücher.example', 'jörg@xn--bcher-kva.example'),
         } ],
         to      => [ {
           name  => '田中',
