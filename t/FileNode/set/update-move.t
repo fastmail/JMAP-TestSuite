@@ -118,5 +118,36 @@ test {
     my $args = $update->({ $n->id => { name => 'dated2.txt' } });
     ok(exists $args->{updated}{ $n->id }, "renamed") or diag explain $args;
     is($get->($n->id)->{modified}, '2020-01-02T03:04:05Z', "modified unchanged by a rename");
+
+    # and when the client never set them: draft S3.1 modified, "The server
+    # does not automatically update this value"; created, "The date the
+    # node was created" -- a rename or move is neither.  The wait lets a
+    # server that keeps its own timestamps per path show a change.
+    # (plain structures throughout: the values are compared with each other)
+    my $plain = sub {
+      my ($id) = @_;
+      $tester->request([[ 'FileNode/get' => { ids => [ $id ] } ]])->single_sentence('FileNode/get')->as_stripped_pair->[1]{list}[0];
+    };
+    my $m = $dir->add_node({ name => 'undated.txt', content => "x" });
+    my $before = $plain->($m->id);
+    sleep 2;
+    my $res = $tester->request([[ 'FileNode/set' => { update => { $m->id => { name => 'undated2.txt', parentId => $b->id } } } ]]);
+    ok($res->is_success, "FileNode/set") or diag explain $res->response_payload;
+    my $sargs = $res->single_sentence('FileNode/set')->as_stripped_pair->[1];
+    ok(exists $sargs->{updated}{ $m->id }, "moved and renamed") or diag explain $sargs;
+    my $after = $plain->($m->id);
+    is($after->{modified}, $before->{modified}, "modified unchanged by a move the client did not date");
+    is($after->{created}, $before->{created}, "created unchanged too");
+
+    # RFC 8620 S5.3 updated: "containing any property that changed in a way
+    # not explicitly requested by the PatchObject": whatever else the move
+    # changed (a blobId, say) is in the updated object, and a value the
+    # patch set is not
+    my $u = $sargs->{updated}{ $m->id } || {};
+    ok(!exists $u->{name} && !exists $u->{parentId}, "updated does not echo what the patch set") or diag explain $u;
+    for my $k (sort keys %$u) {
+      is_deeply($u->{$k}, $after->{$k}, "updated.$k is the node's value now");
+      ok(!eq_deeply($before->{$k}, $after->{$k}), "updated.$k really changed") or diag explain [ $before->{$k}, $after->{$k} ];
+    }
   };
 };
