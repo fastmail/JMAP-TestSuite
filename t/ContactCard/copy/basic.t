@@ -30,9 +30,11 @@ test {
   }
 
   # Skip unless there is a writable address book there too; Cyrus shows the
-  # grantee only a Default book with mayWriteAll false.
-  unless (grep { $_->{myRights}{mayWriteAll} }
-          @{ $probe->arguments->{list} // [] }) {
+  # grantee only a Default book with mayWrite false. RFC 9610 2: the
+  # AddressBookRights are mayRead, mayWrite, mayShare and mayDelete.
+  my ($dest_ab) = grep { $_->{myRights}{mayWrite} }
+                  @{ $probe->arguments->{list} // [] };
+  unless ($dest_ab) {
     pass("no writable address book in the destination account; "
        . "skipping cross-account ContactCard/copy");
     return;
@@ -42,7 +44,8 @@ test {
     name => { full => "Copy Test Contact $$" },
   });
 
-  my $dest_ab = $to_account->create_address_book;
+  # Into the book the source account may write: RFC 9610 shares per book
+  # (shareWith), so a book the destination creates now is not shared.
 
   my $res = $from_tester->request([[
     "ContactCard/copy" => {
@@ -51,7 +54,7 @@ test {
       create => {
         c1 => {
           id              => $src_card->id,
-          addressBookIds  => { $dest_ab->id => JSON::true },
+          addressBookIds  => { $dest_ab->{id} => JSON::true },
         },
       },
     },
@@ -85,7 +88,7 @@ test {
 
   jcmp_deeply(
     $got_card->{addressBookIds},
-    { $dest_ab->id => JSON::true },
+    { $dest_ab->{id} => JSON::true },
     "card is in the destination address book",
   ) or diag explain $got_card;
 
