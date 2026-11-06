@@ -3,6 +3,9 @@ use jmaptest;
 # RFC 9610 S2.3: with onDestroyRemoveContents, a card in the destroyed book
 # "will be removed from it, and if such a ContactCard does not belong to any
 # other AddressBook, it will be destroyed".
+#
+# The card in two books is only tried when the server allows it: RFC 9610
+# S1.4.1 makes maxAddressBooksPerCard null for no limit, else at least 1.
 
 test {
   my ($self) = @_;
@@ -15,18 +18,29 @@ test {
     'urn:ietf:params:jmap:contacts',
   );
 
+  my $session = fetch_session($tester) or return;
+  my $max = $session->{accounts}{ $account->accountId }{accountCapabilities}
+              {"urn:ietf:params:jmap:contacts"}{maxAddressBooksPerCard};
+  my $two_books = !(defined $max && $max < 2);
+  note("maxAddressBooksPerCard is $max; skipping the card in two books")
+    unless $two_books;
+
   my $doomed = $account->create_address_book;
-  my $other  = $account->create_address_book;
 
   my $only = $account->create_contact_card({
     name         => { full => "Only In Doomed Book" },
     address_book => $doomed,
   });
-  my $both = $account->create_contact_card({
-    name           => { full => "In Both Books" },
-    addressBookIds => { $doomed->id => \1, $other->id => \1 },
-    address_book   => $other,
-  });
+
+  my ($other, $both);
+  if ($two_books) {
+    $other = $account->create_address_book;
+    $both  = $account->create_contact_card({
+      name           => { full => "In Both Books" },
+      addressBookIds => { $doomed->id => \1, $other->id => \1 },
+      address_book   => $other,
+    });
+  }
 
   my $state = $account->get_state('contactCard');
 
@@ -55,17 +69,23 @@ test {
       newState       => none(jstr($state)),
       hasMoreChanges => jfalse,
       created        => [],
-      updated        => [ $both->id ],
+      updated        => [ $both ? $both->id : () ],
       destroyed      => [ $only->id ],
     }),
-    "the card only in the book is destroyed, the other is updated",
+    $both ? "the card only in the book is destroyed, the other is updated"
+          : "the card only in the book is destroyed",
   ) or diag explain $changes->as_stripped_triples;
 
   my $get = $tester->request([[
-    "ContactCard/get" => { ids => [ $only->id, $both->id ], properties => [ 'addressBookIds' ] },
+    "ContactCard/get" => {
+      ids        => [ $only->id, $both ? $both->id : () ],
+      properties => [ 'addressBookIds' ],
+    },
   ]]);
   my $args = $get->single_sentence("ContactCard/get")->arguments;
   jcmp_deeply($args->{notFound}, [ $only->id ], "the card only in the book is gone");
+  return unless $both;
+
   jcmp_deeply(
     $args->{list},
     [ superhashof({ id => $both->id, addressBookIds => { $other->id => jtrue } }) ],
