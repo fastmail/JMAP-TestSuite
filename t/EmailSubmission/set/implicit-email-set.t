@@ -63,7 +63,11 @@ test {
       note("server refused to send: forbiddenToSend");
       return;
     }
-    ok($sub_args->{created}{s1}, "submission created") or diag explain $sub_args;
+    # The implicit Email/set performs only the changes "requested in these
+    # two arguments" (S7.5), and those are for submissions that succeed, so
+    # after a failed create there is nothing more to check.
+    ok($sub_args->{created}{s1}, "submission created")
+      or diag(explain($sub_args)), return;
 
     is(scalar @sentences, 2, "two responses") or diag explain $res->as_stripped_triples;
     is($sentences[0]->name, 'EmailSubmission/set', "EmailSubmission/set comes first");
