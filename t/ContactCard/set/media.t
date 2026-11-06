@@ -60,10 +60,24 @@ test {
     my $id = $args->{created}{c1}{id};
     ok($id, "card created") or diag(explain($args)), return;
 
+    # RFC 9610 S3: a Media with a "data:" URI "SHOULD return a blobId
+    # property and omit the uri property", so a server may instead return
+    # the photo as a data: URI holding the same bytes.
     jcmp_deeply(
       $media_of->($id),
-      superhashof({ kind => 'photo', blobId => jstr, mediaType => 'image/png' }),
-      "media has a blobId and mediaType",
+      any(
+        superhashof({ kind => 'photo', blobId => jstr, mediaType => 'image/png' }),
+        superhashof({
+          kind => 'photo',
+          uri  => code(sub {
+            my ($uri) = @_;
+            return (0, "not a data:image/png;base64 URI")
+              unless defined $uri && $uri =~ m{\Adata:image/png;base64,(.*)\z}s;
+            return decode_base64($1) eq $png ? 1 : (0, "data: URI holds other bytes");
+          }),
+        }),
+      ),
+      "media has a blobId and mediaType, or a data: URI with the same bytes",
     );
   };
 
