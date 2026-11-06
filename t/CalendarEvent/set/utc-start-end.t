@@ -5,6 +5,10 @@ use JMAP::TestSuite::Comparator::CalendarEvent qw(jduration);
 # draft-ietf-jmap-calendars S5.9: utcStart "MUST NOT be set in addition to a
 # start property and it cannot be set inside recurrenceOverrides; this MUST
 # be rejected with an invalidProperties SetError", and likewise utcEnd.
+#
+# RFC 8620 S5.3: the SetError's properties list is only a SHOULD, and a
+# conflict between utcStart and start (or utcEnd and duration) may fairly be
+# reported against either member, so either name is accepted.
 
 test {
   my ($self) = @_;
@@ -27,11 +31,11 @@ test {
   );
 
   my %bad = (
-    'utcStart with start' => [ utcStart => {
+    'utcStart with start' => [ [qw(utcStart start)] => {
       start => '2024-05-01T09:00:00', timeZone => 'Etc/UTC', duration => 'PT1H',
       utcStart => '2024-05-01T09:00:00Z',
     } ],
-    'utcEnd with duration' => [ utcEnd => {
+    'utcEnd with duration' => [ [qw(utcEnd duration)] => {
       start => '2024-05-01T09:00:00', timeZone => 'Etc/UTC', duration => 'PT1H',
       utcEnd => '2024-05-01T10:00:00Z',
     } ],
@@ -62,9 +66,11 @@ test {
   my $args = $res->single_sentence("CalendarEvent/set")->arguments;
 
   for my $case (sort keys %bad) {
+    my $prop = $bad{$case}[0];
     jcmp_deeply(
       $args->{notCreated}{ $cid{$case} },
-      invalid_properties($bad{$case}[0]),
+      ref $prop ? any(map {; invalid_properties($_) } @$prop)
+                : invalid_properties($prop),
       "$case is invalidProperties",
     ) or diag explain $res->as_stripped_triples;
   }
