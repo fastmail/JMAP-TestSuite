@@ -36,6 +36,21 @@ has cyrus_port => (
   is => 'ro',
 );
 
+# The mail domain the backend's users have addresses in (virtdomains), and
+# the submission server the proxy sends through. Optional: without them a
+# pristine account's Identity has no real address and nothing can be sent.
+has mail_domain => (
+  is => 'ro',
+);
+
+has smtp_host => (
+  is => 'ro',
+);
+
+has smtp_port => (
+  is => 'ro',
+);
+
 has cyrus_admin_user => (
   is => 'ro',
   default => 'admin',
@@ -270,6 +285,10 @@ sub _create_pristine_account {
       imapSSL    => 1,
       caldavURL  => $self->cyrus_http_url,
       carddavURL => $self->cyrus_http_url,
+      ($self->mail_domain ? (email => "$user\@" . $self->mail_domain) : ()),
+      ($self->smtp_port   ? (smtpHost => $self->smtp_host // $self->cyrus_host,
+                             smtpPort => $self->smtp_port,
+                             smtpSSL  => 1) : ()),
       %extra,
     });
   }
@@ -301,7 +320,11 @@ package JMAP::TestSuite::Account::JMAPProxy {
 
     my $accountId = $self->accountId;
     my $password  = $self->server->cyrus_password;
-    my $creds     = encode_base64("$accountId:$password", '');
+    # The proxy's login is the account's email; with a mail domain that is
+    # an address in it, else the account id (see create_account).
+    my $domain    = $self->server->passthrough ? undef : $self->server->mail_domain;
+    my $login     = $domain ? "$accountId\@$domain" : $accountId;
+    my $creds     = encode_base64("$login:$password", '');
     $tester->ua->lwp->default_header(Authorization => "Basic $creds");
     $tester->ua->lwp->ssl_opts(verify_hostname => 0);
     $tester->ua->lwp->ssl_opts(SSL_verify_mode => 0x00);
