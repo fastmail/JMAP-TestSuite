@@ -93,7 +93,7 @@ test {
     # is retained at the end of the transaction"
     my $args = $set->({
       destroy => [ $old->id ],
-      create  => { n => { parentId => $dir->id, name => 'reused.txt', blobId => $blob->blobId, type => 'text/plain' } },
+      create  => { n => { '@type' => 'File', parentId => $dir->id, name => 'reused.txt', blobId => $blob->blobId, mediaType => 'text/plain' } },
     });
     jcmp_deeply($args->{destroyed}, [ $old->id ], "the old node destroyed") or diag explain $args;
     ok($args->{created}{n}, "and a new one created with its name") or diag explain $args;

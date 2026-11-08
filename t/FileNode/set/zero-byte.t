@@ -18,7 +18,7 @@ test {
   my $empty = $tester->upload({ accountId => $account->accountId, type => 'text/plain', blob => \"" });
 
   my $res = $tester->request([[ 'FileNode/set' => {
-    create => { z => { parentId => $dir->id, name => 'empty.txt', blobId => $empty->blobId, type => 'text/plain' } },
+    create => { z => { '@type' => 'File', parentId => $dir->id, name => 'empty.txt', blobId => $empty->blobId, mediaType => 'text/plain' } },
   } ]]);
   ok($res->is_success, "FileNode/set") or diag explain $res->response_payload;
   my $args = $res->single_sentence('FileNode/set')->arguments;
@@ -29,6 +29,6 @@ test {
 
   my $got = $tester->request([[ 'FileNode/get' => { ids => [ $id ] } ]])
                    ->single_sentence('FileNode/get')->arguments->{list}[0];
-  jcmp_deeply($got, superhashof({ nodeType => 'file', blobId => jstr(), size => jnum(0) }),
+  jcmp_deeply($got, superhashof({ '@type' => 'File', blobId => jstr(), size => jnum(0) }),
               "FileNode/get: a file with a blobId and size 0") or diag explain $got;
 };

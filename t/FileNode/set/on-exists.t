@@ -24,7 +24,7 @@ test {
   };
   my $file = sub {
     my ($name, %extra) = @_;
-    return { parentId => $dir->id, name => $name, blobId => $blob->blobId, type => 'text/plain', %extra };
+    return { '@type' => 'File', parentId => $dir->id, name => $name, blobId => $blob->blobId, mediaType => 'text/plain', %extra };
   };
   my $children = sub {
     my $args = $tester->request([[ 'FileNode/query' => { filter => { parentId => $dir->id } }, 'q' ],
@@ -89,21 +89,15 @@ test {
     ok(!$args->{destroyed} || !@{ $args->{destroyed} }, "nothing destroyed") or diag explain $args;
   };
 
-  subtest "newest" => sub {
-    my $old = $dir->add_node({ name => 'newest.txt', content => "old", modified => '2020-06-01T00:00:00Z' });
-    # draft S3.2.3 onExists "newest": "If the incoming item has a strictly
-    # later modified value, the existing node is destroyed and the operation
-    # proceeds as with "replace".  Otherwise the operation is rejected as
-    # with null, returning an "alreadyExists" error with the existingId"
-    my $args = $set->({ onExists => 'newest', create => { r => $file->('newest.txt', modified => '2020-06-01T00:00:00Z') } });
-    jcmp_deeply($args->{notCreated}{r}, superhashof({ type => 'alreadyExists', existingId => $old->id }),
-                "the same modified: alreadyExists") or diag explain $args;
-    $args = $set->({ onExists => 'newest', create => { r => $file->('newest.txt', modified => '2019-06-01T00:00:00Z') } });
-    jcmp_deeply($args->{notCreated}{r}, superhashof({ type => 'alreadyExists', existingId => $old->id }),
-                "an older one: alreadyExists") or diag explain $args;
-    $args = $set->({ onExists => 'newest', create => { r => $file->('newest.txt', modified => '2021-06-01T00:00:00Z') } });
-    ok($args->{created}{r}, "a newer one: created") or diag explain $args;
-    jcmp_deeply($args->{destroyed}, [ $old->id ], "and the old node destroyed") or diag explain $args;
+  subtest "no other values" => sub {
+    # draft-ietf-jmap-filenode-20 S3.2.3 onExists: null, "replace" or
+    # "rename" ("newest" went in -19); "Any other value is rejected with
+    # invalidArguments"
+    for my $v ('newest', 'unchanged', 'bogus') {
+      my $res = $tester->request([[ 'FileNode/set' => { onExists => $v, create => { r => $file->("odd-$v.txt") } } ]]);
+      jcmp_deeply($res->single_sentence->arguments, superhashof({ type => 'invalidArguments' }),
+                  "onExists \"$v\": invalidArguments") or diag explain $res->response_payload;
+    }
   };
 
   subtest "compareCaseInsensitively" => sub {

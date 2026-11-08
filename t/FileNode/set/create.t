@@ -1,6 +1,6 @@
 use jmaptest;
 
-# draft-ietf-jmap-filenode-15 (the draft) S3.1 and S3.2.3: FileNode/set create.
+# draft-ietf-jmap-filenode-20 (the draft) S3.1 and S3.2.3: FileNode/set create.
 attr pristine => 1;
 
 test {
@@ -27,61 +27,66 @@ test {
     return $res->single_sentence('FileNode/set')->arguments;
   };
 
+  subtest "\@type is required" => sub {
+    # draft S3.1.1 @type: "This MUST be provided on creation"
+    my $args = $create->({ n => { parentId => $dir->id, name => 'no type' } });
+    jcmp_deeply($args->{notCreated}{n}, invalid_properties('@type'), "invalidProperties naming \@type") or diag explain $args;
+    # S2.1 supportedNodeTypes: an @type the server does not list
+    my %types = map {; $_ => 1 } @{ $cap->{supportedNodeTypes} || [] };
+    my ($unsupported) = grep { !$types{$_} } 'SymLink', 'x-NoSuchType';
+    $args = $create->({ u => { '@type' => $unsupported, parentId => $dir->id, name => 'odd', target => 'x' } });
+    jcmp_deeply($args->{notCreated}{u}, invalid_properties('@type'), "an \@type not in supportedNodeTypes") or diag explain $args;
+  };
+
   subtest "a directory" => sub {
-    # draft S3.1 nodeType: "If not provided on creation, the server infers
-    # the type: ... "directory" otherwise"
-    my $args = $create->({ d => { parentId => $dir->id, name => 'a directory' } });
+    my $args = $create->({ d => { '@type' => 'Directory', parentId => $dir->id, name => 'a directory' } });
     # RFC 8620 S5.3: created holds the id and every property the server set
     jcmp_deeply($args->{created}{d}, superhashof({ id => jstr() }), "created, with an id")
       or diag explain $args;
     my $id = $args->{created}{d}{id} or return;
     my $got = $tester->request([[ 'FileNode/get' => { ids => [ $id ] } ]])
                      ->single_sentence('FileNode/get')->arguments->{list}[0];
-    # draft S3.1: blobId, size and type "MUST be null for directory" nodes
-    jcmp_deeply($got, superhashof({
-      nodeType => 'directory', parentId => $dir->id, name => 'a directory',
-      blobId => undef, size => undef, type => undef,
-    }), "inferred a directory") or diag explain $got;
+    # draft S3.1: properties of another @type "are omitted rather than set to null"
+    jcmp_deeply($got, superhashof({ '@type' => 'Directory', parentId => $dir->id, name => 'a directory' }),
+                "a Directory") or diag explain $got;
+    ok(!grep({ exists $got->{$_} } qw(blobId size mediaType executable)), "with no File properties") or diag explain $got;
   };
 
   subtest "a file" => sub {
-    # draft S3.1 nodeType: inferred "file" if blobId is non-null; size is
-    # server-set, so (RFC 8620 S5.3) it is in created
-    my $args = $create->({ f => { parentId => $dir->id, name => 'a file.txt',
-                                  blobId => $blob->blobId, type => 'text/plain' } });
+    # size is server-set, so (RFC 8620 S5.3) it is in created
+    my $args = $create->({ f => { '@type' => 'File', parentId => $dir->id, name => 'a file.txt',
+                                  blobId => $blob->blobId, mediaType => 'text/plain' } });
     jcmp_deeply($args->{created}{f}, superhashof({ id => jstr(), size => jnum(12) }),
                 "created, with the id and the server-set size") or diag explain $args;
     my $id = $args->{created}{f}{id} or return;
     my $got = $tester->request([[ 'FileNode/get' => { ids => [ $id ] } ]])
                      ->single_sentence('FileNode/get')->arguments->{list}[0];
     jcmp_deeply($got, superhashof({
-      nodeType => 'file', parentId => $dir->id, name => 'a file.txt',
-      blobId => jstr(), size => jnum(12), type => 'text/plain',
-    }), "inferred a file") or diag explain $got;
+      '@type' => 'File', parentId => $dir->id, name => 'a file.txt',
+      blobId => jstr(), size => jnum(12), mediaType => 'text/plain',
+    }), "a File") or diag explain $got;
+    ok(!grep({ exists $got->{$_} } qw(isSubscribed myRights shareWith role)), "with no Directory properties") or diag explain $got;
   };
 
   subtest "a file without content" => sub {
     # draft S3.1 blobId: "Creating ... a file node to have a null blobId is
     # an "invalidProperties" error"
-    my $args = $create->({ n => { parentId => $dir->id, name => 'no content', nodeType => 'file' } });
+    my $args = $create->({ n => { '@type' => 'File', parentId => $dir->id, name => 'no content' } });
     jcmp_deeply($args->{notCreated}{n}, invalid_properties(), "invalidProperties") or diag explain $args;
   };
 
   subtest "names" => sub {
     # draft S3.1 name: "at least 1 character in length"; the server "MUST
-    # reject names containing any character listed in forbiddenNameChars,
-    # or matching any entry in forbiddenNodeNames (case-insensitively), with
-    # an "invalidProperties" error"
-    my %bad = (empty => '');
+    # reject names containing any character listed in forbiddenNameChars
+    # ... with an "invalidProperties" error", and "." and ".." are never
+    # names (S3.1.1)
+    my %bad = (empty => '', dot => '.', dotdot => '..');
     my @chars = split //, ($cap->{forbiddenNameChars} // '');
     $bad{"char$_"} = "bad$chars[$_]name" for 0 .. $#chars;
-    my @names = @{ $cap->{forbiddenNodeNames} || [] };
-    $bad{"node$_"} = $names[$_] for 0 .. $#names;
-    $bad{"nodeuc$_"} = uc $names[$_] for grep { uc $names[$_] ne $names[$_] } 0 .. $#names;
     # draft S2.1 maxSizeFileNodeName: "The maximum length, in (UTF-8) octets"
     $bad{toolong} = 'x' x ($cap->{maxSizeFileNodeName} + 1);
 
-    my $args = $create->({ map {; $_ => { parentId => $dir->id, name => $bad{$_} } } keys %bad });
+    my $args = $create->({ map {; $_ => { '@type' => 'Directory', parentId => $dir->id, name => $bad{$_} } } keys %bad });
     for my $k (sort keys %bad) {
       jcmp_deeply($args->{notCreated}{$k}, invalid_properties('name'),
                   "name '" . substr($bad{$k}, 0, 20) . "' is invalidProperties") or diag explain $args->{notCreated}{$k};
@@ -89,7 +94,7 @@ test {
     ok(!%{ $args->{created} || {} }, "nothing created") or diag explain $args->{created};
 
     my $max = 'y' x $cap->{maxSizeFileNodeName};
-    $args = $create->({ m => { parentId => $dir->id, name => $max } });
+    $args = $create->({ m => { '@type' => 'Directory', parentId => $dir->id, name => $max } });
     ok($args->{created}{m}, "a name of exactly maxSizeFileNodeName octets is fine") or diag explain $args;
   };
 
@@ -98,14 +103,15 @@ test {
     # draft S3.2.3 onExists: "If null, an attempt to create ... a FileNode
     # which would cause a name collision will be rejected by the server with
     # an "alreadyExists" error"; the SetError "MUST include an existingId"
-    my $args = $create->({ t => { parentId => $dir->id, name => 'taken' } });
+    my $args = $create->({ t => { '@type' => 'Directory', parentId => $dir->id, name => 'taken' } });
     jcmp_deeply($args->{notCreated}{t}, superhashof({ type => 'alreadyExists', existingId => $first->id }),
                 "alreadyExists with existingId") or diag explain $args;
 
     # draft S3.1 name: "There MUST NOT be two sibling FileNodes with both the
     # same parent and the same name", so a pair in one call cannot both be
     # created
-    $args = $create->({ p1 => { parentId => $dir->id, name => 'pair' }, p2 => { parentId => $dir->id, name => 'pair' } });
+    $args = $create->({ p1 => { '@type' => 'Directory', parentId => $dir->id, name => 'pair' },
+                        p2 => { '@type' => 'Directory', parentId => $dir->id, name => 'pair' } });
     my @won = grep { $args->{created}{$_} } qw(p1 p2);
     cmp_ok(scalar(@won), '<=', 1, "at most one of a same-named pair is created") or diag explain $args;
     # a loser whose sibling was created clashes with it: alreadyExists
@@ -119,8 +125,8 @@ test {
   subtest "a child created by reference" => sub {
     # RFC 8620 S5.3: a creation id may be referenced later in the same call
     my $args = $create->({
-      outer => { parentId => $dir->id, name => 'outer' },
-      inner => { parentId => '#outer', name => 'inner.txt', blobId => $blob->blobId, type => 'text/plain' },
+      outer => { '@type' => 'Directory', parentId => $dir->id, name => 'outer' },
+      inner => { '@type' => 'File', parentId => '#outer', name => 'inner.txt', blobId => $blob->blobId, mediaType => 'text/plain' },
     });
     ok($args->{created}{outer} && $args->{created}{inner}, "both created") or diag explain $args;
     my $got = $tester->request([[ 'FileNode/get' => { ids => [ $args->{created}{inner}{id} ], properties => [ 'parentId' ] } ]])
@@ -130,10 +136,10 @@ test {
 
   subtest "top level" => sub {
     plan skip_all => "the account may create top-level nodes" if $cap->{mayCreateTopLevelFileNode};
-    # draft S2.1 mayCreateTopLevelFileNode: only if true "the user may create
-    # a FileNode ... with a null parentId"
-    my $args = $create->({ top => { parentId => undef, name => "top $^T.$$" } });
+    # draft S2.1 mayCreateTopLevelFileNode: "If false, creating a node with a
+    # null parentId ... fails with "forbidden""
+    my $args = $create->({ top => { '@type' => 'Directory', parentId => undef, name => "top $^T.$$" } });
     ok(!$args->{created}{top}, "not created") or diag explain $args;
-    ok($args->{notCreated}{top}, "notCreated with a SetError") or diag explain $args;
+    jcmp_deeply($args->{notCreated}{top}, superhashof({ type => 'forbidden' }), "forbidden") or diag explain $args;
   };
 };

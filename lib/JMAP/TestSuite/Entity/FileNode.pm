@@ -9,12 +9,11 @@ with 'JMAP::TestSuite::Entity' => {
   properties  => [ qw(
     id
     parentId
-    nodeType
     blobId
     target
     size
     name
-    type
+    mediaType
     created
     modified
     accessed
@@ -69,13 +68,14 @@ sub scratch_dir {
       [ 'FileNode/query' => { filter => { isTopLevel => JSON::true } }, 'q' ],
       [ 'FileNode/get'   => { '#ids' => { resultOf => 'q', name => 'FileNode/query', path => '/ids' } }, 'g' ],
     ]);
-    my ($parent) = grep {; ($_->{nodeType} // '') eq 'directory' && $_->{myRights}{mayAddChildren} }
+    my ($parent) = grep {; ($_->{'@type'} // '') eq 'Directory' && $_->{myRights}{mayAddChildren} }
                    @{ $res->sentence(1)->arguments->{list} || [] };
     Carp::confess("no top-level directory grants mayAddChildren") unless $parent;
     $parentId = $parent->{id};
   }
 
   return $class->create_node($account, {
+    '@type'  => 'Directory',
     name     => "jmts $^T.$$." . $inc++,
     %{ $arg || {} },
     parentId => $parentId,
@@ -93,8 +93,9 @@ sub create_node {
   return $batch->result_for('x');
 }
 
-# A child of this directory: { name => ..., content => ..., type => ... }
-# makes a file (the content is uploaded first), and no content a directory.
+# A child of this directory: { name => ..., content => ..., mediaType => ... }
+# makes a File (the content is uploaded first), and no content a Directory.
+# draft-ietf-jmap-filenode-20 S3.1.1: @type "MUST be provided on creation".
 sub add_node {
   my ($self, $arg) = @_;
   local $Test::Builder::Level = $Test::Builder::Level + 1;
@@ -103,12 +104,14 @@ sub add_node {
   if (defined(my $content = delete $create{content})) {
     my $blob = $self->tester->upload({
       accountId => $self->accountId,
-      type      => $create{type} // 'application/octet-stream',
+      type      => $create{mediaType} // 'application/octet-stream',
       blob      => \$content,
     });
     $create{blobId} = $blob->blobId;
-    $create{type} //= 'application/octet-stream';
+    $create{mediaType} //= 'application/octet-stream';
+    $create{'@type'} //= 'File';
   }
+  $create{'@type'} //= 'Directory';
   return ref($self)->create_node($self->account, { %create, parentId => $self->id });
 }
 

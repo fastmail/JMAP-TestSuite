@@ -42,8 +42,8 @@ test {
 
   my $blob = $tester->upload({ accountId => $account->accountId, type => 'text/plain', blob => \"hello" });
   my $made = $set->({ create => {
-    f => { parentId => $D->id, name => 'f.txt', blobId => $blob->blobId, type => 'text/plain' },
-    d => { parentId => $D->id, name => 'dir' },
+    f => { '@type' => 'File', parentId => $D->id, name => 'f.txt', blobId => $blob->blobId, mediaType => 'text/plain' },
+    d => { '@type' => 'Directory', parentId => $D->id, name => 'dir' },
   } });
   my ($fid, $did) = map {; $made->{created}{$_}{id} } qw(f d);
   ok($fid && $did, "created a file and a directory") or diag explain $made;
@@ -96,8 +96,8 @@ test {
     # two changes that survive: a fresh state, then two creations kept
     my $from = $state->();
     my $two = $set->({ create => {
-      m1 => { parentId => $D->id, name => 'm1' },
-      m2 => { parentId => $D->id, name => 'm2' },
+      m1 => { '@type' => 'Directory', parentId => $D->id, name => 'm1' },
+      m2 => { '@type' => 'Directory', parentId => $D->id, name => 'm2' },
     } });
     ok($two->{created}{m1} && $two->{created}{m2}, "two more nodes") or diag explain $two;
     # RFC 8620 S5.2: "the server MUST ensure the number of ids returned

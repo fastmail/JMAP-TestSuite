@@ -32,7 +32,7 @@ test {
       maxFileNodeDepth          => any(undef, $uint),
       maxSizeFileNodeName       => $uint,
       forbiddenNameChars        => any(undef, $str),
-      forbiddenNodeNames        => any(undef, array_each($str)),
+      supportedNodeTypes        => array_each($str),
       fileNodeQuerySortOptions  => array_each($str),
       mayCreateTopLevelFileNode => $bool,
       webTrashUrl               => any(undef, $str),
@@ -40,6 +40,10 @@ test {
       webUrlTemplate            => any(undef, $str),
       webWriteUrlTemplate       => any(undef, $str),
     }), "account capability has every required key, with its type") or diag explain $cap;
+
+    # draft-ietf-jmap-filenode-20 S2.1 supportedNodeTypes: "This MUST
+    # include Directory and File"
+    cmp_deeply($cap->{supportedNodeTypes}, superbagof(qw(Directory File)), "supportedNodeTypes has Directory and File");
 
     # draft S2.1 maxSizeFileNodeName: "This MUST be at least 100"
     cmp_ok($cap->{maxSizeFileNodeName}, '>=', 100, "maxSizeFileNodeName is at least 100");
@@ -54,32 +58,33 @@ test {
     }
   };
 
-  # draft S3.1: the FileNode object's properties and their types
+  # draft-ietf-jmap-filenode-20 S3.1: the FileNode object's properties and
+  # their types.  "Properties that this document defines for one type MUST
+  # NOT appear on a FileNode of another type; they are omitted rather than
+  # set to null."
   my $rights = {
     map {; $_ => jbool() } qw(mayRead mayAddChildren mayRename mayDelete mayModifyContent mayShare)
   };
-  my $node_shape = superhashof({
-    id           => jstr(),
-    parentId     => any(undef, jstr()),
-    nodeType     => jstr(),
-    blobId       => any(undef, jstr()),
-    size         => any(undef, jnum()),
-    name         => jstr(),
-    type         => any(undef, jstr()),
-    created      => jstr(),
-    modified     => any(undef, jstr()),
-    accessed     => any(undef, jstr()),
-    changed      => jstr(),
-    executable   => jbool(),
-    isSubscribed => jbool(),
-    myRights     => $rights,
-    shareWith    => any(undef, hash_each($rights)),
-    role         => any(undef, jstr()),
-  });
-  # draft S3.1 blobId/size/type: "MUST be null for directory" nodes, and
-  # non-null for file nodes
-  my $dir_shape  = superhashof({ nodeType => 'directory', blobId => undef, size => undef, type => undef });
-  my $file_shape = superhashof({ nodeType => 'file', blobId => jstr(), size => jnum(), type => jstr() });
+  my %common = (
+    id       => jstr(),
+    '@type'  => jstr(),
+    parentId => any(undef, jstr()),
+    name     => jstr(),
+    created  => jstr(),
+    modified => any(undef, jstr()),
+    accessed => any(undef, jstr()),
+    changed  => jstr(),
+  );
+  my %file_only = (blobId => jstr(), size => jnum(), mediaType => jstr(), executable => jbool());
+  my %dir_only  = (isSubscribed => jbool(), myRights => $rights,
+                   shareWith => any(undef, hash_each($rights)), role => any(undef, jstr()));
+  my $dir_shape  = all(superhashof({ %common, %dir_only, '@type' => 'Directory' }),
+                       code(sub { my @x = grep { exists $_[0]{$_} } keys %file_only, 'target';
+                                  @x ? (0, "File properties on a Directory: @x") : 1 }));
+  my $file_shape = all(superhashof({ %common, %file_only, '@type' => 'File' }),
+                       code(sub { my @x = grep { exists $_[0]{$_} } keys %dir_only, 'target';
+                                  @x ? (0, "Directory properties on a File: @x") : 1 }));
+  my $node_shape = superhashof(\%common);
 
   subtest "FileNode/get of every top-level node" => sub {
     my $res = $tester->request([
@@ -93,15 +98,15 @@ test {
       jcmp_deeply($n, $node_shape, "top-level node $n->{id} has every property") or diag explain $n;
       # draft S3.2.5 isTopLevel: "the node must have a null parentId"
       is($n->{parentId}, undef, "top-level node $n->{id} has a null parentId");
-      jcmp_deeply($n, $n->{nodeType} eq 'directory' ? $dir_shape : $file_shape,
-                  "top-level node $n->{id}: blobId, size and type fit its nodeType")
-        if $n->{nodeType} =~ /\A(?:file|directory)\z/;
+      jcmp_deeply($n, $n->{'@type'} eq 'Directory' ? $dir_shape : $file_shape,
+                  "top-level node $n->{id}: its \@type's properties, and no others")
+        if $n->{'@type'} =~ /\A(?:File|Directory)\z/;
     }
   };
 
   my $dir  = JMAP::TestSuite::Entity::FileNode->scratch_dir($account);
   my $sub  = $dir->add_node({ name => 'sub' });
-  my $file = $sub->add_node({ name => 'hello.txt', content => "hello world", type => 'text/plain' });
+  my $file = $sub->add_node({ name => 'hello.txt', content => "hello world", mediaType => 'text/plain' });
 
   subtest "a file and a directory" => sub {
     my $res = $tester->request([[ 'FileNode/get' => { ids => [ $sub->id, $file->id ] } ]]);
@@ -111,7 +116,7 @@ test {
                 "the directory") or diag explain \%got;
     # draft S3.1 size: "The size in bytes of the associated blob data"
     jcmp_deeply($got{ $file->id }, all($node_shape, $file_shape,
-                superhashof({ name => 'hello.txt', parentId => $sub->id, size => 11, type => 'text/plain' })),
+                superhashof({ name => 'hello.txt', parentId => $sub->id, size => 11, mediaType => 'text/plain' })),
                 "the file") or diag explain \%got;
   };
 
@@ -134,6 +139,8 @@ test {
     is($id, undef, "the parent chain is complete up to a top-level node") or diag explain \@list;
 
     my $plain = $tester->request([[ 'FileNode/get' => { ids => [ $file->id ], properties => [ 'parentId' ] } ]]);
+    # -20 S3.1.1: get "always returns \@type"
+    is($plain->single_sentence('FileNode/get')->arguments->{list}[0]{'@type'}, 'File', "\@type is returned whatever properties asks for");
     is(scalar @{ $plain->single_sentence('FileNode/get')->arguments->{list} }, 1,
        "without fetchParents (draft S3.2.1: default false) only the node itself");
   };

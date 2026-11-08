@@ -1,7 +1,7 @@
 use jmaptest;
 
 # draft-ietf-jmap-filenode-15 (the draft) S3.1 and S3.2.3: FileNode/set
-# update -- rename, move, cycles, immutable nodeType, content.
+# update -- rename, move, cycles, immutable @type, content.
 attr pristine => 1;
 
 test {
@@ -28,7 +28,7 @@ test {
 
   my $a = $dir->add_node({ name => 'a' });
   my $b = $dir->add_node({ name => 'b' });
-  my $file = $a->add_node({ name => 'f.txt', content => "content", type => 'text/plain' });
+  my $file = $a->add_node({ name => 'f.txt', content => "content", mediaType => 'text/plain' });
 
   subtest "rename" => sub {
     my $args = $update->({ $file->id => { name => 'g.txt' } });
@@ -69,13 +69,13 @@ test {
     is($get->($a->id)->{parentId}, $dir->id, "the directory has not moved");
   };
 
-  subtest "nodeType is immutable" => sub {
-    # draft S3.1 nodeType: "Attempting to change nodeType after creation is
-    # an invalidProperties error"
-    my $args = $update->({ $b->id => { nodeType => 'file' } });
-    jcmp_deeply($args->{notUpdated}{ $b->id }, invalid_properties('nodeType'), "invalidProperties")
+  subtest "\@type is immutable" => sub {
+    # draft S3.1.1 @type: "(immutable)" -- an update changing it is
+    # invalidProperties (RFC 8620 S5.3)
+    my $args = $update->({ $b->id => { '@type' => 'File' } });
+    jcmp_deeply($args->{notUpdated}{ $b->id }, invalid_properties('@type'), "invalidProperties")
       or diag explain $args;
-    is($get->($b->id)->{nodeType}, 'directory', "still a directory");
+    is($get->($b->id)->{'@type'}, 'Directory', "still a Directory");
   };
 
   subtest "a name clash" => sub {
