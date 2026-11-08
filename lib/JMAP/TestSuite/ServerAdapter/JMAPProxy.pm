@@ -20,6 +20,16 @@ has mgmt_uri => (
   required => 1,
 );
 
+# The proxy's management API takes a token (JMAP_MGMT_TOKEN)
+has mgmt_token => (
+  is => 'ro',
+);
+
+sub _mgmt_auth {
+  my ($self) = @_;
+  return defined $self->mgmt_token ? (Authorization => 'Bearer ' . $self->mgmt_token) : ();
+}
+
 has accountIds => (
   isa => 'ArrayRef[Str]',
   traits  => [ 'Array' ],
@@ -192,7 +202,7 @@ sub same_creds_account_pair {
   my $lwp  = LWP::UserAgent->new;
   for my $spec ([$primary, undef], [$shared, $shared]) {
     my ($aid, $backend) = @$spec;
-    my $res = $lwp->post("$mgmt/api/accounts",
+    my $res = $lwp->post("$mgmt/api/accounts", $self->_mgmt_auth,
       Content_Type => 'application/json',
       Content => encode_json({
         accountid  => $aid,
@@ -227,7 +237,7 @@ sub mixed_account_pair {
     unless $client->setacl("user$sep$b", $b, "lrswipkxtecdan");
 
   my $mgmt = $self->mgmt_uri =~ s{/\z}{}r;
-  my $res  = LWP::UserAgent->new->post("$mgmt/api/accounts",
+  my $res  = LWP::UserAgent->new->post("$mgmt/api/accounts", $self->_mgmt_auth,
     Content_Type => 'application/json',
     Content => encode_json({
       accountid  => $b,
@@ -293,7 +303,7 @@ sub _create_pristine_account {
     });
   }
   my $lwp = LWP::UserAgent->new();
-  my $res = $lwp->post("$mgmt/api/accounts",
+  my $res = $lwp->post("$mgmt/api/accounts", $self->_mgmt_auth,
    Content_Type => 'application/json',
    Content => $content
   );
