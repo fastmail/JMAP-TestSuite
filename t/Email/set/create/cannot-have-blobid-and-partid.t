@@ -1,6 +1,5 @@
 use jmaptest;
-
-use Data::GUID qw(guid_string);
+use JMAP::TestSuite::Util qw(email_create_invalid_or_repaired);
 
 test {
   my ($self) = @_;
@@ -19,38 +18,31 @@ test {
     body => "My pid is $$",
   });
 
-  TODO: {
-    local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2497';
-
-    $tester->request_ok(
-      [
-        "Email/set" => {
-          create => {
-            new => {
-              mailboxIds => { $mbox->id => jtrue },
-              bodyStructure => {
-                blobId => $blob->blobId,
-                partId => 'text',
-                type   => 'text/plain',
-              },
-              bodyValues => {
-                text => {
-                  value => 'ok',
-                }
-              },
-            },
-          },
-        },
-      ],
-      superhashof({
-        notCreated => {
-          new => superhashof({
-            type => 'invalidProperties',
-            properties => bag(qw(bodyStructure/partId bodyStructure/blobId)),
-          }),
-        },
-      }),
-      "cannot have blobId and partId in bodyStructure",
-    );
-  };
+  # RFC 8621 S4.6: a part "MUST NOT" have both partId and blobId.
+  email_create_invalid_or_repaired(
+    $tester,
+    {
+      mailboxIds => { $mbox->id => jtrue },
+      bodyStructure => {
+        blobId => $blob->blobId,
+        partId => 'text',
+        type   => 'text/plain',
+      },
+      bodyValues => {
+        text => {
+          value => 'ok',
+        }
+      },
+    },
+    { properties => [ 'textBody' ] },
+    sub {
+      my ($email) = @_;
+      jcmp_deeply(
+        $email->{textBody},
+        [ superhashof({ type => 'text/plain' }) ],
+        "one text/plain body part, from one source or the other",
+      );
+    },
+    "blobId and partId in bodyStructure",
+  );
 };

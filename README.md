@@ -77,7 +77,9 @@ dev/stalwart/init.sh
 ```
 
 This creates the `example.test` domain via Stalwart's admin API. It is
-idempotent — safe to run again.
+idempotent — safe to run again. It also turns on
+`sharing.allowDirectoryQueries`, which `Principal/query` needs on Stalwart
+1.0.0, and reloads the settings so it takes effect.
 
 **3. Run the tests**
 

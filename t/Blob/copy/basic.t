@@ -10,10 +10,11 @@ test {
   my $from_tester = $from_account->tester;
   my $to_tester   = $to_account->tester;
 
+  # RFC 9404 Section 4: Blob/copy is defined by RFC 8620 and "is selected by the
+  # urn:ietf:params:jmap:core capability", not by urn:ietf:params:jmap:blob.
   $from_tester->require_capabilities(
     'urn:ietf:params:jmap:core',
     'urn:ietf:params:jmap:mail',
-    'urn:ietf:params:jmap:blob',  # RFC 9404: Blob/* methods live under this capability
   );
 
   my $upload = $from_tester->upload({

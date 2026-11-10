@@ -13,7 +13,6 @@ test {
 
   $account->tester->require_capabilities(
     'urn:ietf:params:jmap:core',
-    'urn:ietf:params:jmap:blob',
   );
 
   foreign_account_not_found_ok($account, $other, [

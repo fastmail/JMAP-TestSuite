@@ -1,6 +1,5 @@
 use jmaptest;
-
-use Data::GUID qw(guid_string);
+use JMAP::TestSuite::Util qw(email_create_invalid_or_repaired);
 
 test {
   my ($self) = @_;
@@ -15,37 +14,30 @@ test {
 
   my $mbox = $account->create_mailbox;
 
-  TODO: {
-    local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2495';
-
-    $tester->request_ok(
-      [
-        "Email/set" => {
-          create => {
-            new => {
-              mailboxIds => { $mbox->id => jtrue },
-              bodyStructure => {
-                partId => 'text',
-                type   => 'text/plain',
-              },
-              bodyValues => {
-                notText => {
-                  value => 'ok',
-                }
-              },
-            },
-          },
-        },
-      ],
-      superhashof({
-        notCreated => {
-          new => superhashof({
-            type => 'invalidProperties',
-            properties => [ 'bodyStructure/partId' ],
-          }),
-        },
-      }),
-      "partId must be present in bodyValues",
-    );
-  };
+  # RFC 8621 S4.6: a partId "MUST" be present in bodyValues.
+  email_create_invalid_or_repaired(
+    $tester,
+    {
+      mailboxIds => { $mbox->id => jtrue },
+      bodyStructure => {
+        partId => 'text',
+        type   => 'text/plain',
+      },
+      bodyValues => {
+        notText => {
+          value => 'ok',
+        }
+      },
+    },
+    { properties => [ 'textBody' ] },
+    sub {
+      my ($email) = @_;
+      jcmp_deeply(
+        $email->{textBody},
+        [ superhashof({ type => 'text/plain' }) ],
+        "the text/plain part still exists",
+      );
+    },
+    "partId missing from bodyValues",
+  );
 };

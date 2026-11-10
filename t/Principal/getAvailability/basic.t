@@ -12,6 +12,10 @@ test {
     'urn:ietf:params:jmap:core',
     'urn:ietf:params:jmap:principals',
     'urn:ietf:params:jmap:calendars',
+    # draft-ietf-jmap-calendars section 1.5.2: this capability "represents
+    # support for the Principal/getAvailability method", so a server may
+    # refuse the method unless the request lists it in "using".
+    'urn:ietf:params:jmap:principals:availability',
   );
 
   my $prin_res = $tester->request([[

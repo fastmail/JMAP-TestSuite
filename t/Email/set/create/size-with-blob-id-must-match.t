@@ -42,35 +42,35 @@ test {
     );
   };
 
+  # RFC 8621 Section 4.6: "If a blobId is given, [size] may be included but
+  # is ignored by the server (the size is actually calculated from the blob
+  # content itself)". So a wrong size is not an error; the server works out
+  # the real one.
   subtest "size doesn't match" => sub {
-    TODO: {
-      local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2501';
-
-      $tester->request_ok(
-        [
-          "Email/set" => {
-            create => {
-              new => {
-                mailboxIds => { $mbox->id => jtrue },
-                bodyStructure => {
-                  blobId => $blob->blob_id,
-                  type   => 'text/plain',
-                  size   => $blob->size + 5,
-                },
+    $tester->request_ok(
+      [
+        "Email/set" => {
+          create => {
+            new => {
+              mailboxIds => { $mbox->id => jtrue },
+              bodyStructure => {
+                blobId => $blob->blob_id,
+                type   => 'text/plain',
+                size   => $blob->size + 5,
               },
             },
           },
-        ],
-        superhashof({
-          notCreated => {
-            new => superhashof({
-              type => 'invalidProperties',
-              properties => [ 'bodyStructure/size' ],
-            }),
-          },
-        }),
-        "cannot have mismatched size with blobId",
-      );
-    };
+        },
+      ],
+      superhashof({
+        created => {
+          new => superhashof({
+            id   => jstr(),
+            size => jnum(),
+          }),
+        },
+      }),
+      "a mismatched size with blobId is ignored, not rejected",
+    );
   };
 };

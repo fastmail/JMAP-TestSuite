@@ -1,4 +1,5 @@
 use jmaptest;
+use JMAP::TestSuite::Util qw(client_keywords);
 
 use Data::GUID qw(guid_string);
 
@@ -97,7 +98,7 @@ test {
           htmlBody    => [ \%body ],
           id          => $id,
           inReplyTo   => undef,
-          keywords    => {},
+          keywords    => client_keywords(),
           mailboxIds  => {
             $mbox->id => jtrue(),
           },

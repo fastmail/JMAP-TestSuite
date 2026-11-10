@@ -38,6 +38,20 @@ if [ -z "$ADMIN_ACCOUNT_ID" ]; then
 fi
 echo "Admin account ID: $ADMIN_ACCOUNT_ID"
 
+# Principal/query is refused with "forbidden" unless directory queries are
+# allowed (Stalwart 1.0.0 gates it on this setting; default off). The setting
+# is only re-read on a settings reload, so ask for one after changing it.
+SHARING=$(curl -sf -H "Authorization: Basic $ADMIN_CREDS" -H "Content-Type: application/json" \
+  -X POST "$BASE/jmap" -d "{\"using\":[\"urn:stalwart:jmap\"],\"methodCalls\":[[\"x:Sharing/get\",{\"accountId\":\"$ADMIN_ACCOUNT_ID\",\"ids\":[\"singleton\"]},\"c1\"]]}" \
+  | python3 -c "import sys,json; l=json.load(sys.stdin)['methodResponses'][0][1].get('list',[]); print('on' if l and l[0].get('allowDirectoryQueries') else 'off')")
+if [ "$SHARING" != "on" ]; then
+  curl -sf -H "Authorization: Basic $ADMIN_CREDS" -H "Content-Type: application/json" \
+    -X POST "$BASE/jmap" -d "{\"using\":[\"urn:stalwart:jmap\"],\"methodCalls\":[[\"x:Sharing/set\",{\"accountId\":\"$ADMIN_ACCOUNT_ID\",\"create\":{\"s\":{\"allowDirectoryQueries\":true}}},\"c1\"]]}" >/dev/null
+  curl -sf -H "Authorization: Basic $ADMIN_CREDS" -H "Content-Type: application/json" \
+    -X POST "$BASE/jmap" -d "{\"using\":[\"urn:stalwart:jmap\"],\"methodCalls\":[[\"x:Action/set\",{\"accountId\":\"$ADMIN_ACCOUNT_ID\",\"create\":{\"r\":{\"@type\":\"ReloadSettings\"}}},\"c1\"]]}" >/dev/null
+  echo "Enabled directory queries (sharing.allowDirectoryQueries) and reloaded settings."
+fi
+
 # Check if the domain already exists
 QUERY_RESULT=$(curl -sf \
   -H "Authorization: Basic $ADMIN_CREDS" \

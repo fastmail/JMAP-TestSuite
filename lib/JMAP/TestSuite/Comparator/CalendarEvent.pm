@@ -55,6 +55,10 @@ sub calendar_event {
     baseEventId              => ignore(),
     # per-user properties (jmap-calendars)
     useDefaultAlerts         => ignore(),
+    # draft-ietf-jmap-calendars section 5.1 additions
+    mayInviteSelf            => ignore(),
+    mayInviteOthers          => ignore(),
+    hideAttendees            => ignore(),
     # iCalendar/CalDAVTalk passthrough fields
     q(@type)                 => ignore(),
     prodId                   => ignore(),

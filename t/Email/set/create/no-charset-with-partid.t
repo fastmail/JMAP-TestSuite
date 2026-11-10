@@ -1,4 +1,5 @@
 use jmaptest;
+use JMAP::TestSuite::Util qw(email_create_invalid_or_repaired);
 
 test {
   my ($self) = @_;
@@ -13,42 +14,29 @@ test {
 
   my $mbox = $account->create_mailbox;
 
-  my $blob = $account->email_blob(generic => {
-    body => "My pid is $$",
-  });
-
-  TODO: {
-    local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2500';
-
-    $tester->request_ok(
-      [
-        "Email/set" => {
-          create => {
-            new => {
-              mailboxIds => { $mbox->id => jtrue },
-              bodyStructure => {
-                partId  => 'text',
-                type    => 'text/plain',
-                charset => 'us-ascii',
-              },
-              bodyValues => {
-                text => {
-                  value => 'ok',
-                }
-              },
-            },
-          },
-        },
-      ],
-      superhashof({
-        notCreated => {
-          new => superhashof({
-            type => 'invalidProperties',
-            properties => [ 'bodyStructure/charset' ],
-          }),
-        },
-      }),
-      "cannot have charset with partId",
-    );
-  };
+  # RFC 8621 S4.6: charset "MUST be omitted if a partId is given", because the
+  # server chooses the encoding of the value.
+  email_create_invalid_or_repaired(
+    $tester,
+    {
+      mailboxIds => { $mbox->id => jtrue },
+      bodyStructure => {
+        partId  => 'text',
+        type    => 'text/plain',
+        charset => 'us-ascii',
+      },
+      bodyValues => {
+        text => {
+          value => 'ok',
+        }
+      },
+    },
+    { properties => [ 'textBody', 'bodyValues' ], fetchTextBodyValues => jtrue },
+    sub {
+      my ($email) = @_;
+      my $part_id = $email->{textBody}[0]{partId};
+      is($email->{bodyValues}{$part_id // ''}{value}, 'ok', "the body value survives");
+    },
+    "charset with partId",
+  );
 };

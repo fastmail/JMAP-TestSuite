@@ -1,4 +1,5 @@
 use jmaptest;
+use JMAP::TestSuite::Util qw(client_keywords);
 
 test {
   my ($self) = @_;
@@ -25,7 +26,7 @@ test {
 
   $tester->request_ok(
     [ "Email/get" => { ids => [ $message->id ] } ],
-    superhashof({ list => [ superhashof({ keywords => {} }) ] }),
+    superhashof({ list => [ superhashof({ keywords => client_keywords() }) ] }),
     "newly created email has no keywords",
   );
 
@@ -43,7 +44,7 @@ test {
 
   $tester->request_ok(
     [ "Email/get" => { ids => [ $message->id ] } ],
-    superhashof({ list => [ superhashof({ keywords => { '$flagged' => jtrue() } }) ] }),
+    superhashof({ list => [ superhashof({ keywords => client_keywords({ '$flagged' => jtrue() }) }) ] }),
     "...and it worked, keyword lowercased",
   );
 };

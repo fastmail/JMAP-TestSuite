@@ -67,9 +67,10 @@ has _detected_separator => (
   },
 );
 
-# Set in test-config.json when the proxy's backend is Cyrus; makes
-# isa('JMAP::TestSuite::ServerAdapter::Cyrus') true so the suite's
-# Cyrus-specific TODO blocks apply.
+# Set in test-config.json when the proxy passes requests straight through to a
+# Cyrus upstream, so the proxy inherits Cyrus's behaviour; makes
+# isa('JMAP::TestSuite::ServerAdapter::Cyrus') true so the suite's Cyrus-specific
+# TODO blocks and skips apply. An IMAP-backed proxy is held to the full spec.
 has cyrus_backend => (
   is      => 'ro',
   default => 0,

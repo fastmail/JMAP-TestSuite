@@ -3,8 +3,9 @@ use Moose;
 
 use Test::Deep ':v1';
 use Test::Deep::JType;
+use Test::Deep::HashRec;
 
-use Sub::Exporter -setup => [ qw(email) ];
+use Sub::Exporter -setup => [ qw(email client_keywords) ];
 
 sub email {
   my ($overrides) = @_;
@@ -62,6 +63,21 @@ sub email {
   return hashrec({
     required => \%required,
     optional => \%optional,
+  });
+}
+
+# Exactly the keywords the client set (none, by default). RFC 9979 section 4
+# lets the server set the mutually exclusive attachment-detection keywords
+# itself, so those two may also appear; nothing else may.
+sub client_keywords {
+  my ($required) = @_;
+
+  return hashrec({
+    required => { %{ $required || {} } },
+    optional => {
+      q{$hasattachment}   => jtrue,
+      q{$hasnoattachment} => jtrue,
+    },
   });
 }
 

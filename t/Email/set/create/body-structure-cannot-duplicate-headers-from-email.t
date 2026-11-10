@@ -1,4 +1,5 @@
 use jmaptest;
+use JMAP::TestSuite::Util qw(email_create_invalid_or_repaired);
 
 test {
   my ($self) = @_;
@@ -13,38 +14,30 @@ test {
 
   my $mbox = $account->create_mailbox;
 
-  TODO: {
-    local $TODO = 'https://github.com/cyrusimap/cyrus-imapd/issues/2498';
-    $tester->request_ok(
-      [
-        "Email/set" => {
-          create => {
-            new => {
-              mailboxIds => { $mbox->id => \1, },
-              'header:foo' => 'bar',
-              bodyStructure => {
-                partId => 'text',
-                type   => 'text/plain',
-                'header:foo' => 'bar',
-              },
-              bodyValues => {
-                text => {
-                  value => 'ok',
-                }
-              },
-            },
-          },
-        },
-      ],
-      superhashof({
-        notCreated => {
-          new => superhashof({
-            type => 'invalidProperties',
-            properties => [ 'bodyStructure/header:foo' ],
-          }),
-        },
-      }),
-      "got invalidProperties error",
-    );
-  };
+  # RFC 8621 S4.6: a header on the root bodyStructure part "MUST NOT" also be
+  # defined on the Email; for a single-part message they are the same header
+  # block.
+  email_create_invalid_or_repaired(
+    $tester,
+    {
+      mailboxIds => { $mbox->id => \1, },
+      'header:foo' => 'bar',
+      bodyStructure => {
+        partId => 'text',
+        type   => 'text/plain',
+        'header:foo' => 'bar',
+      },
+      bodyValues => {
+        text => {
+          value => 'ok',
+        }
+      },
+    },
+    { properties => [ 'header:foo:asText:all' ] },
+    sub {
+      my ($email) = @_;
+      jcmp_deeply($email->{'header:foo:asText:all'}, [ 'bar' ], "foo appears once");
+    },
+    "header on both the Email and its bodyStructure",
+  );
 };
