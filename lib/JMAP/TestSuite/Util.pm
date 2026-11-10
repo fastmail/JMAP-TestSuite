@@ -6,6 +6,7 @@ use Sub::Exporter -setup => [ qw(
   batch_ok
   fetch_session
   foreign_account_not_found_ok
+  email_create_invalid_or_repaired
   invalid_properties
   email
   client_keywords
@@ -300,6 +301,49 @@ sub body_lists_ok {
   return \%label_for;
 }
 
+
+
+=head2 email_create_invalid_or_repaired
+
+  email_create_invalid_or_repaired($tester, \%email, \%get_args, sub {
+    my ($email) = @_;
+    ...
+  }, $desc);
+
+Creates C<\%email>, which breaks one of the RFC 8621 section 4.6 creation
+rules.  The server "SHOULD" reject it with C<invalidProperties>, but "MAY
+choose to modify the Email ... to comply with its requirements instead", so
+either passes: a rejection must be C<invalidProperties>, and a created Email
+is fetched with C<\%get_args> and handed to the callback, which asserts the
+repair does comply.
+
+=cut
+
+sub email_create_invalid_or_repaired {
+  my ($tester, $email, $get_args, $check, $desc) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $res = $tester->request([[ 'Email/set' => { create => { new => $email } } ]]);
+  my $set = $res->single_sentence('Email/set')->arguments;
+
+  if (my $err = $set->{notCreated}{new}) {
+    is($err->{type}, 'invalidProperties', "$desc: rejected with invalidProperties")
+      or diag explain $err;
+    return;
+  }
+
+  my $id = $set->{created}{new}{id};
+  ok($id, "$desc: created, so the server repaired it")
+    or return diag explain $res->as_stripped_triples;
+
+  my $get = $tester->request([[ 'Email/get' => { ids => [ $id ], %$get_args } ]]);
+  my $got = $get->single_sentence('Email/get')->arguments->{list}[0];
+  ok($got, "$desc: the repaired Email can be fetched")
+    or return diag explain $get->as_stripped_triples;
+
+  subtest "$desc: the repaired Email complies" => sub { $check->($got) };
+}
 
 sub batch_ok {
   my ($batch) = @_;
