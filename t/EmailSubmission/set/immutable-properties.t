@@ -55,8 +55,10 @@ test {
     },
   ]])->single_sentence("EmailSubmission/set")->arguments;
   plan skip_all => "server refused to send: forbiddenToSend"
-    if ($set_args->{notCreated}{s1}{type} // '') eq 'forbiddenToSend';
-  my $sub_id = $set_args->{created}{s1}{id};
+    if ((($set_args->{notCreated} // {})->{s1} // {})->{type} // '') eq 'forbiddenToSend';
+  # read without autovivifying: the diagnostics below show $set_args, and a
+  # created.s1 that was never sent misled once
+  my $sub_id = (($set_args->{created} // {})->{s1} // {})->{id};
   ok(defined $sub_id, "created a submission") or return diag explain $set_args;
 
   # RFC 8621 S7: a server "MAY destroy EmailSubmission objects at any time

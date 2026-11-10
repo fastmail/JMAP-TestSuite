@@ -69,6 +69,18 @@ test {
     ok($res->is_success, "Identity/set update");
 
     my $args = $res->single_sentence("Identity/set")->arguments;
+
+    # name is not immutable, but RFC 8620 S5.3 lets a server refuse any
+    # change its policy does not allow ("forbidden"); then nothing changed.
+    if (my $err = ($args->{notUpdated} // {})->{$id}) {
+      is($err->{type}, 'forbidden', "server refuses to change the identity: forbidden")
+        or diag explain $args;
+      my $now = $tester->request([[ "Identity/get" => { ids => [$id] } ]])
+        ->single_sentence("Identity/get")->arguments->{list}[0];
+      is($now->{name}, $orig_name, "and the name is as it was");
+      return;
+    }
+
     # RFC 8620 Section 5.3: the value under updated may be null.
     ok(exists $args->{updated}{$id}, "identity updated") or diag explain $args;
 
