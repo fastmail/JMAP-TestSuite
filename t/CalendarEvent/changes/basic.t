@@ -17,6 +17,8 @@ test {
     my $res = $tester->request([[
       "CalendarEvent/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "CalendarEvent/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -42,6 +44,8 @@ test {
     my $res = $tester->request([[
       "CalendarEvent/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "CalendarEvent/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -71,6 +75,8 @@ test {
     my $res = $tester->request([[
       "CalendarEvent/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "CalendarEvent/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -98,6 +104,8 @@ test {
     my $res = $tester->request([[
       "CalendarEvent/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "CalendarEvent/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(

@@ -23,11 +23,13 @@ test {
   my $thread_id = $message->threadId;
 
   # Other tests share this account, so only our thread's place is checked.
+  # undef: the server answered cannotCalculateChanges (allowed, and noted).
   my $changes_since = sub {
     my ($state) = @_;
     my $res = $tester->request([[
       "Thread/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
     ok($res->is_success, "Thread/changes") or diag explain $res->response_payload;
     my $args = $res->single_sentence("Thread/changes")->arguments;
     return {
@@ -40,17 +42,21 @@ test {
   # losing the last one leaves no Thread, so it is destroyed.
   my $state = $account->get_state('thread');
   $reply->destroy;
-  is_deeply(
-    $changes_since->($state),
-    { created => 0, updated => 1, destroyed => 0 },
-    "destroying one email of two reports the thread updated",
-  );
+  if (my $got = $changes_since->($state)) {
+    is_deeply(
+      $got,
+      { created => 0, updated => 1, destroyed => 0 },
+      "destroying one email of two reports the thread updated",
+    );
+  }
 
   $state = $account->get_state('thread');
   $message->destroy;
-  is_deeply(
-    $changes_since->($state),
-    { created => 0, updated => 0, destroyed => 1 },
-    "destroying the last email reports the thread destroyed",
-  );
+  if (my $got = $changes_since->($state)) {
+    is_deeply(
+      $got,
+      { created => 0, updated => 0, destroyed => 1 },
+      "destroying the last email reports the thread destroyed",
+    );
+  }
 };

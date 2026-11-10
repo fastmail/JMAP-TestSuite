@@ -17,6 +17,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -42,6 +44,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -75,6 +79,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -102,6 +108,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(

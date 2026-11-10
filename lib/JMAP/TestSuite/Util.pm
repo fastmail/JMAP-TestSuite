@@ -6,6 +6,7 @@ use Sub::Exporter -setup => [ qw(
   batch_ok
   fetch_session
   foreign_account_not_found_ok
+  cannot_calculate_changes_ok
   email_create_invalid_or_repaired
   invalid_properties
   email
@@ -344,6 +345,33 @@ sub email_create_invalid_or_repaired {
 
   subtest "$desc: the repaired Email complies" => sub { $check->($got) };
 }
+
+=head2 cannot_calculate_changes_ok
+
+  my $res = $tester->request([[ "Foo/changes" => { sinceState => $state } ]]);
+  return if cannot_calculate_changes_ok($res);
+
+RFC 8620 S5.2 lets a server answer a /changes (or /queryChanges) with
+C<cannotCalculateChanges> whenever it cannot work them out.  That is within
+the spec, if inefficient: this notes it, passes, and returns true, so the
+caller can skip the checks it cannot make.  Any other answer returns false
+and is the caller's to judge.
+
+=cut
+
+sub cannot_calculate_changes_ok {
+  my ($res) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $s = eval { $res->single_sentence } or return 0;
+  return 0 unless $s->name eq 'error'
+               && ($s->arguments->{type} // '') eq 'cannotCalculateChanges';
+  note("inefficient but within the spec: cannotCalculateChanges");
+  pass("cannotCalculateChanges is allowed (RFC 8620 S5.2)");
+  return 1;
+}
+
 
 sub batch_ok {
   my ($batch) = @_;
