@@ -148,10 +148,14 @@ sub foreign_account_not_found_ok {
       }
     }
 
+    # RFC 8620 5.4 and 6.3: a /copy whose fromAccountId is not a valid account
+    # fails with fromAccountNotFound.
+    my $want = (exists $args{fromAccountId} && $args{fromAccountId} eq $foreign)
+             ? 'fromAccountNotFound' : 'accountNotFound';
     jcmp_deeply(
       $s->arguments,
-      superhashof({ type => 'accountNotFound' }),
-      "$desc: accountNotFound",
+      superhashof({ type => $want }),
+      "$desc: $want",
     ) or diag explain $res->as_stripped_triples;
   }
 }
