@@ -1,0 +1,9 @@
+{
+  "adapter"          : "CyrusDirect",
+  "base_uri"         : "http://localhost:8080",
+  "mgmt_uri"         : "http://localhost:8001",
+  "cyrus_host"       : "localhost",
+  "cyrus_port"       : 8143,
+  "cyrus_admin_user" : "admin",
+  "cyrus_admin_pass" : "admin"
+}

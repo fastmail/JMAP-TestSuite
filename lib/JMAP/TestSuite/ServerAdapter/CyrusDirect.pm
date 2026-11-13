@@ -23,13 +23,6 @@ has cyrus_admin_pass => (is => 'ro', default => 'admin');
 
 has cyrus_quota_kb => (is => 'ro', default => 102400);
 
-has accountIds => (
-  isa     => 'ArrayRef[Str]',
-  traits  => ['Array'],
-  handles => { accountIds => 'elements' },
-  required => 1,
-);
-
 # Always behave as a Cyrus adapter so Cyrus-specific TODO blocks apply.
 around 'isa' => sub {
   my ($orig, $self, $class) = @_;
@@ -47,10 +40,11 @@ sub _make_account {
   });
 }
 
+# A fresh account each time, so tests run in parallel never see each other's
+# changes.
 sub any_account {
   my ($self) = @_;
-  my ($accountId) = $self->accountIds;
-  return $self->_make_account($accountId);
+  return $self->_create_pristine_account;
 }
 
 sub pristine_account {
