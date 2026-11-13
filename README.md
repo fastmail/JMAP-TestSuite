@@ -111,36 +111,72 @@ in your environment before `docker compose up`.
 ### CyrusDirect
 
 Targets a [Cyrus IMAP](https://www.cyrusimap.org/) server that exposes both
-a JMAP HTTP interface and a management REST API. The
-[cyrus-docker-test-image](https://github.com/cyrusimap/cyrus-docker-test-image)
-project provides a suitable container.
+a JMAP HTTP interface and a management REST API, as the
+[cyrus-docker-test-server](https://github.com/cyrusimap/cyrus-docker-test-server)
+image does.
 
-**1. Start the container** (see that project's README for the exact command)
+**1. Start the container**
 
-**2. Configure**
+To test the published image:
 
-Create a JSON config pointing at your running instance:
+```sh
+docker run -d --name cyrus-test \
+  -p 8080:8080 -p 8143:8143 -p 8001:8001 -p 8587:8587 -p 8025:8025 \
+  ghcr.io/cyrusimap/cyrus-docker-test-server:latest
+```
+
+To test current Cyrus master, build the image yourself. The build clones
+master, so pass `--no-cache` to make sure it picks up new commits. It takes
+about a quarter of an hour.
+
+```sh
+git clone https://github.com/cyrusimap/cyrus-docker-test-server
+cd cyrus-docker-test-server
+docker build --no-cache . -t cyrus-test-server:master
+```
+
+To test a particular Cyrus commit, add
+`git -C /srv/cyrus-imapd checkout <sha>` after `cyd clone` in the
+`Dockerfile` first.
+
+The server is ready when `curl -sf http://localhost:8001/` succeeds.
+
+**2. Run the tests**
+
+```sh
+JMAP_SERVER_ADAPTER_FILE=eg/cyrusdirect.json prove -Ilib -r t/
+```
+
+**Config (`eg/cyrusdirect.json`):**
 
 ```json
 {
-  "adapter"      : "CyrusDirect",
-  "base_uri"     : "http://localhost:8080",
-  "mgmt_uri"     : "http://localhost:8001",
-  "accountIds"   : ["testuser@localhost"],
-  "cyrus_host"   : "localhost",
-  "cyrus_port"   : 1143,
+  "adapter"          : "CyrusDirect",
+  "base_uri"         : "http://localhost:8080",
+  "mgmt_uri"         : "http://localhost:8001",
+  "cyrus_host"       : "localhost",
+  "cyrus_port"       : 8143,
   "cyrus_admin_user" : "admin",
   "cyrus_admin_pass" : "admin"
 }
 ```
 
-**3. Run the tests**
+`cyrus_port` is the IMAP port, which `pool_account_pair` uses to grant the
+two accounts rights on each other.
 
-```sh
-JMAP_SERVER_ADAPTER_FILE=my-cyrusdirect.json prove -Ilib t/
-```
+Every account the adapter hands out, `any_account` included, is a new user
+made through the management API, so tests can run in parallel (`prove -j`)
+and a long-lived container needs no cleanup between runs.
 
 Supports: `any_account`, `pristine_account`, `pool_account_pair`.
+
+The adapter's users are in the container's default domain, which Cyrus strips
+from the login name. Cyrus's default Identity uses the login name as its email
+only when it contains `@`, so the identity's email is `""`, and most
+`EmailSubmission` tests and `MDN/send` fail before reaching the behaviour they
+test. Cyrus refuses `Identity/set` create, so this can't be worked around from
+JMAP. A user in another domain (`CREATE user/someone@example.org` over IMAP as
+admin) gets a real identity email.
 
 ---
 
