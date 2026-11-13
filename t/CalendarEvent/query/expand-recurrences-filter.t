@@ -4,7 +4,8 @@ use JMAP::TestSuite::Util qw(fetch_session);
 
 # draft-ietf-jmap-calendars S5.11: with expandRecurrences "the filter MUST be
 # just a FilterCondition (not a FilterOperator) and MUST include both a
-# before and after property".
+# before and after property".  That binds the client; a server may still
+# answer a FilterOperator whose range is bounded.
 
 test {
   my ($self) = @_;
@@ -31,13 +32,6 @@ test {
     'no before' => { inCalendar => $calendar->id, after => $after },
     'no after'  => { inCalendar => $calendar->id, before => $before },
     'no range'  => { inCalendar => $calendar->id },
-    'FilterOperator' => {
-      operator   => 'AND',
-      conditions => [
-        { inCalendar => $calendar->id },
-        { after => $after, before => $before },
-      ],
-    },
   );
 
   for my $case (sort keys %bad) {
@@ -54,6 +48,34 @@ test {
       "$case: invalidArguments or unsupportedFilter",
     ) or diag explain $s->arguments;
   }
+
+  subtest "FilterOperator" => sub {
+    my $res = $tester->request([[
+      "CalendarEvent/query" => {
+        filter => {
+          operator   => 'AND',
+          conditions => [
+            { inCalendar => $calendar->id },
+            { after => $after, before => $before },
+          ],
+        },
+        expandRecurrences => \1,
+      },
+    ]]);
+    my $s = $res->single_sentence;
+    if ($s->name eq 'error') {
+      jcmp_deeply(
+        $s->arguments,
+        superhashof({ type => any(qw(invalidArguments unsupportedFilter)) }),
+        "rejected with invalidArguments or unsupportedFilter",
+      ) or diag explain $s->arguments;
+      return;
+    }
+    is($s->name, 'CalendarEvent/query', "answered")
+      or return diag explain $res->as_stripped_triples;
+    is(scalar @{ $s->arguments->{ids} || [] }, 2, "the two instances in range")
+      or diag explain $s->arguments;
+  };
 
   subtest "expandDurationTooLarge" => sub {
     my $session = fetch_session($tester) or return;
