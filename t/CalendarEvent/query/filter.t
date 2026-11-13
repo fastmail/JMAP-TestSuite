@@ -27,6 +27,25 @@ test {
     uid      => $uid,
   });
 
+  # S5.11.1 leaves String matching to the server's index, which may fill
+  # asynchronously (Cyrus's rolling squatter), so wait until both events
+  # can be found.
+  my $indexed = 0;
+  for my $attempt (1 .. 30) {
+    my $res = $tester->request([
+      [ "CalendarEvent/query" => { filter => { inCalendar => $calendar->id, text => 'Zebra' } }, 'a' ],
+      [ "CalendarEvent/query" => { filter => { inCalendar => $calendar->id, text => 'Board' } }, 'b' ],
+    ]);
+    my @found = map {; $_->arguments->{ids} // [] } $res->sentences;
+    if ((grep { $_ eq $picnic->id } @{ $found[0] })
+     && (grep { $_ eq $board->id } @{ $found[1] })) { $indexed = 1; last }
+    sleep 1;
+  }
+  ok($indexed, 'the events are searchable') or do {
+    note('search index never caught up; skipping text and title matches');
+    return;
+  };
+
   my %case = (
     'title matches the title' => [ { title => 'Zebra' },       [ $picnic->id ] ],
     'title ignores description' => [ { title => 'xylophone' }, [] ],
