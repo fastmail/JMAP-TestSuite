@@ -534,8 +534,8 @@ test {
         list      => [{
           id => $message->id,
           to => [
-            { name => 'P', email => "powerful$$\@example.com" },
-            { name => 'M', email => "mighty$$\@example.com" },
+            { name => 'P', email => "powerful$$\@example.net" },
+            { name => 'M', email => "mighty$$\@example.net" },
           ],
         }],
       }),
@@ -560,8 +560,8 @@ test {
           id => $message->id,
           'header:to:asGroupedAddresses' => [
             { name => 'powers-that-be', addresses => [
-              { name => 'P', email => "powerful$$\@example.com" },
-              { name => 'M', email => "mighty$$\@example.com" },
+              { name => 'P', email => "powerful$$\@example.net" },
+              { name => 'M', email => "mighty$$\@example.net" },
             ] },
           ],
         }],
