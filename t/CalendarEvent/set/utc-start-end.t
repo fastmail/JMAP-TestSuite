@@ -35,9 +35,10 @@ test {
       start => '2024-05-01T09:00:00', timeZone => 'Etc/UTC', duration => 'PT1H',
       utcStart => '2024-05-01T09:00:00Z',
     } ],
+    # utcStart, not start, so utcEnd and duration are the only conflict
     'utcEnd with duration' => [ [qw(utcEnd duration)] => {
-      start => '2024-05-01T09:00:00', timeZone => 'Etc/UTC', duration => 'PT1H',
-      utcEnd => '2024-05-01T10:00:00Z',
+      utcStart => '2024-05-01T09:00:00Z', timeZone => 'Etc/UTC', duration => 'PT1H',
+      utcEnd   => '2024-05-01T10:00:00Z',
     } ],
     'utcStart in an override' => [ recurrenceOverrides => {
       start => '2024-05-01T09:00:00', timeZone => 'Etc/UTC', duration => 'PT1H',
