@@ -48,6 +48,16 @@ test {
   };
 
   subtest "an attachment" => sub {
+    # RFC 8621 S4.1.4: hasAttachment is a SHOULD and may be heuristic, so the
+    # attachment is a real, non-empty document a heuristic would not skip.
+    my $pdf = join "\n",
+      '%PDF-1.4',
+      '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+      '2 0 obj << /Type /Pages /Kids [] /Count 0 >> endobj',
+      'trailer << /Root 1 0 R >>',
+      '%%EOF',
+      '';
+
     my $message = $mbox->add_message({
       email_type => 'provided',
       email      => Email::MIME->create(
@@ -65,7 +75,7 @@ test {
               name         => "report.pdf",
               disposition  => "attachment",
             },
-            body => "",
+            body => $pdf,
           ),
         ],
       )->as_string,

@@ -22,12 +22,24 @@ test {
   $drafts //= $mailboxes[0];
   my $drafts_id = $drafts->{id};
 
+  # Identity ids are server-assigned, so look one up.
+  my ($identity) = @{
+    $tester->request([[ "Identity/get" => {} ]])
+      ->single_sentence("Identity/get")->arguments->{list} // []
+  };
+  # RFC 8621 S6 doesn't require an account to have any Identity.
+  plan skip_all => "account has no identity to submit as" unless $identity;
+
+  # RFC 8621 S6: Identity email is "The 'From' email address the client
+  # MUST use"; a "*" mailbox part allows any address in that domain.
+  (my $from = $identity->{email}) =~ s/\A\*\@/jmaptest\@/;
+
   my $email_res = $tester->request([[
     "Email/set" => {
       create => {
         draft1 => {
-          from        => [{ email => $account->accountId . '@localhost' }],
-          to          => [{ email => $account->accountId . '@localhost' }],
+          from        => [{ email => $from }],
+          to          => [{ email => $from }],
           subject     => 'Test EmailSubmission',
           keywords    => { '$draft' => jtrue() },
           mailboxIds  => { $drafts_id => jtrue() },
@@ -41,13 +53,6 @@ test {
   my $email_id = $email_res->single_sentence("Email/set")->arguments->{created}{draft1}{id};
   ok(defined $email_id, "got draft email id");
 
-  # Identity ids are server-assigned, so look one up.
-  my ($identity) = @{
-    $tester->request([[ "Identity/get" => {} ]])
-      ->single_sentence("Identity/get")->arguments->{list} // []
-  };
-  ok($identity && $identity->{id}, "got an identity to submit as") or return;
-
   my $sub_res = $tester->request([[
     "EmailSubmission/set" => {
       create => {
@@ -55,8 +60,8 @@ test {
           emailId    => $email_id,
           identityId => $identity->{id},
           envelope   => {
-            mailFrom => { email => $account->accountId . '@localhost' },
-            rcptTo   => [{ email => $account->accountId . '@localhost' }],
+            mailFrom => { email => $from },
+            rcptTo   => [{ email => $from }],
           },
         },
       },
@@ -67,9 +72,16 @@ test {
   my $set_args = $sub_res->single_sentence("EmailSubmission/set")->arguments;
   my $sub_id = $set_args->{created}{s1}{id};
 
+  # RFC 8621 S7.5: forbiddenToSend means the user "does not have permission
+  # to send at all right now", which no request can avoid.
+  my $err_type = $set_args->{notCreated}{s1}{type} // '';
   SKIP: {
-    skip "submission not created (SMTP may not be available)", 5
-      unless defined $sub_id;
+    skip "server refused to send: forbiddenToSend", 2
+      if $err_type eq 'forbiddenToSend';
+
+    ok(defined $sub_id, "created a submission")
+      or diag explain $set_args->{notCreated};
+    skip "no submission to fetch", 1 unless defined $sub_id;
 
     subtest "get created submission" => sub {
       my $res = $tester->request([[
@@ -79,19 +91,25 @@ test {
       ]]);
       ok($res->is_success, "EmailSubmission/get") or diag explain $res->response_payload;
 
-      my $args = $res->single_sentence("EmailSubmission/get")->arguments;
-      is(scalar @{ $args->{list} },     1, "one result");
-      is(scalar @{ $args->{notFound} }, 0, "nothing not found");
-
+      # RFC 8621 S7: a server "MAY destroy EmailSubmission objects at any
+      # time after the message is successfully sent", even immediately.
       jcmp_deeply(
-        $args->{list}[0],
-        superhashof({
-          id         => jstr($sub_id),
-          emailId    => jstr($email_id),
-          identityId => jstr(),
-        }),
-        "submission has required fields",
-      ) or diag explain $args->{list}[0];
+        $res->single_sentence("EmailSubmission/get")->arguments,
+        any(
+          superhashof({
+            list     => [
+              superhashof({
+                id         => jstr($sub_id),
+                emailId    => jstr($email_id),
+                identityId => jstr(),
+              }),
+            ],
+            notFound => [],
+          }),
+          superhashof({ list => [], notFound => [ jstr($sub_id) ] }),
+        ),
+        "submission found with required fields, or already destroyed",
+      ) or diag explain $res->as_stripped_triples;
     };
   };
 

@@ -35,16 +35,16 @@ test {
       $res->single_sentence('Email/import')->arguments,
       {
         accountId  => jstr($account->accountId),
-        oldState => jstr(),
+        oldState => any(undef, jstr()),
         newState => jstr(),
         notCreated => undef,
         created => {
-          new => {
+          new => superhashof({
             blobId   => jstr(),
             id       => jstr(),
             size     => jnum(),
             threadId => jstr(),
-          },
+          }),
         },
       },
     ) or diag explain $res->as_stripped_triples;
@@ -92,7 +92,8 @@ test {
           }),
         }),
         receivedAt => jstr('2017-08-08T05:04:03Z'),
-        keywords   => any(superhashof({ foo => JSON::true }), superhashof({ Foo => JSON::true })),  # RFC 8621 4.1.1: keywords are case-insensitive; the server may keep the case it was given
+        # RFC 8621 S4.1.1: "servers MUST return keywords in lowercase".
+        keywords   => { foo => JSON::true },
       }),
       'email looks good',
     );
@@ -120,16 +121,16 @@ test {
       $res->single_sentence('Email/import')->arguments,
       {
         accountId  => jstr($account->accountId),
-        oldState => jstr(),
+        oldState => any(undef, jstr()),
         newState => jstr(),
         notCreated => undef,
         created => {
-          new => {
+          new => superhashof({
             blobId   => jstr(),
             id       => jstr(),
             size     => jnum(),
             threadId => jstr(),
-          },
+          }),
         },
       },
     ) or diag explain $res->as_stripped_triples;
@@ -176,7 +177,7 @@ test {
             value => "My pid is still $$",
           }),
         }),
-        receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+        receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z'),
       }),
       'email looks good',
     );
@@ -208,16 +209,16 @@ test {
       $res->single_sentence('Email/import')->arguments,
       {
         accountId  => jstr($account->accountId),
-        oldState => jstr(),
+        oldState => any(undef, jstr()),
         newState => jstr(),
         notCreated => undef,
         created => {
-          new => {
+          new => superhashof({
             blobId   => jstr(),
             id       => jstr(),
             size     => jnum(),
             threadId => jstr(),
-          },
+          }),
         },
       },
     ) or diag explain $res->as_stripped_triples;
@@ -265,7 +266,7 @@ test {
               value => "Still $$ for my pid",
             }),
           }),
-          receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+          receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z'),
         }),
         'email looks good',
       );

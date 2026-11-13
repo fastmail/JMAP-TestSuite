@@ -18,6 +18,7 @@ use JMAP::TestSuite::TestRoutine::JMAPTest;
 use JMAP::TestSuite::Util;
 use Test::Deep ':v1';
 use Test::Deep::JType;
+use JSON ();
 
 sub test_routine_test_traits {
   'JMAP::TestSuite::TestRoutine::JMAPTest'
@@ -109,6 +110,45 @@ sub test_query {
 
   # So you can ->request_ok(..) or foo();
   return ! $failures;
+}
+
+# POST $body to the API endpoint as $tester, bypassing JMAP::Tester's request
+# building, for tests of malformed requests.  Returns the HTTP::Response.
+sub raw_api_post {
+  my ($self, $tester, $body, $content_type) = @_;
+
+  require HTTP::Request;
+  my $req = HTTP::Request->new(
+    POST => $tester->api_uri,
+    [
+      'Content-Type' => $content_type // 'application/json',
+      $tester->_maybe_auth_header,
+    ],
+    $body,
+  );
+
+  return $tester->ua->lwp->request($req);
+}
+
+# Assert that $http_res is a request-level error (RFC 8620 S3.6.1): an HTTP
+# error status, and if the body is a problem details object, of $type.
+sub request_level_error_ok {
+  my ($self, $http_res, $type, $desc) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  ok($http_res->is_client_error, "$desc: an HTTP 4xx error")
+    or diag($http_res->as_string);
+
+  my $problem = eval { JSON->new->decode($http_res->decoded_content) };
+  if (ref $problem eq 'HASH' && exists $problem->{type}) {
+    is($problem->{type}, "urn:ietf:params:jmap:error:$type",
+       "$desc: problem details type is $type")
+      or diag explain $problem;
+  } else {
+    # S3.6.1: the server "SHOULD return a JSON problem details object".
+    note("$desc: response body is not a problem details object");
+  }
 }
 
 sub explain_test_query_failure {

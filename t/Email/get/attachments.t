@@ -1,6 +1,6 @@
 use jmaptest;
 
-use JMAP::TestSuite::Util qw(part multipart parts cpart cmultipart);
+use JMAP::TestSuite::Util qw(body_lists_ok part multipart cpart cmultipart);
 use Email::MIME;
 
 test {
@@ -60,20 +60,20 @@ test {
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
 
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0],
-      superhashof({
-        textBody => [ map { part($_) } qw(text/plain image/jpeg audio/mp3 video/avi) ],
-        htmlBody => [ part('text/html') ],
-      }),
-      "textBody and htmlBody are correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      [ parts(qw(image/jpeg audio/mp3 video/avi)) ],
-      "attachments are correct"
-    );
+    body_lists_ok($res->sentence_named("Email/get")->arguments->{list}[0], {
+      leaves    => [
+        a => part('text/plain'),
+        b => part('image/jpeg'),
+        c => part('audio/mp3'),
+        d => part('video/avi'),
+        e => part('text/html'),
+      ],
+      suggested => {
+        textBody    => [qw(a b c d)],
+        htmlBody    => [qw(e)],
+        attachments => [qw(b c d)],
+      },
+    });
   };
 
   subtest "image/audio/video in html only, attached" => sub {
@@ -120,20 +120,20 @@ test {
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
 
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0],
-      superhashof({
-        textBody => [ part('text/plain')],
-        htmlBody => [ map { part($_) } qw(text/html image/jpeg audio/mp3 video/avi) ],
-      }),
-      "textBody and htmlBody are correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      [ parts(qw(image/jpeg audio/mp3 video/avi)) ],
-      "attachments are correct"
-    );
+    body_lists_ok($res->sentence_named("Email/get")->arguments->{list}[0], {
+      leaves    => [
+        a => part('text/plain'),
+        b => part('text/html'),
+        c => part('image/jpeg'),
+        d => part('audio/mp3'),
+        e => part('video/avi'),
+      ],
+      suggested => {
+        textBody    => [qw(a)],
+        htmlBody    => [qw(b c d e)],
+        attachments => [qw(c d e)],
+      },
+    });
   };
 
   subtest "image/audio/video in text and html, not attached" => sub {
@@ -180,99 +180,19 @@ test {
       "bodyStructure parts look right"
     ) or diag explain $res->as_stripped_triples;
 
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0],
-      superhashof({
-        textBody => [ map { part($_) } qw(text/plain image/jpeg audio/mp3 video/avi) ],
-        htmlBody => [ map { part($_) } qw(text/html image/jpeg audio/mp3 video/avi) ],
-      }),
-      "textBody and htmlBody are correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{textBody},
-      [ map { part($_) } qw(text/plain image/jpeg audio/mp3 video/avi) ],
-      "textBody is correct"
-    ) or diag explain $res->as_stripped_triples;
-
-    jcmp_deeply(
-      $res->sentence_named("Email/get")->arguments->{list}[0]{attachments},
-      # RFC 8621 Section 4.1.4: a server MAY leave inline media that is already
-      # in textBody/htmlBody out of attachments, or list it; both are correct.
-      any([], bag(part("image/jpeg"), part("audio/mp3"), part("video/avi"))),
-      "attachments are correct"
-    );
-  };
-
-  subtest "no attachments" => sub {
-    my $message = $mbox->add_message({
-      email_type => 'provided',
-      email      => Email::MIME->create(
-        header_str => [
-          From => 'test@example.com',
-          To   => 'test@exapmle.com',
-        ],
-        parts => [
-          "Main body",
-        ],
-      )->as_string,
-    });
-
-    my $res = $tester->request([[
-      "Email/get" => {
-        ids        => [ $message->id ],
-        properties => [ 'attachments', 'hasAttachment', ],
+    body_lists_ok($res->sentence_named("Email/get")->arguments->{list}[0], {
+      leaves    => [
+        a => part('text/plain'),
+        b => part('text/html'),
+        c => part('image/jpeg'),
+        d => part('audio/mp3'),
+        e => part('video/avi'),
+      ],
+      suggested => {
+        textBody    => [qw(a c d e)],
+        htmlBody    => [qw(b c d e)],
+        attachments => [],
       },
-    ]]);
-    ok($res->is_success, "Email/get")
-      or diag explain $res->response_payload;
-
-    my $email = $res->sentence_named("Email/get")->arguments->{list}[0];
-    jcmp_deeply(
-      $email,
-      superhashof({ hasAttachment => jfalse() }),
-      "Email without attachments is hasAttachment: false",
-    ) or diag explain $res->as_stripped_triples;
-  };
-
-  subtest "an attachment" => sub {
-    my $message = $mbox->add_message({
-      email_type => 'provided',
-      email      => Email::MIME->create(
-        header_str => [
-          From => 'test@example.com',
-          To   => 'test@exapmle.com',
-        ],
-        parts => [
-          "Main body",
-          Email::MIME->create(
-            attributes => {
-              filename     => "report.pdf",
-              content_type => "application/pdf",
-              encoding     => "quoted-printable",
-              name         => "report.pdf",
-              disposition  => "attachment",
-            },
-            body => "",
-          ),
-        ],
-      )->as_string,
     });
-
-    my $res = $tester->request([[
-      "Email/get" => {
-        ids        => [ $message->id ],
-        properties => [ 'attachments', 'hasAttachment', ],
-      },
-    ]]);
-    ok($res->is_success, "Email/get")
-      or diag explain $res->response_payload;
-
-    my $email = $res->sentence_named("Email/get")->arguments->{list}[0];
-    jcmp_deeply(
-      $email,
-      superhashof({ hasAttachment => jtrue() }),
-      "Email with attachments is hasAttachment: true",
-    ) or diag explain $res->as_stripped_triples;
   };
 };

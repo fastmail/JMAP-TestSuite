@@ -1,6 +1,8 @@
 use jmaptest;
 use utf8;
 
+use Time::Local qw(timegm);
+
 test {
   my ($self) = @_;
 
@@ -351,6 +353,9 @@ test {
         } @hlist, ),
         References => $long_value,
       ],
+      raw_headers => [
+        'X-Broken' => 'not a message id',
+      ],
     });
 
     my $res = $tester->request([[
@@ -366,6 +371,7 @@ test {
           qw(
             header:References:asRaw
             header:References:asMessageIds
+            header:X-Broken:asMessageIds
           ),
         ],
       },
@@ -388,6 +394,8 @@ test {
           } @hlist, ),
           'header:References:asRaw' => " <$mid2>\r\n <$mid3>",
           'header:References:asMessageIds' => [ $mid2, $mid3 ],
+          # RFC 8621 S4.1.2.5: "If parsing fails, the value is null."
+          'header:X-Broken:asMessageIds' => undef,
         }],
       }),
       "Response looks good",
@@ -403,8 +411,18 @@ test {
 
     my $value = "Thu, 13 Feb 1969 23:32 -0330 (Newfoundland Time)";
 
-    # 13th at 23:32 + 3.5h...
-    my $expect = "1969-02-13T23:32:00-03:30";
+    # RFC 8620 S1.4: a Date may use any offset, so compare the instant;
+    # 23:32 at -03:30 is 03:02 UTC on the 14th.
+    my $expect = code(sub {
+      my ($got) = @_;
+      return (0, "not a Date") unless defined $got && $got =~ m{
+        \A(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:\.\d*[1-9])?
+        (?:Z|([+-])(\d\d):(\d\d))\z
+      }x;
+      my $utc = timegm($6, $5, $4, $3, $2 - 1, $1)
+               - ($7 ? "${7}1" * ($8 * 3600 + $9 * 60) : 0);
+      return $utc == timegm(0, 2, 3, 14, 1, 1969) || (0, "$got is the wrong instant");
+    });
 
     my $message = $mbox->add_message({
       raw_headers => [
@@ -446,7 +464,7 @@ test {
             "header:$_:asRaw" => " $value",
           } @hlist, ),
           ( map {;
-            "header:$_:asDate" => "$expect",
+            "header:$_:asDate" => $expect,
           } @hlist, ),
           'header:X-Broken:asRaw' => " not a date",
           'header:X-Broken:asDate' => undef,
@@ -470,7 +488,7 @@ test {
     my $url1 = "http://example.net";
     my $url2 = "http://example.org/" . ("a" x 35);
 
-    my $value = "<$url1> <$url2>";
+    my $value = "<$url1>, <$url2>";
 
     my $message = $mbox->add_message({
       raw_headers => [
@@ -509,7 +527,7 @@ test {
         list      => [{
           id => $message->id,
           ( map {;
-            "header:$_:asRaw" => " <$url1>\r\n <$url2>",
+            "header:$_:asRaw" => " <$url1>,\r\n <$url2>",
           } @hlist, ),
           ( map {;
             "header:$_:asURLs" => [ $url1, $url2 ],

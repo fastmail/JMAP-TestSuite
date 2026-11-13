@@ -21,31 +21,34 @@ test {
   ok(ref $args->{list} eq 'ARRAY', "list is array");
 
   my @list = @{ $args->{list} };
-  ok(@list >= 1, "at least one identity");
+  # RFC 8621 S6 doesn't require an account to have any Identity.
+  SKIP: {
+    skip "account has no identities", 2 unless @list;
 
-  my $first = $list[0];
-  jcmp_deeply(
-    $first,
-    superhashof({
-      id        => jstr(),
-      mayDelete => jbool(),
-      email     => jstr(),
-    }),
-    "identity has required fields",
-  ) or diag explain $first;
+    my $first = $list[0];
+    jcmp_deeply(
+      $first,
+      superhashof({
+        id        => jstr(),
+        mayDelete => jbool(),
+        email     => jstr(),
+      }),
+      "identity has required fields",
+    ) or diag explain $first;
 
-  my $id = $first->{id};
+    my $id = $first->{id};
 
-  subtest "fetch by id" => sub {
-    my $res = $tester->request([[
-      "Identity/get" => { ids => [$id] },
-    ]]);
-    ok($res->is_success, "Identity/get by id");
+    subtest "fetch by id" => sub {
+      my $res = $tester->request([[
+        "Identity/get" => { ids => [$id] },
+      ]]);
+      ok($res->is_success, "Identity/get by id");
 
-    my $args2 = $res->single_sentence("Identity/get")->arguments;
-    is(scalar @{ $args2->{list} },     1, "one result");
-    is(scalar @{ $args2->{notFound} }, 0, "nothing not found");
-    is($args2->{list}[0]{id}, $id, "correct identity returned");
+      my $args2 = $res->single_sentence("Identity/get")->arguments;
+      is(scalar @{ $args2->{list} },     1, "one result");
+      is(scalar @{ $args2->{notFound} }, 0, "nothing not found");
+      is($args2->{list}[0]{id}, $id, "correct identity returned");
+    };
   };
 
   subtest "fetch unknown id" => sub {

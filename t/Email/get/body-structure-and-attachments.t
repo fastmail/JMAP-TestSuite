@@ -1,6 +1,6 @@
 use jmaptest;
 
-use JMAP::TestSuite::Util qw(get_parts multipart);
+use JMAP::TestSuite::Util qw(body_lists_ok get_parts multipart);
 use Path::Tiny qw(path);
 use Email::MIME;
 use Digest::MD5 qw(md5_hex);
@@ -31,6 +31,8 @@ test {
       properties => [ qw(
         bodyStructure
         bodyValues
+        textBody
+        htmlBody
         attachments
         hasAttachment
       ) ],
@@ -141,12 +143,9 @@ EOF
       'we have attachments'
     );
 
-    my $attachments = $get->arguments->{list}[0]{attachments};
-
-    jcmp_deeply(
-      $attachments,
-      [ @PART{ qw(C F G H J) } ],
-      "our attachments are correct"
-    );
+    body_lists_ok($get->arguments->{list}[0], {
+      leaves    => [ map {; $_ => $PART{$_} } qw(A B C D E F G H J K) ],
+      suggested => { attachments => [qw(C F G H J)] },
+    });
   };
 };

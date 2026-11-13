@@ -6,7 +6,9 @@ use Sub::Exporter -setup => [ qw(
   batch_ok
   fetch_session
   foreign_account_not_found_ok
+  cannot_calculate_changes_ok
   email_create_invalid_or_repaired
+  invalid_properties
   email
   client_keywords
   mailbox
@@ -15,6 +17,7 @@ use Sub::Exporter -setup => [ qw(
   address_book
   contact_card
   thread
+  body_lists_ok
   get_parts multipart part parts cmultipart cpart
 ) ];
 
@@ -73,7 +76,9 @@ sub fetch_session {
 Asserts that every listed call, made as C<$account> but naming C<$other>'s
 accountId, fails with C<accountNotFound> (RFC 8620 section 3.6.2).  C<$other> exists
 on the server but is outside C<$account>'s session, and must be reported the
-same way as an id that does not exist at all.
+same way as an id that does not exist at all.  A /copy whose C<fromAccountId>
+is the foreign one must fail with C<fromAccountNotFound> instead (sections 5.4
+and 6.3).
 
 Each call is C<[ $method, \%args ]>.  C<accountId> is set to the foreign id
 unless given.  The strings C<'SELF'> and C<'OTHER'> in C<accountId> or
@@ -148,10 +153,9 @@ sub foreign_account_not_found_ok {
       }
     }
 
-    # RFC 8620 5.4 and 6.3: a /copy whose fromAccountId is not a valid account
-    # fails with fromAccountNotFound.
-    my $want = (exists $args{fromAccountId} && $args{fromAccountId} eq $foreign)
-             ? 'fromAccountNotFound' : 'accountNotFound';
+    my $want = ($args{fromAccountId} // '') eq $foreign && $args{accountId} ne $foreign
+             ? 'fromAccountNotFound'
+             : 'accountNotFound';
     jcmp_deeply(
       $s->arguments,
       superhashof({ type => $want }),
@@ -159,6 +163,146 @@ sub foreign_account_not_found_ok {
     ) or diag explain $res->as_stripped_triples;
   }
 }
+
+=head2 invalid_properties
+
+  jcmp_deeply($err, invalid_properties(qw(mailboxIds keywords)));
+
+A comparator for an C<invalidProperties> SetError.  RFC 8620 section 5.3 says
+the error "SHOULD also have a property called C<properties>" listing the
+invalid ones, so it may be absent; when present it must name each given
+property, as itself, as a path inside it (C<myRights/mayDelete> for
+C<myRights>), or as a path containing it.  Order and extra entries do not
+matter.
+
+=cut
+
+sub invalid_properties {
+  my @want = @_;
+
+  return code(sub {
+    my ($err) = @_;
+    return (0, "not a SetError object") unless ref $err eq 'HASH';
+    my $type = $err->{type} // 'undef';
+    return (0, "type is $type, not invalidProperties") unless $type eq 'invalidProperties';
+
+    my $got = $err->{properties};
+    return 1 unless defined $got;
+    return (0, "properties is not an array") unless ref $got eq 'ARRAY';
+
+    for my $w (@want) {
+      next if grep {; $_ eq $w || index($_, "$w/") == 0 || index($w, "$_/") == 0 } @$got;
+      return (0, "properties [@$got] does not name $w");
+    }
+    return 1;
+  });
+}
+
+=head2 body_lists_ok
+
+  my $label_for = body_lists_ok($email, {
+    leaves    => [ A => $PART{A}, B => $PART{B}, ... ],
+    suggested => {
+      textBody    => [qw(A B C D K)],
+      htmlBody    => [qw(A E K)],
+      attachments => [qw(C F G H J)],
+    },
+  });
+
+Checks, as one subtest, the textBody, htmlBody and attachments of C<$email>
+(an Email/get result that includes bodyStructure and all three lists) against
+RFC 8621 section 4.1.4.  C<leaves> labels the non-multipart parts of
+bodyStructure in depth-first order and gives each one's expectation.
+
+The section says the decomposition "is not mandated", so what is checked is:
+every textBody and htmlBody part is a leaf of bodyStructure of type
+text/plain, text/html, image/*, audio/* or video/*; attachments is exactly the
+depth-first list of leaves that are in neither list, or are image/audio/video
+and not in both; and every listed part matches its leaf's expectation.
+Whether the lists equal C<suggested>, the result of the section's suggested
+algorithm, is only reported with C<note>.
+
+Returns a hashref from partId to label.
+
+=cut
+
+sub body_lists_ok {
+  my ($email, $arg) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my %label_for;
+
+  subtest "textBody, htmlBody and attachments" => sub {
+    my @leaves;
+    my $walk;
+    $walk = sub {
+      my ($part) = @_;
+      return push @leaves, $part unless ($part->{type} // '') =~ m{\Amultipart/}i;
+      $walk->($_) for @{ $part->{subParts} || [] };
+    };
+    $walk->($email->{bodyStructure} || {});
+
+    my @pairs = @{ $arg->{leaves} };
+    is(@leaves, @pairs / 2, "bodyStructure has the expected number of leaf parts")
+      or return diag explain $email->{bodyStructure};
+
+    my (@order, %expect_for, %is_media);
+    for my $i (0 .. $#leaves) {
+      my ($label, $expect) = @pairs[ 2 * $i, 2 * $i + 1 ];
+      push @order, $label;
+      $label_for{ $leaves[$i]{partId} // '' } = $label;
+      $expect_for{$label} = $expect;
+      $is_media{$label} = ($leaves[$i]{type} // '') =~ m{\A(?:image|audio|video)/}i;
+    }
+
+    my %got;
+    for my $list (qw(textBody htmlBody attachments)) {
+      for my $part (@{ $email->{$list} || [] }) {
+        my $label = $label_for{ $part->{partId} // '' };
+        ok(defined $label, "$list part is a leaf of bodyStructure")
+          or diag(explain($part)), next;
+        push @{ $got{$list} }, $label;
+
+        jcmp_deeply($part, $expect_for{$label}, "$list part $label looks right");
+        next if $list eq 'attachments';
+
+        like(
+          $part->{type},
+          qr{\A(?:text/plain|text/html|image/.+|audio/.+|video/.+)\z}i,
+          "$list part $label is of a type allowed in $list",
+        );
+      }
+    }
+
+    my %in = map {; my $l = $_; $l => { map {; $_ => 1 } @{ $got{$l} || [] } } }
+             qw(textBody htmlBody);
+    my @want = grep {;
+         (! $in{textBody}{$_} && ! $in{htmlBody}{$_})
+      || ($is_media{$_} && ! ($in{textBody}{$_} && $in{htmlBody}{$_}))
+    } @order;
+
+    is(
+      "@{ $got{attachments} || [] }",
+      "@want",
+      "attachments are the leaves not in textBody or htmlBody, plus media not in both",
+    );
+
+    for my $list (qw(textBody htmlBody attachments)) {
+      my $want = $arg->{suggested}{$list} // next;
+      my $have = "@{ $got{$list} || [] }";
+      note(
+        $have eq "@$want"
+          ? "$list matches the RFC 8621 S4.1.4 suggested algorithm"
+          : "$list is [$have]; the RFC 8621 S4.1.4 suggested algorithm gives [@$want]"
+      );
+    }
+  };
+
+  return \%label_for;
+}
+
+
 
 =head2 email_create_invalid_or_repaired
 
@@ -202,6 +346,33 @@ sub email_create_invalid_or_repaired {
   subtest "$desc: the repaired Email complies" => sub { $check->($got) };
 }
 
+=head2 cannot_calculate_changes_ok
+
+  my $res = $tester->request([[ "Foo/changes" => { sinceState => $state } ]]);
+  return if cannot_calculate_changes_ok($res);
+
+RFC 8620 S5.2 lets a server answer a /changes (or /queryChanges) with
+C<cannotCalculateChanges> whenever it cannot work them out.  That is within
+the spec, if inefficient: this notes it, passes, and returns true, so the
+caller can skip the checks it cannot make.  Any other answer returns false
+and is the caller's to judge.
+
+=cut
+
+sub cannot_calculate_changes_ok {
+  my ($res) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $s = eval { $res->single_sentence } or return 0;
+  return 0 unless $s->name eq 'error'
+               && ($s->arguments->{type} // '') eq 'cannotCalculateChanges';
+  note("inefficient but within the spec: cannotCalculateChanges");
+  pass("cannotCalculateChanges is allowed (RFC 8620 S5.2)");
+  return 1;
+}
+
+
 sub batch_ok {
   my ($batch) = @_;
 
@@ -240,7 +411,7 @@ sub batch_ok {
 # structure just above this:
 # https://github.com/jmapio/jmap/blob/master/spec/mail/message.mdown#emailget
 sub get_parts {
-  return (
+  my %parts = (
     A => {
       blobId      => jstr(),
       charset     => 'us-ascii', # No CT, so default charset
@@ -371,6 +542,8 @@ sub get_parts {
       type        => 'text/plain',
     },
   );
+
+  return map {; $_ => _leaf($parts{$_}) } keys %parts;
 }
 
 # For examining responses
@@ -395,7 +568,7 @@ sub multipart {
 sub part {
   my ($type) = @_;
 
-  return {
+  return _leaf({
     blobId      => jstr(),
     charset     => ignore(),
     cid         => undef,      # not provided
@@ -406,11 +579,30 @@ sub part {
     partId      => jstr(),
     size        => jnum(),
     type        => $type,
-  };
+  });
 }
 
 sub parts {
   map { part($_) } @_;
+}
+
+# RFC 8621 S4.1.4: subParts is "EmailBodyPart[]|null" and only meaningful for
+# multipart/*, so a leaf may omit it or give null or [].
+sub _leaf {
+  my ($expect) = @_;
+
+  return code(sub {
+    my ($got) = @_;
+    return (0, "not an EmailBodyPart object") unless ref $got eq 'HASH';
+
+    my %got = %$got;
+    my $sub_parts = delete $got{subParts};
+    return (0, "leaf part has non-empty subParts")
+      if defined $sub_parts && ! (ref $sub_parts eq 'ARRAY' && ! @$sub_parts);
+
+    my ($ok, $stack) = Test::Deep::cmp_details(\%got, $expect);
+    return $ok || (0, Test::Deep::deep_diag($stack));
+  });
 }
 
 # For creating requests

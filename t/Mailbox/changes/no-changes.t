@@ -28,7 +28,7 @@ test {
     superhashof({
       accountId      => jstr($account->accountId),
       oldState       => jstr($state),
-      newState       => jstr($state),
+      newState       => jstr,
       hasMoreChanges => jfalse,
       created        => [],
       updated        => [],
@@ -37,9 +37,15 @@ test {
     "Response looks good",
   ) or diag explain $res->as_stripped_triples;
 
-  ok(
-       ! exists $changes->{updatedProperties}
-    || ! defined $changes->{updatedProperties},
-    "updatedProperties is null or omitted"
-  );
+  # RFC 8620 S5.1: servers SHOULD return the same state if nothing changed.
+  note("newState differs from oldState though nothing changed (a SHOULD)")
+    if ($changes->{newState} // q{}) ne $state;
+
+  # RFC 8621 S2.2: with nothing changed, "only" counts changed, so a
+  # (possibly empty) list of counts is as valid as null.
+  jcmp_deeply(
+    $changes->{updatedProperties},
+    any(undef, subbagof(qw(totalEmails unreadEmails totalThreads unreadThreads))),
+    "updatedProperties is null or a subset of the count properties"
+  ) or diag explain $changes;
 };

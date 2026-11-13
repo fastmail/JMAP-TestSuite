@@ -32,7 +32,7 @@ test {
     'Reporting-UA: Test Client',
     'Final-Recipient: rfc822;tester@example.com',
     'Original-Message-ID: <original@example.com>',
-    'Disposition: manual-action/mdn-sent-manually;displayed',
+    'Disposition: Manual-Action/MDN-Sent-Manually;Displayed',
     '',
     '--=_mdn_boundary--',
     '',
@@ -65,14 +65,20 @@ test {
     jcmp_deeply(
       $mdn,
       superhashof({
-        subject     => jstr(),
+        # RFC 9007 S1.1: "Servers MUST support all properties" of an MDN.
+        subject           => jstr('Read: Test Message'),
+        reportingUA       => jstr('Test Client'),
+        finalRecipient    => re(qr/\Arfc822; ?tester\@example\.com\z/),
+        originalMessageId => jstr('<original@example.com>'),
+        # RFC 9007 S2: these fields "MUST be converted to lowercase by
+        # MDN/parse".
         disposition => superhashof({
-          actionMode  => jstr(),
-          sendingMode => jstr(),
-          type        => jstr(),
+          actionMode  => jstr('manual-action'),
+          sendingMode => jstr('mdn-sent-manually'),
+          type        => jstr('displayed'),
         }),
       }),
-      "parsed MDN has required fields",
+      "parsed MDN matches the blob",
     ) or diag explain $mdn;
   };
 

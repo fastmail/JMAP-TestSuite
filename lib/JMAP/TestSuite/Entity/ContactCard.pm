@@ -10,7 +10,7 @@ with 'JMAP::TestSuite::Entity' => {
     name
     emails
     phones
-    online
+    onlineServices
     addresses
     notes
     anniversaries

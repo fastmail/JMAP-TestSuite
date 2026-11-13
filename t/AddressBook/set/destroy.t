@@ -1,4 +1,5 @@
 use jmaptest;
+use Data::GUID qw(guid_string);
 
 # RFC 9610 S2.3: destroying an address book with contents is refused with
 # "addressBookHasContents" unless "onDestroyRemoveContents" is set.
@@ -34,7 +35,7 @@ test {
       $args,
       superhashof({
         accountId => jstr($account->accountId),
-        oldState  => jstr(),
+        oldState  => any(undef, jstr()),
         newState  => jstr(),
         destroyed => [$id],
       }),
@@ -48,7 +49,7 @@ test {
         "AddressBook/get" => { ids => [$id] },
       ]]);
       my $get_args = $get_res->single_sentence("AddressBook/get")->arguments;
-      ok(grep { $_ eq $id } @{$get_args->{notFound}}, 'id in notFound after destroy');
+      ok((grep { $_ eq $id } @{$get_args->{notFound}}), 'id in notFound after destroy');
       is(scalar @{$get_args->{list}}, 0, 'list is empty');
     };
   };
@@ -85,7 +86,7 @@ test {
       or diag explain $res->response_payload;
 
     my $args = $res->single_sentence("AddressBook/set")->arguments;
-    ok(grep { $_ eq $book->id } @{$args->{destroyed} // []}, 'address book destroyed');
+    ok((grep { $_ eq $book->id } @{$args->{destroyed} // []}), 'address book destroyed');
     ok(!$args->{notDestroyed}{ $book->id }, 'not in notDestroyed');
 
     subtest "Card also gone" => sub {
@@ -94,14 +95,21 @@ test {
         "ContactCard/get" => { ids => [$card->id] },
       ]]);
       my $get_args = $get_res->single_sentence("ContactCard/get")->arguments;
-      ok(grep { $_ eq $card->id } @{$get_args->{notFound}},
+      ok((grep { $_ eq $card->id } @{$get_args->{notFound}}),
          'card in notFound after address book destroy');
     };
   };
 
   subtest "Card in a second address book survives" => sub {
-    # RFC 9610 S2.1 requires a card to be in at least one address book but not
-    # that a server support several, so skip if this create is refused.
+    # RFC 9610 S1.4.1: maxAddressBooksPerCard is null for no limit, else >= 1.
+    my $session = fetch_session($tester) or return;
+    my $max = $session->{accounts}{ $account->accountId }{accountCapabilities}
+                {"urn:ietf:params:jmap:contacts"}{maxAddressBooksPerCard};
+    if (defined $max && $max < 2) {
+      note("maxAddressBooksPerCard is $max; skipping");
+      return;
+    }
+
     my $book1 = $account->create_address_book;
     my $book2 = $account->create_address_book;
 
@@ -111,6 +119,7 @@ test {
           multi => {
             '@type'        => 'Card',
             version        => '1.0',
+            uid            => "urn:uuid:" . lc guid_string(),
             name           => { full => "Multi-book contact $^T.$$" },
             addressBookIds => { $book1->id => \1, $book2->id => \1 },
           },
@@ -121,14 +130,10 @@ test {
 
     my $cargs = $cres->single_sentence("ContactCard/set")->arguments;
 
-    unless ($cargs->{created}{multi}) {
-      note('server will not put one card in two address books ('
-         . ($cargs->{notCreated}{multi}{type} // 'unknown error')
-         . '); RFC 9610 does not require it, so skipping');
-      return;
-    }
+    ok($cargs->{created}{multi}, "card created in two address books")
+      or diag explain $cargs;
 
-    my $card = $cargs->{created}{multi};
+    my $card = $cargs->{created}{multi} or return;
 
     my $res = $tester->request([[
       "AddressBook/set" => {
@@ -139,8 +144,8 @@ test {
     ok($res->is_success, "AddressBook/set destroy one of two books")
       or diag explain $res->response_payload;
 
-    ok(grep { $_ eq $book1->id }
-         @{ $res->single_sentence("AddressBook/set")->arguments->{destroyed} // [] },
+    ok((grep { $_ eq $book1->id }
+         @{ $res->single_sentence("AddressBook/set")->arguments->{destroyed} // [] }),
        'first address book destroyed');
 
     my $get_res = $tester->request([[

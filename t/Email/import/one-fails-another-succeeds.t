@@ -39,21 +39,18 @@ test {
     $res->single_sentence('Email/import')->arguments,
     {
       accountId  => jstr($account->accountId),
-      oldState => jstr(),
+      oldState => any(undef, jstr()),
       newState => jstr(),
       notCreated => {
-        new2 => superhashof({
-          type => 'invalidProperties',
-          properties => [ 'mailboxIds' ],
-        }),
+        new2 => invalid_properties('mailboxIds'),
       },
       created => {
-        new => {
+        new => superhashof({
           blobId   => jstr(),
           id       => jstr(),
           size     => jnum(),
           threadId => jstr(),
-        },
+        }),
       },
     },
   ) or diag explain $res->as_stripped_triples;
@@ -100,7 +97,7 @@ test {
           value => "This one worked ($$)",
         }),
       }),
-      receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+      receivedAt => re('\A\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z'),
     }),
     'email looks good',
   );

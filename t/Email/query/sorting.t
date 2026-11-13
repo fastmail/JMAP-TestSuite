@@ -15,47 +15,73 @@ test {
 
   my $mailbox = $account->create_mailbox;
 
-  my $flagged   = $mailbox->add_message({ subject => 'flagged',   keywords => { '$flagged' => jtrue() } });
-  my $unflagged = $mailbox->add_message({ subject => 'unflagged', keywords => {} });
+  # Creation order is the reverse of receivedAt order.
+  my $flagged   = $mailbox->add_message({
+    subject    => 'flagged',
+    receivedAt => '2020-01-02T00:00:00Z',
+    keywords   => { '$flagged' => jtrue() },
+  });
+  my $unflagged = $mailbox->add_message({
+    subject    => 'unflagged',
+    receivedAt => '2020-01-01T00:00:00Z',
+    keywords   => {},
+  });
 
-  subtest "sort by hasKeyword ascending puts unflagged first" => sub {
+  my $query = sub {
+    my ($sort) = @_;
+
     my $res = $tester->request([[
       "Email/query" => {
-        sort => [{ property => 'hasKeyword', keyword => '$flagged', isAscending => JSON::true }],
+        filter => { inMailbox => $mailbox->id },
+        sort   => [ $sort ],
       },
     ]]);
+    ok($res->is_success, "Email/query") or diag explain $res->response_payload;
 
-    my $ids = $res->single_sentence('Email/query')->arguments->{ids};
-    ok($ids && @$ids >= 2, 'got at least two results');
-
-    my @pos = map { my $id = $_; my $i = 0; $i++ until $ids->[$i] eq $id; $i }
-              ($unflagged->id, $flagged->id);
-    ok($pos[0] < $pos[1], 'unflagged comes before flagged in ascending sort');
+    return $res->sentence(0);
   };
 
-  subtest "sort by hasKeyword descending puts flagged first" => sub {
-    my $res = $tester->request([[
-      "Email/query" => {
-        sort => [{ property => 'hasKeyword', keyword => '$flagged', isAscending => JSON::false }],
-      },
-    ]]);
+  for my $test (
+    [ JSON::true,  'ascending puts unflagged first', [ $unflagged->id, $flagged->id ] ],
+    [ JSON::false, 'descending puts flagged first',  [ $flagged->id, $unflagged->id ] ],
+  ) {
+    my ($asc, $name, $want) = @$test;
 
-    my $ids = $res->single_sentence('Email/query')->arguments->{ids};
-    ok($ids && @$ids >= 2, 'got at least two results');
+    subtest "sort by hasKeyword $name" => sub {
+      my $sentence = $query->({
+        property    => 'hasKeyword',
+        keyword     => '$flagged',
+        isAscending => $asc,
+      });
 
-    my @pos = map { my $id = $_; my $i = 0; $i++ until $ids->[$i] eq $id; $i }
-              ($flagged->id, $unflagged->id);
-    ok($pos[0] < $pos[1], 'flagged comes before unflagged in descending sort');
-  };
+      # RFC 8621 S4.4.2: hasKeyword is one of the sorts that SHOULD be supported.
+      if ($sentence->name eq 'error') {
+        is($sentence->arguments->{type}, 'unsupportedSort', 'unsupportedSort')
+          or diag explain $sentence->arguments;
+        return;
+      }
 
-  subtest "sort by receivedAt (basic sort field) works" => sub {
-    my $res = $tester->request([[
-      "Email/query" => {
-        sort => [{ property => 'receivedAt', isAscending => JSON::true }],
-      },
-    ]]);
+      jcmp_deeply(
+        $sentence->arguments->{ids},
+        [ map {; jstr($_) } @$want ],
+        "ids in hasKeyword order",
+      ) or diag explain $sentence->arguments;
+    };
+  }
 
-    my $ids = $res->single_sentence('Email/query')->arguments->{ids};
-    ok($ids && @$ids >= 2, 'got results');
+  subtest "sort by receivedAt" => sub {
+    my $sentence = $query->({
+      property    => 'receivedAt',
+      isAscending => JSON::true,
+    });
+
+    is($sentence->name, 'Email/query', 'got Email/query response')
+      or diag explain $sentence->arguments;
+
+    jcmp_deeply(
+      $sentence->arguments->{ids},
+      [ jstr($unflagged->id), jstr($flagged->id) ],
+      "ids in receivedAt order",
+    ) or diag explain $sentence->arguments;
   };
 };

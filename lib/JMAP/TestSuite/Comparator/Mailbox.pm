@@ -19,6 +19,7 @@ sub mailbox {
     unreadEmails  => jnum,
     totalThreads  => jnum,
     unreadThreads => jnum,
+    isSubscribed  => jbool,
     myRights      => superhashof({
       map {
         $_ => jbool(),

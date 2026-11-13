@@ -22,13 +22,21 @@ test {
   my @list = @{ $args->{list} };
   is(scalar @list, 1, "exactly one VacationResponse");
 
+  # RFC 8621 S8: isEnabled is "Boolean", fromDate/toDate "UTCDate|null",
+  # and subject/textBody/htmlBody "String|null".
+  my $utc_date = re(qr/\A\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z/);
   jcmp_deeply(
     $list[0],
     superhashof({
       id        => 'singleton',
-      isEnabled => ignore(),
+      isEnabled => jbool(),
+      fromDate  => any(undef, $utc_date),
+      toDate    => any(undef, $utc_date),
+      subject   => any(undef, jstr()),
+      textBody  => any(undef, jstr()),
+      htmlBody  => any(undef, jstr()),
     }),
-    "singleton has required fields",
+    "singleton has every property, with the right types",
   ) or diag explain $list[0];
 
   subtest "fetch by id" => sub {

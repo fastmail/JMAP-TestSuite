@@ -24,7 +24,7 @@ test {
 
   my $set_args = $res->single_sentence("CalendarEvent/set")->arguments;
 
-  ok(grep { $_ eq $event->id } @{ $set_args->{destroyed} // [] },
+  ok((grep { $_ eq $event->id } @{ $set_args->{destroyed} // [] }),
     'event id in destroyed list');
 
   ok(!$set_args->{notDestroyed}{ $event->id }, 'no notDestroyed entry');
@@ -37,7 +37,7 @@ test {
 
     my $args = $get_res->single_sentence("CalendarEvent/get")->arguments;
     is(scalar @{ $args->{list} }, 0, 'no events returned');
-    ok(grep { $_ eq $event->id } @{ $args->{notFound} // [] },
+    ok((grep { $_ eq $event->id } @{ $args->{notFound} // [] }),
       'event id in notFound');
   };
 };

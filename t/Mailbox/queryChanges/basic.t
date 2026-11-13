@@ -26,7 +26,14 @@ test {
   ok($res->is_success, "Mailbox/query baseline") or diag explain $res->response_payload;
 
   my $base = $res->single_sentence("Mailbox/query")->arguments;
-  ok($base->{canCalculateChanges}, "canCalculateChanges is true");
+  # RFC 8620 S5.5 lets a server answer canCalculateChanges false for a given
+  # filter/sort; nothing to test then.
+  ok(defined $base->{canCalculateChanges}, "has canCalculateChanges");
+  unless ($base->{canCalculateChanges}) {
+    note("server does not support Mailbox/queryChanges for this "
+       . "filter/sort, so the rest of this file does not apply");
+    return;
+  }
 
   my $query_state = $base->{queryState};
   ok(defined $query_state, "got queryState");
@@ -40,16 +47,26 @@ test {
     ]]);
     ok($res->is_success, "Mailbox/queryChanges") or diag explain $res->response_payload;
 
+    my $out = $res->single_sentence("Mailbox/queryChanges")->arguments;
+
+    # RFC 8620 S5.6: removed MAY hold extra ids; as "name" is mutable, any
+    # still in the results must be reinserted via added.
+    my %current = map {; $_ => 1 } @{ $base->{ids} };
+    my @reinserted = grep {; $current{$_} } @{ $out->{removed} || [] };
+
     jcmp_deeply(
-      $res->single_sentence("Mailbox/queryChanges")->arguments,
+      $out,
       superhashof({
         oldQueryState => jstr($query_state),
-        newQueryState => jstr($query_state),
-        added         => [],
-        removed       => [],
+        newQueryState => jstr,
+        added         => bag(map {; superhashof({ id => jstr($_) }) } @reinserted),
+        removed       => array_each(jstr),
       }),
       "no-changes response",
     ) or diag explain $res->as_stripped_triples;
+
+    note("queryState changed though nothing did (RFC 8620 S5.5 permits this)")
+      if ($out->{newQueryState} // q{}) ne $query_state;
   };
 
   # Create a mailbox that sorts between a and b

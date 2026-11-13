@@ -56,8 +56,8 @@ test {
         mailbox({
           id            => jstr($mailbox1->id),
           name          => jstr($mailbox1->name),
-          isSubscribed  => jfalse,
-          isSeenShared  => jfalse,
+          # RFC 8621 S2: a user-created Mailbox only "SHOULD default" isSubscribed to true.
+          isSubscribed  => jbool,
           totalEmails   => jnum(0),
           unreadEmails  => jnum(0),
           totalThreads  => jnum(0),
@@ -94,8 +94,8 @@ test {
       mailbox({
         id            => jstr($mailbox1->id),
         name          => jstr($mailbox1->name),
-        isSubscribed  => jfalse,
-        isSeenShared  => jfalse,
+        # RFC 8621 S2: a user-created Mailbox only "SHOULD default" isSubscribed to true.
+        isSubscribed  => jbool,
         totalEmails   => jnum(0),
         unreadEmails  => jnum(0),
         totalThreads  => jnum(0),

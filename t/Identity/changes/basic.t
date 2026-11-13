@@ -24,17 +24,23 @@ test {
     ]]);
     ok($res->is_success, "Identity/changes") or diag explain $res->response_payload;
 
+    my $changes = $res->single_sentence("Identity/changes")->arguments;
+
     jcmp_deeply(
-      $res->single_sentence("Identity/changes")->arguments,
+      $changes,
       superhashof({
         oldState => jstr($state),
-        newState => jstr($state),
+        newState => jstr,
         created  => [],
         updated  => [],
         destroyed => [],
       }),
       "no changes from current state",
     ) or diag explain $res->as_stripped_triples;
+
+    # RFC 8620 S5.1: servers SHOULD return the same state if nothing changed.
+    note("newState differs from oldState though nothing changed (a SHOULD)")
+      if ($changes->{newState} // q{}) ne $state;
   };
 
   subtest "cannotCalculateChanges for wrong state" => sub {

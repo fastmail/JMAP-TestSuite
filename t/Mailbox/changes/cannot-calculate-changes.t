@@ -42,7 +42,7 @@ test {
     is($sent->name, 'Mailbox/changes', 'got a Mailbox/changes response');
 
     my $args = $sent->arguments;
-    ok(grep { $_ eq $mailbox->id } @{ $args->{created} // [] },
+    ok((grep { $_ eq $mailbox->id } @{ $args->{created} // [] }),
        'the new mailbox is reported as created')
       or diag explain $args;
     is($args->{oldState}, $state, 'oldState echoes what we asked from');

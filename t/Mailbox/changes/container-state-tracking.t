@@ -46,7 +46,7 @@ test {
 
     my $args = $sent->arguments;
 
-    ok(grep { $_ eq $mailbox->id } @{ $args->{updated} // [] },
+    ok((grep { $_ eq $mailbox->id } @{ $args->{updated} // [] }),
        'the mailbox is reported as updated after gaining a message')
       or diag explain $args;
 
@@ -83,8 +83,8 @@ test {
       my $del = $tester->request([[
         "Email/set" => { destroy => [ $email->id ] },
       ]]);
-      ok(grep { $_ eq $email->id }
-           @{ $del->single_sentence("Email/set")->arguments->{destroyed} // [] },
+      ok((grep { $_ eq $email->id }
+           @{ $del->single_sentence("Email/set")->arguments->{destroyed} // [] }),
          'email destroyed');
 
       my $res2 = $tester->request([[
@@ -93,7 +93,7 @@ test {
       my $sent2 = $res2->single_sentence;
       return if $sent2->name eq 'error';
 
-      ok(grep { $_ eq $mailbox->id } @{ $sent2->arguments->{updated} // [] },
+      ok((grep { $_ eq $mailbox->id } @{ $sent2->arguments->{updated} // [] }),
          'the mailbox is reported as updated after losing the message')
         or diag explain $sent2->arguments;
     };
@@ -110,7 +110,7 @@ test {
     my $qargs = $q->single_sentence("Mailbox/query")->arguments;
     my $query_state = $qargs->{queryState};
     ok(defined $query_state, 'got a queryState');
-    ok(grep { $_ eq $doomed->id } @{ $qargs->{ids} // [] },
+    ok((grep { $_ eq $doomed->id } @{ $qargs->{ids} // [] }),
        'the mailbox is in the query results to start with');
 
     $tester->request([[
@@ -130,7 +130,7 @@ test {
     }
 
     # RFC 8620 S5.6 permits spurious removals, so don't assert exclusivity.
-    ok(grep { $_ eq $doomed->id } @{ $sent->arguments->{removed} // [] },
+    ok((grep { $_ eq $doomed->id } @{ $sent->arguments->{removed} // [] }),
        'the destroyed mailbox appears in removed')
       or diag explain $sent->arguments;
 

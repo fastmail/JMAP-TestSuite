@@ -27,8 +27,10 @@ test {
     ok($res->is_success, "Mailbox/changes")
       or diag explain $res->response_payload;
 
+    my $changes = $res->single_sentence("Mailbox/changes")->arguments;
+
     jcmp_deeply(
-      $res->single_sentence("Mailbox/changes")->arguments,
+      $changes,
       superhashof({
         accountId      => jstr($account->accountId),
         oldState       => jstr($state),
@@ -37,15 +39,17 @@ test {
         created        => [],
         updated        => [ $mailbox->id ],
         destroyed      => [],
-        updatedProperties => bag(qw(
-          totalEmails
-          unreadEmails
-          totalThreads
-          unreadThreads
-        )),
       }),
       "Response looks good",
     ) or diag explain $res->as_stripped_triples;
+
+    # RFC 8621 S2.2: updatedProperties lists the counts "that may have
+    # changed", or is null if the server "is unable to tell".
+    jcmp_deeply(
+      $changes->{updatedProperties},
+      any(undef, subbagof(qw(totalEmails unreadEmails totalThreads unreadThreads))),
+      "updatedProperties is null or a subset of the count properties"
+    ) or diag explain $changes;
   };
 
   subtest "Counts and other things changed, should not get" => sub {

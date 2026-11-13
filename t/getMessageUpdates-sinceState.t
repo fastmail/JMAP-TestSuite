@@ -11,17 +11,22 @@ test {
     'urn:ietf:params:jmap:mail',
   );
 
-  # We should be able to pass junk (like an integer sinceState instead of a
-  # string sinceState like the spec requires) and get back a sensible JSON
-  # blob telling us what we did wrong.
+  # RFC 8620 S3.6.2: an argument "of the wrong type" is invalidArguments,
+  # a method-level error; the Request object itself is well-formed.
   my $res = $tester->request([[
-    'Email/queryChanges' => {
-      # JMAP expects this state value to be a string, so this call may be
-      # rejected, but it shouldn't cause a server error.
+    'Email/changes' => {
       sinceState => jnum(0),
     },
   ]]);
 
-  ok($res->is_success, 'called getMessageUpdates')
-    or diag explain $res->response_payload;
+  ok($res->is_success, 'a bad argument is not a request-level error')
+    or return diag explain $res->response_payload;
+
+  jcmp_deeply(
+    $res->single_sentence("error")->arguments,
+    superhashof({
+      type => 'invalidArguments',
+    }),
+    "non-string sinceState gives invalidArguments",
+  ) or diag explain $res->as_stripped_triples;
 };

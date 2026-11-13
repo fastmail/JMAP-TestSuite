@@ -1,4 +1,5 @@
 use jmaptest;
+use Data::GUID qw(guid_string);
 
 test {
   my ($self) = @_;
@@ -19,6 +20,7 @@ test {
         c1 => {
           q(@type)       => 'Card',
           version        => '1.0',
+          uid            => "urn:uuid:" . lc guid_string(),
           name           => { full => "Test Contact" },
           addressBookIds => { $ab->id => \1 },
         },
@@ -54,6 +56,6 @@ test {
 
     my $args = $res->single_sentence("AddressBook/set")->arguments;
     ok(!$args->{notDestroyed}{ $ab->id }, 'no notDestroyed entry');
-    ok(grep { $_ eq $ab->id } @{ $args->{destroyed} // [] }, 'address book destroyed');
+    ok((grep { $_ eq $ab->id } @{ $args->{destroyed} // [] }), 'address book destroyed');
   };
 };

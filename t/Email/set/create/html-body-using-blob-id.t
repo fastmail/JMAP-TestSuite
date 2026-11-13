@@ -45,12 +45,12 @@ test {
     ],
     superhashof({
       created => {
-        new => {
+        new => superhashof({
           id       => jstr(),
           size     => jnum(),
           blobId   => jstr(),
           threadId => jstr(),
-        },
+        }),
       },
     }),
     "htmlBody create"
@@ -104,14 +104,16 @@ test {
           },
           messageId   => [ jstr(), ],
           preview     => jstr(),
-          receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+          receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z'),
           references  => undef,
           replyTo     => undef,
           sender      => undef,
           sentAt      => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(Z|([+-]\d\d:\d\d))\z'),
           size        => jnum(),
           subject     => 'a test subject',
-          textBody    => [ \%body ],
+          # RFC 8621 S4.6 doesn't fix the generated structure; the server may add a
+          # text/plain alternative, which S4.1.4 then puts in textBody.
+          textBody    => [ any(\%body, superhashof({ type => 'text/plain' })) ],
           threadId    => $new->{threadId},
           to          => undef,
         },

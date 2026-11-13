@@ -40,6 +40,13 @@ test {
     return;
   };
 
+  # RFC 8621 S5: "If the server is unable to determine search snippets, it
+  # MUST return null for both the "subject" and "preview" properties."
+  my $no_snippets = sub {
+    my ($snip) = @_;
+    return ! defined $snip->{subject} && ! defined $snip->{preview};
+  };
+
   subtest "snippet with subject match" => sub {
     my $res = $tester->request([[
       "SearchSnippet/get" => {
@@ -55,8 +62,13 @@ test {
 
     my $snip = $list[0];
     is($snip->{emailId}, $email->id, "correct emailId");
-    like($snip->{subject}, qr{<mark>}, "subject contains <mark> tag")
-      or diag explain $snip;
+
+    if ($no_snippets->($snip)) {
+      note("server returned no snippets");
+    } else {
+      like($snip->{subject}, qr{<mark>}, "subject contains <mark> tag")
+        or diag explain $snip;
+    }
   };
 
   subtest "snippet with body match" => sub {
@@ -69,11 +81,16 @@ test {
     ok($res->is_success, "SearchSnippet/get body") or diag explain $res->response_payload;
 
     my $args = $res->single_sentence("SearchSnippet/get")->arguments;
+    is(scalar @{ $args->{list} }, 1, "one snippet");
+
     my $snip = $args->{list}[0];
-    ok(defined $snip->{preview} || defined $snip->{body}, "has preview or body snippet")
-      or diag explain $snip;
-    if (defined $snip->{preview}) {
-      like($snip->{preview}, qr{<mark>}, "preview contains <mark> tag");
+    is($snip->{emailId}, $email->id, "correct emailId");
+
+    if ($no_snippets->($snip)) {
+      note("server returned no snippets");
+    } else {
+      like($snip->{preview}, qr{<mark>}, "preview contains <mark> tag")
+        or diag explain $snip;
     }
   };
 
@@ -86,9 +103,15 @@ test {
     ]]);
     ok($res->is_success, "SearchSnippet/get no terms");
 
-    my $snip = $res->single_sentence("SearchSnippet/get")->arguments->{list}[0];
-    ok(!defined $snip->{subject}, "subject is undef with no filter terms");
-    ok(!defined $snip->{preview}, "preview is undef with no filter terms");
+    jcmp_deeply(
+      $res->single_sentence("SearchSnippet/get")->arguments->{list},
+      [ superhashof({
+        emailId => jstr($email->id),
+        subject => undef,
+        preview => undef,
+      }) ],
+      "one snippet, with no subject or preview",
+    ) or diag explain $res->as_stripped_triples;
   };
 
   subtest "multiple emailIds returned" => sub {

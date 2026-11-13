@@ -16,6 +16,7 @@ with 'JMAP::TestSuite::Entity' => {
     totalThreads
     unreadThreads
     shareWith
+    isSubscribed
   ) ],
 };
 

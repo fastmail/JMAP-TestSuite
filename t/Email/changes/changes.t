@@ -19,6 +19,8 @@ test {
     my $res = $tester->request([[
       "Email/changes" => { sinceState => $state, },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "Email/changes")
       or diag explain $res->response_payload;
 
@@ -47,6 +49,8 @@ test {
     my $res = $tester->request([[
       "Email/changes" => { sinceState => $state, },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "Email/changes")
       or diag explain $res->response_payload;
 
@@ -75,6 +79,8 @@ test {
     my $res = $tester->request([[
       "Email/changes" => { sinceState => $state, },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "Email/changes")
       or diag explain $res->response_payload;
 

@@ -15,10 +15,17 @@ test {
 
   my $mailbox1 = $account->create_mailbox;
 
-  my $message1 = $mailbox1->add_message;
-  my $message2 = $message1->reply;
+  # RFC 8621 S3: emailIds are "sorted by the receivedAt date", oldest first.
+  my $message1 = $mailbox1->add_message({
+    subject    => 'Thread test',
+    receivedAt => '2020-01-01T00:00:00Z',
+  });
+  my $message2 = $message1->reply({
+    subject    => 'Re: Thread test',
+    receivedAt => '2020-01-01T01:00:00Z',
+  });
 
-  my $other = $mailbox1->add_message;
+  my $other = $mailbox1->add_message({ subject => 'Unrelated' });
 
   is($message1->threadId, $message2->threadId, 'threadIds match');
   isnt($other->threadId, $message1->threadId, 'other message not in thread');

@@ -98,6 +98,7 @@ test {
         'Mailbox/changes looks good',
       );
 
+      is($get->name, 'error', 'Mailbox/get with bad backref is an error response');
       jcmp_deeply(
         $get->arguments,
         superhashof({
@@ -140,6 +141,7 @@ test {
       'Mailbox/changes looks good',
     );
 
+    is($get->name, 'error', 'Mailbox/get with #ids and ids is an error response');
     jcmp_deeply(
       $get->arguments,
       superhashof({

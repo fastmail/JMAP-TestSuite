@@ -53,8 +53,18 @@ test {
   my $query_state = $baseline_res->sentence(0)->arguments->{queryState};
   ok($query_state, 'got a query state');
 
+  # RFC 8620 S5.5 lets a server answer canCalculateChanges false for a given
+  # filter/sort; nothing to test then.
+  my $base = $baseline_res->sentence(0)->arguments;
+  ok(defined $base->{canCalculateChanges}, "has canCalculateChanges");
+  unless ($base->{canCalculateChanges}) {
+    note("server does not support Email/queryChanges for this "
+       . "filter/sort, so the rest of this file does not apply");
+    return;
+  }
+
   subtest "no changes" => sub {
-    $tester->request_ok(
+    my ($res) = $tester->request_ok(
       [
         "Email/queryChanges" => {
           %args,
@@ -63,12 +73,17 @@ test {
       ],
       superhashof({
         oldQueryState => $query_state,
-        newQueryState => $query_state,
+        newQueryState => ignore,
         added         => [ ],
-        removed       => [ ],
+        # RFC 8620 S5.6: removed MAY hold extra ids, but not ones still in
+        # the results.
+        removed       => array_each(none($match->id)),
       }),
       "expected resposne",
     );
+
+    note("queryState changed though nothing did (RFC 8620 S5.5 permits this)")
+      if ($res->sentence(0)->arguments->{newQueryState} // q{}) ne $query_state;
   };
 
   my $match2 = $mailbox->add_message({ subject => 'aaa 2' });
@@ -116,7 +131,9 @@ test {
       ],
       superhashof({
         oldQueryState => $query_state,
-        newQueryState => none($query_state),
+        # RFC 8620 S5.5: queryState MAY change here, but need not, as the
+        # results are unaffected.
+        newQueryState => ignore,
         added         => [ ],
         removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),
@@ -184,7 +201,9 @@ test {
       ],
       superhashof({
         oldQueryState => $query_state,
-        newQueryState => none($query_state),
+        # RFC 8620 S5.5: queryState MAY change here, but need not, as the
+        # results are unaffected.
+        newQueryState => ignore,
         added         => [ ],
         removed       => ignore, # server MAY include extra IDs (RFC 8620 §5.6)
       }),

@@ -25,7 +25,7 @@ sub contact_card {
     kind           => ignore(),
     emails         => ignore(),
     phones         => ignore(),
-    online         => ignore(),
+    onlineServices => ignore(),
     addresses      => ignore(),
     notes          => ignore(),
     anniversaries  => ignore(),
@@ -45,9 +45,11 @@ sub contact_card {
     }
   }
 
+  # RFC 9553 S1.7.4: implementations "MUST preserve" unknown properties.
   return hashrec({
     required => \%required,
     optional => \%optional,
+    allow_unknown => 1,
   });
 }
 

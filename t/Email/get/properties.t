@@ -17,8 +17,12 @@ test {
   my $to      = "recip$$\@example.net";
   my $subject = "A subject for $$";
 
-  my $message = $mbox->add_message;
+  my $em_msg_id    = "orig-$$-" . time . "\@example.net";
+  my $reply_msg_id = "reply-$$-" . time . "\@example.net";
+
+  my $message = $mbox->add_message({ message_id => "<$em_msg_id>" });
   my $reply = $message->reply({
+    message_id => "<$reply_msg_id>",
     from    => $from,
     to      => $to,
     subject => $subject,
@@ -29,9 +33,6 @@ test {
       'Reply-To' => "rt$from",
     ],
   });
-
-  my $em_msg_id = $message->messageId->[0];
-  my $reply_msg_id = $reply->messageId->[0];
 
   my $empty = any([], undef);
 
@@ -58,7 +59,7 @@ test {
           },
           keywords      => superhashof({}),
           size          => jnum(),
-          receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
+          receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z'),
           messageId     => [ $reply_msg_id ],
           inReplyTo     => [ $em_msg_id ],
           references    => [ $em_msg_id ],
@@ -139,7 +140,7 @@ test {
           },
           keywords      => superhashof({}),
           size          => jnum(),
-          receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ'),
+          receivedAt    => re('\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z'),
           messageId     => [ $reply_msg_id ],
           inReplyTo     => [ $em_msg_id ],
           references    => [ $em_msg_id ],

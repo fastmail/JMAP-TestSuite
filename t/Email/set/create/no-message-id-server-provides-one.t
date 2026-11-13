@@ -46,7 +46,9 @@ test {
       list => [
         {
           id        => $created_id,
-          messageId => [ jstr ],
+          # RFC 8621 S4.6: the generated Message-ID must conform to RFC 5322
+          # S3.6.4, i.e. hold a single id-left "@" id-right.
+          messageId => [ re(qr/\A[^\s<>@]+\@[^\s<>@]+\z/) ],
         },
       ],
     }),

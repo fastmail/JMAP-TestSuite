@@ -43,17 +43,8 @@ test {
 
   my $describer_sub = $self->make_describer_sub(\%mailboxes_by_id);
 
-  my @all_name_asc = map {;
-    $_->{id}
-  } sort {
-    $a->{name} cmp $b->{name}
-  } @mailboxes;
-
-  my @with_role_name_asc = map {;
-    $_->{id}
-  } sort {
-    $a->{name} cmp $b->{name}
-  } @with_roles;
+  my @all_ids       = map {; $_->{id} } @mailboxes;
+  my @with_role_ids = map {; $_->{id} } @with_roles;
 
   # AND
   $self->test_query(
@@ -134,39 +125,29 @@ test {
     "OR - two conditions",
   );
 
-  $self->test_query(
+  $self->test_unordered_query(
     $account,
-    "Mailbox/query",
     {
-      filter => {
-        operator => 'OR',
-        conditions => [
-          { hasAnyRole => JSON::true, },
-          { hasAnyRole => JSON::true, },
-        ],
-      },
-      sort => [{ property => 'name', isAscending => JSON::true, }],
+      operator => 'OR',
+      conditions => [
+        { hasAnyRole => JSON::true, },
+        { hasAnyRole => JSON::true, },
+      ],
     },
-    { ids => [ @with_role_name_asc ], },
-    $describer_sub,
+    \@with_role_ids,
     "OR - two conditions, same cond",
   );
 
-  $self->test_query(
+  $self->test_unordered_query(
     $account,
-    "Mailbox/query",
     {
-      filter => {
-        operator => 'OR',
-        conditions => [
-          { hasAnyRole => JSON::true, },
-          { hasAnyRole => JSON::false, },
-        ],
-      },
-      sort => [{ property => 'name', isAscending => JSON::true, }],
+      operator => 'OR',
+      conditions => [
+        { hasAnyRole => JSON::true, },
+        { hasAnyRole => JSON::false, },
+      ],
     },
-    { ids => [ @all_name_asc ], },
-    $describer_sub,
+    \@all_ids,
     "OR - two conditions, diff conds",
   );
 
@@ -206,6 +187,24 @@ test {
     "NOT - two conditions",
   );
 };
+
+# RFC 8620 S5.5: the default collation is server dependent, so results that
+# include server-provisioned Mailboxes are compared without regard to order.
+sub test_unordered_query {
+  my ($self, $account, $filter, $expect, $test) = @_;
+
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  my $res = $account->tester->request([[
+    "Mailbox/query" => { filter => $filter },
+  ]]);
+
+  jcmp_deeply(
+    $res->single_sentence("Mailbox/query")->arguments,
+    superhashof({ ids => bag(@$expect) }),
+    $test,
+  ) or diag explain $res->as_stripped_triples;
+}
 
 sub make_describer_sub {
   my ($self, $mailboxes_by_id) = @_;

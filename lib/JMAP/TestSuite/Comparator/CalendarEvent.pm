@@ -5,7 +5,7 @@ use Test::Deep ':v1';
 use Test::Deep::JType;
 use Test::Deep::HashRec;
 
-use Sub::Exporter -setup => [ qw(calendar_event) ];
+use Sub::Exporter -setup => [ qw(calendar_event jduration) ];
 
 sub calendar_event {
   my ($overrides) = @_;
@@ -72,10 +72,50 @@ sub calendar_event {
     }
   }
 
+  # jscalendarbis S1.7.4: implementations "MUST preserve" unknown properties.
   return hashrec({
     required => \%required,
     optional => \%optional,
+    allow_unknown => 1,
   });
+}
+
+# jscalendarbis S1.5.6 Duration ABNF.
+my $DUR_TIME = qr/T(?:\d+H(?:\d+M(?:\d+S)?)?|\d+M(?:\d+S)?|\d+S)/;
+my $DUR_CAL  = qr/(?:\d+W(?:\d+D)?|\d+D)/;
+my $DURATION = qr/\AP(?:$DUR_CAL$DUR_TIME?|$DUR_TIME)\z/;
+
+sub _duration_parts {
+  my ($str) = @_;
+  return unless defined $str && !ref $str && $str =~ $DURATION;
+  my %n = map {; $_ => 0 } qw(W D H M S);
+  my ($cal, $time) = $str =~ /\AP([^T]*)(.*)\z/;
+  $n{$2} = $1 while $cal  =~ /(\d+)([WD])/g;
+  $n{$2} = $1 while $time =~ /(\d+)([HMS])/g;
+  # S1.5.6: a week is always seven days, but a day is not always 24 hours.
+  return [ $n{W} * 7 + $n{D}, $n{H} * 3600 + $n{M} * 60 + $n{S} ];
+}
+
+=head2 jduration
+
+  duration => jduration('PT2H'),
+
+Matches any JSCalendar Duration string denoting the same length of time,
+so PT2H also matches PT120M and PT7200S, but not P1D or PT2H0M0.5S.
+
+=cut
+
+sub jduration {
+  my ($want) = @_;
+  my $w = _duration_parts($want) or die "jduration: bad Duration '$want'";
+
+  return all(jstr, code(sub {
+    my $got = "$_[0]";
+    my $g = _duration_parts($got)
+      or return (0, "'$got' is not a JSCalendar Duration");
+    return 1 if $g->[0] == $w->[0] && $g->[1] == $w->[1];
+    return (0, "'$got' is not equivalent to '$want'");
+  }));
 }
 
 no Moose;

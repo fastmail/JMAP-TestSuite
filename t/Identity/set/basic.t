@@ -15,10 +15,10 @@ test {
     "Identity/get" => {},
   ]]);
   my $list = $get_res->single_sentence("Identity/get")->arguments->{list};
-  ok(@$list >= 1, "at least one identity exists");
-  my $id = $list->[0]{id};
+  # RFC 8621 S6 doesn't require an account to have any Identity.
+  my $id = @$list ? $list->[0]{id} : undef;
 
-  subtest "cannot create identity" => sub {
+  subtest "create identity" => sub {
     my $res = $tester->request([[
       "Identity/set" => {
         create => {
@@ -28,12 +28,30 @@ test {
     ]]);
     ok($res->is_success, "Identity/set create");
 
-    my $args = $res->single_sentence("Identity/set")->arguments;
-    ok(!$args->{created} || !$args->{created}{new1}, "new identity not created");
-    ok($args->{notCreated}{new1}, "new1 in notCreated");
+    # RFC 8621 S6.3: a standard /set, whose only extra create error is
+    # forbiddenFrom; a server may also refuse with a standard forbidden.
+    my $args    = $res->single_sentence("Identity/set")->arguments;
+    my $created = $args->{created}{new1};
+
+    if ($created) {
+      jcmp_deeply($created, superhashof({ id => jstr }), "identity created")
+        or diag explain $args;
+
+      $tester->request([[
+        "Identity/set" => { destroy => [ $created->{id} ] },
+      ]]);
+    } else {
+      jcmp_deeply(
+        $args->{notCreated}{new1},
+        superhashof({ type => any(qw(forbiddenFrom forbidden)) }),
+        "identity refused with forbiddenFrom or forbidden",
+      ) or diag explain $args;
+    }
   };
 
   subtest "update name" => sub {
+    plan skip_all => "account has no identities" unless defined $id;
+
     my $orig_res = $tester->request([[
       "Identity/get" => { ids => [$id] },
     ]]);
@@ -51,6 +69,18 @@ test {
     ok($res->is_success, "Identity/set update");
 
     my $args = $res->single_sentence("Identity/set")->arguments;
+
+    # name is not immutable, but RFC 8620 S5.3 lets a server refuse any
+    # change its policy does not allow ("forbidden"); then nothing changed.
+    if (my $err = ($args->{notUpdated} // {})->{$id}) {
+      is($err->{type}, 'forbidden', "server refuses to change the identity: forbidden")
+        or diag explain $args;
+      my $now = $tester->request([[ "Identity/get" => { ids => [$id] } ]])
+        ->single_sentence("Identity/get")->arguments->{list}[0];
+      is($now->{name}, $orig_name, "and the name is as it was");
+      return;
+    }
+
     # RFC 8620 Section 5.3: the value under updated may be null.
     ok(exists $args->{updated}{$id}, "identity updated") or diag explain $args;
 
@@ -66,14 +96,28 @@ test {
   };
 
   subtest "destroy identity follows mayDelete" => sub {
+    # Destroy only an identity of our own, never a pre-existing one; RFC 8621
+    # S6: "Multiple identities with the same email address MAY exist".
+    my $email = @$list ? $list->[0]{email} : 'test@example.com';
+    my $create_res = $tester->request([[
+      "Identity/set" => {
+        create => {
+          new1 => { email => $email, name => 'Test Destroy' },
+        },
+      },
+    ]]);
+    my $created = $create_res->single_sentence("Identity/set")->arguments->{created}{new1};
+    plan skip_all => "server refused to create an identity" unless $created;
+    my $new_id = $created->{id};
+
     my $get_res = $tester->request([[
-      "Identity/get" => { ids => [$id] },
+      "Identity/get" => { ids => [$new_id] },
     ]]);
     my $identity = $get_res->single_sentence("Identity/get")->arguments->{list}[0];
 
     my $res = $tester->request([[
       "Identity/set" => {
-        destroy => [$id],
+        destroy => [$new_id],
       },
     ]]);
     ok($res->is_success, "Identity/set destroy");
@@ -82,15 +126,15 @@ test {
     if ($identity->{mayDelete}) {
       # The server said this one may go; nothing more is promised.
       ok(
-        (grep { $_ eq $id } @{ $args->{destroyed} // [] }) || $args->{notDestroyed}{$id},
+        (grep { $_ eq $new_id } @{ $args->{destroyed} // [] }) || $args->{notDestroyed}{$new_id},
         "server accounted for the destroy of a deletable identity"
       ) or diag explain $args;
     }
     else {
       # RFC 8621 Section 6: an Identity with mayDelete false is rejected with
       # a standard forbidden SetError.
-      ok(!grep({ $_ eq $id } @{ $args->{destroyed} // [] }), "identity not destroyed");
-      is($args->{notDestroyed}{$id}{type}, q{forbidden}, "notDestroyed with forbidden")
+      ok(!grep({ $_ eq $new_id } @{ $args->{destroyed} // [] }), "identity not destroyed");
+      is($args->{notDestroyed}{$new_id}{type}, q{forbidden}, "notDestroyed with forbidden")
         or diag explain $args;
     }
   };

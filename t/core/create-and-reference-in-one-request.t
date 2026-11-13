@@ -95,14 +95,23 @@ test {
     ok($res->is_success, "the request itself did not fail")
       or diag explain $res->response_payload;
 
-    my $eset = $res->sentence(0)->arguments;
+    # RFC 8620 S5.3 puts the ordering MUST on the client and does not say
+    # how the server rejects a violation: a method error or a SetError.
+    my $sent = $res->sentence(0);
+    my $eset = $sent->arguments;
 
-    ok(!exists $eset->{updated}{ $email->id },
-       'the forward reference did not apply the update')
-      or diag explain $eset;
-    ok($eset->{notUpdated}{ $email->id },
-       'it is reported in notUpdated')
-      or diag explain $eset;
+    if ($sent->name eq 'error') {
+      ok(defined $eset->{type}, 'the forward reference is a method-level error')
+        or diag explain $eset;
+    } else {
+      is($sent->name, 'Email/set', 'got an Email/set response');
+      ok(!exists $eset->{updated}{ $email->id },
+         'the forward reference did not apply the update')
+        or diag explain $eset;
+      ok($eset->{notUpdated}{ $email->id },
+         'it is reported in notUpdated')
+        or diag explain $eset;
+    }
 
     subtest "and the email did not move" => sub {
       my $get = $tester->request([[

@@ -29,8 +29,20 @@ test {
     },
   ]]);
 
-  TODO: {
-    todo_skip "Need to figure out what to do here", 1;
-    ok(1);
-  };
+  # RFC 8621 S4.8: the server may fix an invalid message, and then the blobId
+  # "MUST ... be different", or it may reject it with invalidEmail.
+  jcmp_deeply(
+    $res->single_sentence('Email/import')->arguments,
+    any(
+      superhashof({
+        created => {
+          new => superhashof({ id => jstr(), blobId => none($blob->blobId) }),
+        },
+      }),
+      superhashof({
+        notCreated => { new => superhashof({ type => 'invalidEmail' }) },
+      }),
+    ),
+    "invalid message is either fixed or rejected with invalidEmail",
+  ) or diag explain $res->as_stripped_triples;
 };

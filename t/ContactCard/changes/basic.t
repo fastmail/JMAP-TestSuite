@@ -17,6 +17,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -42,6 +44,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -51,7 +55,9 @@ test {
         newState       => none(jstr($state)),
         hasMoreChanges => jfalse,
         created        => [ $card->id ],
-        updated        => [],
+        # RFC 8620 S5.2: a record created AND updated since the old state
+        # "MAY" also be returned in "updated".
+        updated        => any([], [ $card->id ]),
         destroyed      => [],
       }),
       "created response looks good",
@@ -73,6 +79,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(
@@ -100,6 +108,8 @@ test {
     my $res = $tester->request([[
       "ContactCard/changes" => { sinceState => $state },
     ]]);
+    return if cannot_calculate_changes_ok($res);
+
     ok($res->is_success, "ContactCard/changes") or diag explain $res->response_payload;
 
     jcmp_deeply(

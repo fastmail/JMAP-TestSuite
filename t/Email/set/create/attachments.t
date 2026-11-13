@@ -52,12 +52,12 @@ test {
     ],
     superhashof({
       created => {
-        new => {
+        new => superhashof({
           id       => jstr(),
           size     => jnum(),
           blobId   => jstr(),
           threadId => jstr(),
-        },
+        }),
       },
     }),
     "attachments create"
@@ -111,6 +111,8 @@ test {
               email => 'test@example.org',
             },
           ],
+          # RFC 8621 S4.1.4 only says SHOULD, but ignoring a named, non-inline
+          # attachment with content would be clearly wrong.
           hasAttachment => jtrue(),
           htmlBody    => [ \%body ],
           id          => $id,
@@ -121,7 +123,7 @@ test {
           },
           messageId   => [ jstr(), ],
           preview     => jstr(),
-          receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\z'),
+          receivedAt  => re('^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d*[1-9])?Z\z'),
           references  => undef,
           replyTo     => undef,
           sender      => undef,
