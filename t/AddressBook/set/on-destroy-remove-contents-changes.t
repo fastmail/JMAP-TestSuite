@@ -62,19 +62,21 @@ test {
   ]]);
   ok($changes->is_success, "ContactCard/changes") or diag explain $changes->response_payload;
 
-  jcmp_deeply(
-    $changes->single_sentence("ContactCard/changes")->arguments,
-    superhashof({
-      oldState       => jstr($state),
-      newState       => none(jstr($state)),
-      hasMoreChanges => jfalse,
-      created        => [],
-      updated        => [ $both ? $both->id : () ],
-      destroyed      => [ $only->id ],
-    }),
-    $both ? "the card only in the book is destroyed, the other is updated"
-          : "the card only in the book is destroyed",
-  ) or diag explain $changes->as_stripped_triples;
+  unless (cannot_calculate_changes_ok($changes)) {
+    jcmp_deeply(
+      $changes->single_sentence("ContactCard/changes")->arguments,
+      superhashof({
+        oldState       => jstr($state),
+        newState       => none(jstr($state)),
+        hasMoreChanges => jfalse,
+        created        => [],
+        updated        => [ $both ? $both->id : () ],
+        destroyed      => [ $only->id ],
+      }),
+      $both ? "the card only in the book is destroyed, the other is updated"
+            : "the card only in the book is destroyed",
+    ) or diag explain $changes->as_stripped_triples;
+  }
 
   my $get = $tester->request([[
     "ContactCard/get" => {
